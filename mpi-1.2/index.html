@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entitas, Atribut &amp; Primary Key — Rekayasa Perangkat Lunak Fase F</title>
+  <meta name="description" content="Media pembelajaran interaktif untuk menganalisis entitas, atribut, dan primary key dari spesifikasi kebutuhan sistem.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <a href="#konten-utama" class="skip-link">Lewati ke konten utama</a>
+
+  <header class="app-header">
+    <div class="app-header__brand">
+      <span class="app-header__kicker">Rekayasa Perangkat Lunak — Fase F</span>
+      <h1 class="app-header__title">Entitas, Atribut &amp; Primary Key</h1>
+    </div>
+    <div class="app-header__actions">
+      <button type="button" id="resetAppBtn" class="btn btn--ghost btn--small">Reset</button>
+      <a href="../index.html" class="btn btn--ghost btn--small">Beranda</a>
+    </div>
+  </header>
+
+  <nav class="stage-nav" aria-label="Tahapan pembelajaran">
+    <ol class="stage-nav__list" id="stageNavList">
+      <!-- Diisi oleh app.js -->
+    </ol>
+  </nav>
+
+  <main id="konten-utama">
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-label">
+        <span id="progressLabel">0 dari 11 tahap selesai</span>
+        <span style="font-size:0.78rem;color:var(--color-ink-muted);">Progress disimpan otomatis</span>
+      </div>
+      <div class="progress-bar" role="progressbar" aria-label="Progress pembelajaran">
+        <div class="progress-bar__fill" id="progressFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div id="stageContainer">
+      <!-- Konten tahap dirender oleh app.js -->
+      <p style="text-align:center;padding:var(--space-7);color:var(--color-ink-muted);">Memuat media pembelajaran…</p>
+    </div>
+  </main>
+
+  <div class="app-notice" id="appNotice" role="status" aria-live="polite"></div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>
