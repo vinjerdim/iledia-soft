@@ -134,23 +134,23 @@ const DATA = {
   mapping: {
     instruction: 'Klik sebuah atribut untuk memilihnya, lalu klik kolom entitas yang sesuai untuk menempatkannya. Klik atribut yang sudah ditempatkan untuk mengembalikannya ke daftar.',
     entities: [
-      { id: 'anggota',    label: 'Anggota',    colorKey: 'blue'   },
-      { id: 'buku',       label: 'Buku',       colorKey: 'green'  },
+      { id: 'anggota', label: 'Anggota', colorKey: 'blue' },
+      { id: 'buku', label: 'Buku', colorKey: 'green' },
       { id: 'peminjaman', label: 'Peminjaman', colorKey: 'orange' }
     ],
     attributes: [
-      { id: 'nomor_anggota',     label: 'nomor_anggota',     entityId: 'anggota'    },
-      { id: 'nama_anggota',      label: 'nama_anggota',      entityId: 'anggota'    },
-      { id: 'kelas',             label: 'kelas',             entityId: 'anggota'    },
-      { id: 'tanggal_bergabung', label: 'tanggal_bergabung', entityId: 'anggota'    },
-      { id: 'kode_buku',         label: 'kode_buku',         entityId: 'buku'       },
-      { id: 'judul_buku',        label: 'judul_buku',        entityId: 'buku'       },
-      { id: 'pengarang',         label: 'pengarang',         entityId: 'buku'       },
-      { id: 'penerbit',          label: 'penerbit',          entityId: 'buku'       },
-      { id: 'tahun_terbit',      label: 'tahun_terbit',      entityId: 'buku'       },
-      { id: 'nomor_peminjaman',  label: 'nomor_peminjaman',  entityId: 'peminjaman' },
-      { id: 'tanggal_pinjam',    label: 'tanggal_pinjam',    entityId: 'peminjaman' },
-      { id: 'tanggal_kembali',   label: 'tanggal_kembali',   entityId: 'peminjaman' }
+      { id: 'nomor_anggota', label: 'nomor_anggota', entityId: 'anggota' },
+      { id: 'nama_anggota', label: 'nama_anggota', entityId: 'anggota' },
+      { id: 'kelas', label: 'kelas', entityId: 'anggota' },
+      { id: 'tanggal_bergabung', label: 'tanggal_bergabung', entityId: 'anggota' },
+      { id: 'kode_buku', label: 'kode_buku', entityId: 'buku' },
+      { id: 'judul_buku', label: 'judul_buku', entityId: 'buku' },
+      { id: 'pengarang', label: 'pengarang', entityId: 'buku' },
+      { id: 'penerbit', label: 'penerbit', entityId: 'buku' },
+      { id: 'tahun_terbit', label: 'tahun_terbit', entityId: 'buku' },
+      { id: 'nomor_peminjaman', label: 'nomor_peminjaman', entityId: 'peminjaman' },
+      { id: 'tanggal_pinjam', label: 'tanggal_pinjam', entityId: 'peminjaman' },
+      { id: 'tanggal_kembali', label: 'tanggal_kembali', entityId: 'peminjaman' }
     ]
   },
 
@@ -163,9 +163,9 @@ const DATA = {
       entityName: 'Anggota',
       context: 'Dalam tabel Anggota, setiap baris mewakili satu orang anggota perpustakaan yang terdaftar.',
       attributes: [
-        { id: 'nomor_anggota',     label: 'nomor_anggota',     note: 'Nomor unik yang ditetapkan sistem' },
-        { id: 'nama_anggota',      label: 'nama_anggota',      note: 'Nama lengkap anggota' },
-        { id: 'kelas',             label: 'kelas',             note: 'Kelas saat ini (misal: XI RPL 1)' },
+        { id: 'nomor_anggota', label: 'nomor_anggota', note: 'Nomor unik yang ditetapkan sistem' },
+        { id: 'nama_anggota', label: 'nama_anggota', note: 'Nama lengkap anggota' },
+        { id: 'kelas', label: 'kelas', note: 'Kelas saat ini (misal: XI RPL 1)' },
         { id: 'tanggal_bergabung', label: 'tanggal_bergabung', note: 'Tanggal mendaftar sebagai anggota' }
       ],
       correctPK: 'nomor_anggota',
@@ -177,11 +177,11 @@ const DATA = {
       ],
       feedbackMap: {
         nomor_anggota: {
-          goodReason:  'Pilihan PK dan alasan kamu sudah tepat! nomor_anggota memenuhi semua kriteria: unik, stabil, tidak null, dan dapat mengidentifikasi satu record secara tepat.',
-          poorReason:  'Pilihan PK kamu tepat (nomor_anggota), tetapi alasannya perlu diperbaiki. Primary key dipilih bukan karena posisinya dalam tabel atau kemudahan mengingat, melainkan karena keunikan dan kestabilan nilainya dalam mengidentifikasi setiap record.'
+          goodReason: 'Pilihan PK dan alasan kamu sudah tepat! nomor_anggota memenuhi semua kriteria: unik, stabil, tidak null, dan dapat mengidentifikasi satu record secara tepat.',
+          poorReason: 'Pilihan PK kamu tepat (nomor_anggota), tetapi alasannya perlu diperbaiki. Primary key dipilih bukan karena posisinya dalam tabel atau kemudahan mengingat, melainkan karena keunikan dan kestabilan nilainya dalam mengidentifikasi setiap record.'
         },
-        nama_anggota:      'Nama anggota tidak ideal sebagai primary key. Ada kemungkinan dua anggota memiliki nama yang sama (misal: dua siswa bernama "Budi Santoso"). Primary key harus benar-benar unik — tidak boleh ada dua record dengan nilai PK yang sama.',
-        kelas:             'Kelas tidak bisa menjadi primary key karena satu kelas dimiliki oleh banyak anggota, artinya nilainya pasti berulang. Selain itu, kelas seorang siswa berubah setiap tahun ajaran — ini melanggar syarat kestabilan PK.',
+        nama_anggota: 'Nama anggota tidak ideal sebagai primary key. Ada kemungkinan dua anggota memiliki nama yang sama (misal: dua siswa bernama "Budi Santoso"). Primary key harus benar-benar unik — tidak boleh ada dua record dengan nilai PK yang sama.',
+        kelas: 'Kelas tidak bisa menjadi primary key karena satu kelas dimiliki oleh banyak anggota, artinya nilainya pasti berulang. Selain itu, kelas seorang siswa berubah setiap tahun ajaran — ini melanggar syarat kestabilan PK.',
         tanggal_bergabung: 'Tanggal bergabung tidak ideal sebagai primary key. Banyak anggota bisa mendaftar di tanggal yang sama. Nilai yang berulang berarti tidak memenuhi syarat keunikan. Selain itu, jika ada kesalahan input dan tanggal dikoreksi, mengubah PK bisa merusak relasi data di seluruh sistem.'
       }
     },
@@ -190,9 +190,9 @@ const DATA = {
       entityName: 'Buku',
       context: 'Dalam tabel Buku, setiap baris mewakili satu judul buku yang tersedia di perpustakaan.',
       attributes: [
-        { id: 'kode_buku',    label: 'kode_buku',    note: 'Kode unik yang ditetapkan sistem perpustakaan' },
-        { id: 'judul_buku',   label: 'judul_buku',   note: 'Judul lengkap buku' },
-        { id: 'pengarang',    label: 'pengarang',    note: 'Nama penulis atau pengarang buku' },
+        { id: 'kode_buku', label: 'kode_buku', note: 'Kode unik yang ditetapkan sistem perpustakaan' },
+        { id: 'judul_buku', label: 'judul_buku', note: 'Judul lengkap buku' },
+        { id: 'pengarang', label: 'pengarang', note: 'Nama penulis atau pengarang buku' },
         { id: 'tahun_terbit', label: 'tahun_terbit', note: 'Tahun buku pertama diterbitkan' }
       ],
       correctPK: 'kode_buku',
@@ -204,11 +204,11 @@ const DATA = {
       ],
       feedbackMap: {
         kode_buku: {
-          goodReason:  'Pilihan PK dan alasan kamu sudah tepat! kode_buku unik, stabil, dan efisien digunakan sebagai referensi di tabel Peminjaman.',
-          poorReason:  'Pilihan PK kamu tepat (kode_buku), tetapi perhatikan alasannya. PK yang baik dipilih karena keunikan, kestabilan, dan kemampuan identifikasi — bukan karena paling populer atau mudah dikenali.'
+          goodReason: 'Pilihan PK dan alasan kamu sudah tepat! kode_buku unik, stabil, dan efisien digunakan sebagai referensi di tabel Peminjaman.',
+          poorReason: 'Pilihan PK kamu tepat (kode_buku), tetapi perhatikan alasannya. PK yang baik dipilih karena keunikan, kestabilan, dan kemampuan identifikasi — bukan karena paling populer atau mudah dikenali.'
         },
-        judul_buku:   'Judul buku tidak ideal sebagai primary key. Dua edisi atau cetakan buku yang berbeda bisa memiliki judul yang sama. Perpustakaan juga mungkin punya beberapa eksemplar buku berjudul sama yang perlu dibedakan satu sama lain.',
-        pengarang:    'Pengarang tidak bisa menjadi primary key karena satu pengarang menulis banyak buku — nilai pengarang pasti berulang di banyak baris. Primary key harus dapat membedakan <em>setiap</em> record.',
+        judul_buku: 'Judul buku tidak ideal sebagai primary key. Dua edisi atau cetakan buku yang berbeda bisa memiliki judul yang sama. Perpustakaan juga mungkin punya beberapa eksemplar buku berjudul sama yang perlu dibedakan satu sama lain.',
+        pengarang: 'Pengarang tidak bisa menjadi primary key karena satu pengarang menulis banyak buku — nilai pengarang pasti berulang di banyak baris. Primary key harus dapat membedakan <em>setiap</em> record.',
         tahun_terbit: 'Tahun terbit tidak bisa menjadi primary key. Banyak buku diterbitkan pada tahun yang sama — nilai ini pasti berulang. Primary key harus unik untuk setiap baris, bukan hanya untuk sebagian baris.'
       }
     }
@@ -223,25 +223,25 @@ const DATA = {
     instruction: 'Klik tombol "Uji sebagai PK" di bawah nama kolom untuk melihat apakah kolom tersebut memenuhi syarat keunikan. Perhatikan baris mana yang memiliki nilai sama.',
     columns: [
       { id: 'nomor_anggota', label: 'nomor_anggota', hint: 'Nomor unik ditetapkan sistem' },
-      { id: 'nama_anggota',  label: 'nama_anggota',  hint: 'Nama lengkap anggota' },
-      { id: 'kelas',         label: 'kelas',         hint: 'Kelas saat ini' },
+      { id: 'nama_anggota', label: 'nama_anggota', hint: 'Nama lengkap anggota' },
+      { id: 'kelas', label: 'kelas', hint: 'Kelas saat ini' },
       { id: 'tanggal_lahir', label: 'tanggal_lahir', hint: 'Tanggal lahir anggota' }
     ],
     rows: [
-      { nomor_anggota: 'A001', nama_anggota: 'Budi Santoso',   kelas: 'XI RPL 1',  tanggal_lahir: '15 Mar 2008' },
-      { nomor_anggota: 'A002', nama_anggota: 'Siti Rahayu',    kelas: 'XI RPL 1',  tanggal_lahir: '22 Jul 2008' },
-      { nomor_anggota: 'A003', nama_anggota: 'Budi Santoso',   kelas: 'XI RPL 2',  tanggal_lahir: '10 Mei 2008' },
-      { nomor_anggota: 'A004', nama_anggota: 'Ahmad Fauzi',    kelas: 'X RPL 1',   tanggal_lahir: '30 Jan 2009' },
-      { nomor_anggota: 'A005', nama_anggota: 'Dewi Lestari',   kelas: 'XII RPL 1', tanggal_lahir: '8 Nov 2007'  },
-      { nomor_anggota: 'A006', nama_anggota: 'Rizky Pratama',  kelas: 'X RPL 2',   tanggal_lahir: '15 Mar 2009' },
-      { nomor_anggota: 'A007', nama_anggota: 'Dewi Lestari',   kelas: 'XI RPL 3',  tanggal_lahir: '20 Sep 2008' },
-      { nomor_anggota: 'A008', nama_anggota: 'Fani Kusuma',    kelas: 'XII RPL 1', tanggal_lahir: '8 Nov 2007'  }
+      { nomor_anggota: 'A001', nama_anggota: 'Budi Santoso', kelas: 'XI RPL 1', tanggal_lahir: '15 Mar 2008' },
+      { nomor_anggota: 'A002', nama_anggota: 'Siti Rahayu', kelas: 'XI RPL 1', tanggal_lahir: '22 Jul 2008' },
+      { nomor_anggota: 'A003', nama_anggota: 'Budi Santoso', kelas: 'XI RPL 2', tanggal_lahir: '10 Mei 2008' },
+      { nomor_anggota: 'A004', nama_anggota: 'Ahmad Fauzi', kelas: 'X RPL 1', tanggal_lahir: '30 Jan 2009' },
+      { nomor_anggota: 'A005', nama_anggota: 'Dewi Lestari', kelas: 'XII RPL 1', tanggal_lahir: '8 Nov 2007' },
+      { nomor_anggota: 'A006', nama_anggota: 'Rizky Pratama', kelas: 'X RPL 2', tanggal_lahir: '15 Mar 2009' },
+      { nomor_anggota: 'A007', nama_anggota: 'Dewi Lestari', kelas: 'XI RPL 3', tanggal_lahir: '20 Sep 2008' },
+      { nomor_anggota: 'A008', nama_anggota: 'Fani Kusuma', kelas: 'XII RPL 1', tanggal_lahir: '8 Nov 2007' }
     ],
     /* Daftar pasangan baris yang nilainya sama (0-based index) */
     duplicates: {
       nomor_anggota: [],
-      nama_anggota:  [[0, 2], [4, 6]],
-      kelas:         [[0, 1], [4, 7]],
+      nama_anggota: [[0, 2], [4, 6]],
+      kelas: [[0, 1], [4, 7]],
       tanggal_lahir: [[4, 7]]
     },
     analysis: {

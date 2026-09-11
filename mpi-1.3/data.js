@@ -126,7 +126,7 @@ const DATA = {
     description: 'Klik baris pada tabel <strong>Peminjaman</strong> untuk melihat bagaimana nilai FK menghubungkan record ke tabel Anggota dan Buku.',
     anggota: [
       { nomor_anggota: 'A001', nama_anggota: 'Budi Santoso', kelas: 'XI RPL 1' },
-      { nomor_anggota: 'A002', nama_anggota: 'Citra Dewi',   kelas: 'XI RPL 2' },
+      { nomor_anggota: 'A002', nama_anggota: 'Citra Dewi', kelas: 'XI RPL 2' },
       { nomor_anggota: 'A003', nama_anggota: 'Dani Pratama', kelas: 'XII RPL 1' }
     ],
     buku: [

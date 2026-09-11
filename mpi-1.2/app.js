@@ -39,46 +39,46 @@ const STAGE_LABELS = [
 const STORAGE_KEY = 'mpi-1-2-v1';
 
 const State = {
-  currentStage:       'orientasi',
-  completedStages:    {},   // { stageName: true }
+  currentStage: 'orientasi',
+  completedStages: {},   // { stageName: true }
 
   /* Stage 2 — SRS Klasifikasi */
-  classification:     {},   // { candidateId: 'entitas'|'atribut'|'bukan' }
-  classifChecked:     false,
+  classification: {},   // { candidateId: 'entitas'|'atribut'|'bukan' }
+  classifChecked: false,
 
   /* Stage 3 — Peta Atribut */
-  attrAssignments:    {},   // { attrId: entityId|null }
-  selectedAttrId:     null,
-  mappingChecked:     false,
+  attrAssignments: {},   // { attrId: entityId|null }
+  selectedAttrId: null,
+  mappingChecked: false,
 
   /* Stage 4 — PK Challenge */
-  pkCurrentIdx:       0,
-  pkAnswers:          [],   // [{ selectedPK, selectedReasons:[], checked }]
+  pkCurrentIdx: 0,
+  pkAnswers: [],   // [{ selectedPK, selectedReasons:[], checked }]
 
   /* Stage 5 — Uji Keunikan */
-  testedColumns:      {},   // { colId: true }
+  testedColumns: {},   // { colId: true }
 
   /* Stage 6 — Studi Kasus */
-  selectedCase:       null,
-  caseEntities:       [],   // [{ id, name, attrs:[], pk, reason }]
-  caseChecked:        false,
+  selectedCase: null,
+  caseEntities: [],   // [{ id, name, attrs:[], pk, reason }]
+  caseChecked: false,
 
   /* Stage 7 — Tabel Pemetaan */
-  tableRows:          [],   // [{ id, entity, attributes, pk, reason }]
-  tableNextId:        1,
-  tableChecked:       false,
+  tableRows: [],   // [{ id, entity, attributes, pk, reason }]
+  tableNextId: 1,
+  tableChecked: false,
 
   /* Stage 8 — Peer Review */
-  peerChecked:        {},   // { pr1: bool, ... }
+  peerChecked: {},   // { pr1: bool, ... }
 
   /* Stage 10 — Refleksi */
-  reflections:        {},   // { r1: string, r2: string }
+  reflections: {},   // { r1: string, r2: string }
 
   /* Scoring */
   score: {
     classifCorrect: 0, classifTotal: 0,
     mappingCorrect: 0, mappingTotal: 0,
-    pkCorrect: 0,      pkTotal: 0
+    pkCorrect: 0, pkTotal: 0
   }
 };
 
@@ -101,25 +101,25 @@ function loadState() {
 
 function clearState() {
   try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ }
-  State.currentStage    = 'orientasi';
+  State.currentStage = 'orientasi';
   State.completedStages = {};
-  State.classification  = {};
-  State.classifChecked  = false;
+  State.classification = {};
+  State.classifChecked = false;
   State.attrAssignments = {};
-  State.selectedAttrId  = null;
-  State.mappingChecked  = false;
-  State.pkCurrentIdx    = 0;
-  State.pkAnswers       = [];
-  State.testedColumns   = {};
-  State.selectedCase    = null;
-  State.caseEntities    = [];
-  State.caseChecked     = false;
-  State.tableRows       = [];
-  State.tableNextId     = 1;
-  State.tableChecked    = false;
-  State.peerChecked     = {};
-  State.reflections     = {};
-  State.score           = { classifCorrect:0, classifTotal:0, mappingCorrect:0, mappingTotal:0, pkCorrect:0, pkTotal:0 };
+  State.selectedAttrId = null;
+  State.mappingChecked = false;
+  State.pkCurrentIdx = 0;
+  State.pkAnswers = [];
+  State.testedColumns = {};
+  State.selectedCase = null;
+  State.caseEntities = [];
+  State.caseChecked = false;
+  State.tableRows = [];
+  State.tableNextId = 1;
+  State.tableChecked = false;
+  State.peerChecked = {};
+  State.reflections = {};
+  State.score = { classifCorrect: 0, classifTotal: 0, mappingCorrect: 0, mappingTotal: 0, pkCorrect: 0, pkTotal: 0 };
 }
 
 /* ============================================================
@@ -127,7 +127,7 @@ function clearState() {
    ============================================================ */
 
 function navigateTo(stageId) {
-  const targetIdx  = STAGES.indexOf(stageId);
+  const targetIdx = STAGES.indexOf(stageId);
   const currentIdx = STAGES.indexOf(State.currentStage);
   if (targetIdx === -1) return;
 
@@ -180,12 +180,12 @@ function updateStageNav() {
 }
 
 function updateProgress() {
-  const total     = STAGES.length;
-  const done      = Object.keys(State.completedStages).length;
-  const pct       = Math.round((done / total) * 100);
-  const barFill   = document.getElementById('progressFill');
-  const barLabel  = document.getElementById('progressLabel');
-  if (barFill)  barFill.style.width = pct + '%';
+  const total = STAGES.length;
+  const done = Object.keys(State.completedStages).length;
+  const pct = Math.round((done / total) * 100);
+  const barFill = document.getElementById('progressFill');
+  const barLabel = document.getElementById('progressLabel');
+  if (barFill) barFill.style.width = pct + '%';
   if (barLabel) barLabel.textContent = done + ' dari ' + total + ' tahap selesai';
 }
 
@@ -199,18 +199,18 @@ function renderCurrentStage() {
   updateProgress();
 
   switch (State.currentStage) {
-    case 'orientasi':  renderOrientasi(container);  break;
-    case 'srs':        renderSRS(container);         break;
-    case 'mapping':    renderMapping(container);     break;
-    case 'pk':         renderPK(container);          break;
-    case 'uniqueness': renderUniqueness(container);  break;
-    case 'casestudy':  renderCaseStudy(container);   break;
-    case 'table':      renderTable(container);       break;
-    case 'peerreview': renderPeerReview(container);  break;
-    case 'results':    renderResults(container);     break;
-    case 'reflection': renderReflection(container);  break;
-    case 'done':       renderDone(container);        break;
-    default:           container.innerHTML = '<p>Tahap tidak ditemukan.</p>';
+    case 'orientasi': renderOrientasi(container); break;
+    case 'srs': renderSRS(container); break;
+    case 'mapping': renderMapping(container); break;
+    case 'pk': renderPK(container); break;
+    case 'uniqueness': renderUniqueness(container); break;
+    case 'casestudy': renderCaseStudy(container); break;
+    case 'table': renderTable(container); break;
+    case 'peerreview': renderPeerReview(container); break;
+    case 'results': renderResults(container); break;
+    case 'reflection': renderReflection(container); break;
+    case 'done': renderDone(container); break;
+    default: container.innerHTML = '<p>Tahap tidak ditemukan.</p>';
   }
 }
 
@@ -294,13 +294,13 @@ function parseSRSParagraphs(paragraphs) {
 }
 
 function renderSRS(container) {
-  const srs     = DATA.srs;
-  const paras   = parseSRSParagraphs(srs.paragraphs);
+  const srs = DATA.srs;
+  const paras = parseSRSParagraphs(srs.paragraphs);
   const checked = State.classifChecked;
 
   const candidatesHTML = srs.candidates.map(function (c) {
     const current = State.classification[c.id] || null;
-    const fb      = (State.classifChecked && current) ? buildClassifFeedback(c, current) : { cls: '', html: '' };
+    const fb = (State.classifChecked && current) ? buildClassifFeedback(c, current) : { cls: '', html: '' };
 
     return `<div class="candidate-item ${checked ? 'candidate-item--checked' : ''}" id="ci-${esc(c.id)}" data-cid="${esc(c.id)}">
       <div class="candidate-item__header">
@@ -322,9 +322,9 @@ function renderSRS(container) {
   let scoreHTML = '';
   if (checked) {
     const correct = srs.candidates.filter(function (c) { return State.classification[c.id] === c.correct; }).length;
-    const total   = srs.candidates.length;
-    const pct     = Math.round((correct / total) * 100);
-    const ok      = correct === total;
+    const total = srs.candidates.length;
+    const pct = Math.round((correct / total) * 100);
+    const ok = correct === total;
     scoreHTML = `<div class="feedback-box feedback-box--${ok ? 'success' : 'warning'}" style="margin-bottom:var(--space-4);">
       <span class="feedback-box__icon">${ok ? '🎉' : '📊'}</span>
       <div class="feedback-box__body">
@@ -384,10 +384,10 @@ function renderSRS(container) {
   /* --- Events --- */
   container.querySelectorAll('.classify-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      const cid      = btn.dataset.cid;
+      const cid = btn.dataset.cid;
       const classify = btn.dataset.classify;
       State.classification[cid] = classify;
-      State.classifChecked      = false;
+      State.classifChecked = false;
       saveState();
       renderSRS(container);
     });
@@ -421,22 +421,22 @@ function renderSRS(container) {
 
 function buildClassifFeedback(candidate, chosen) {
   const isCorrect = chosen === candidate.correct;
-  const text      = candidate.feedback[chosen] || '';
+  const text = candidate.feedback[chosen] || '';
   return {
-    cls:  isCorrect ? 'is-correct' : 'is-incorrect',
+    cls: isCorrect ? 'is-correct' : 'is-incorrect',
     html: text
   };
 }
 
 function checkClassification(container) {
   State.classifChecked = true;
-  const cands   = DATA.srs.candidates;
-  let correct   = 0;
+  const cands = DATA.srs.candidates;
+  let correct = 0;
   cands.forEach(function (c) {
     if (State.classification[c.id] === c.correct) correct++;
   });
   State.score.classifCorrect = correct;
-  State.score.classifTotal   = cands.length;
+  State.score.classifTotal = cands.length;
   saveState();
   renderSRS(container);
 }
@@ -446,8 +446,8 @@ function checkClassification(container) {
    ============================================================ */
 
 function renderMapping(container) {
-  const mapData  = DATA.mapping;
-  const checked  = State.mappingChecked;
+  const mapData = DATA.mapping;
+  const checked = State.mappingChecked;
   const selected = State.selectedAttrId;
 
   /* Build assignment map */
@@ -473,8 +473,8 @@ function renderMapping(container) {
   /* Entity columns HTML */
   const columnsHTML = mapData.entities.map(function (entity) {
     const attrChips = assigned[entity.id].map(function (aid) {
-      const a    = mapData.attributes.find(function (x) { return x.id === aid; });
-      const cor  = mapData.attributes.find(function (x) { return x.id === aid; }).entityId;
+      const a = mapData.attributes.find(function (x) { return x.id === aid; });
+      const cor = mapData.attributes.find(function (x) { return x.id === aid; }).entityId;
       let chipCls = 'attr-chip attr-chip--' + esc(entity.colorKey);
       if (checked) {
         chipCls += cor === entity.id ? ' attr-chip--correct' : ' attr-chip--incorrect';
@@ -501,15 +501,15 @@ function renderMapping(container) {
       if (State.attrAssignments[a.id] === a.entityId) correct++;
     });
     State.score.mappingCorrect = correct;
-    State.score.mappingTotal   = mapData.attributes.length;
+    State.score.mappingTotal = mapData.attributes.length;
     const total = mapData.attributes.length;
-    const ok    = correct === total;
+    const ok = correct === total;
     scoreHTML = `<div class="feedback-box feedback-box--${ok ? 'success' : 'warning'}" style="margin-bottom:var(--space-4);">
       <span class="feedback-box__icon">${ok ? '🎉' : '📊'}</span>
       <div class="feedback-box__body">
         <strong>${correct} dari ${total} atribut ditempatkan dengan benar.</strong>
         ${ok ? '<br>Semua atribut sudah berada di entitas yang tepat!'
-              : '<br>Atribut yang ditandai ✗ perlu dipindahkan. Klik chip tersebut untuk mengembalikannya ke daftar, lalu pindahkan ke entitas yang benar.'}
+        : '<br>Atribut yang ditandai ✗ perlu dipindahkan. Klik chip tersebut untuk mengembalikannya ke daftar, lalu pindahkan ke entitas yang benar.'}
       </div>
     </div>`;
   }
@@ -527,7 +527,7 @@ function renderMapping(container) {
         <p style="font-size:0.88rem;color:var(--color-ink-muted);">${esc(mapData.instruction)}</p>
 
         <div id="selectedIndicator" class="selected-indicator ${selected ? 'is-visible' : ''}">
-          ${selected ? `Dipilih: <strong>${esc(mapData.attributes.find(function(x){return x.id===selected;}).label)}</strong> — Sekarang klik nama entitas yang sesuai, atau klik atribut lain untuk ganti pilihan.` : ''}
+          ${selected ? `Dipilih: <strong>${esc(mapData.attributes.find(function (x) { return x.id === selected; }).label)}</strong> — Sekarang klik nama entitas yang sesuai, atau klik atribut lain untuk ganti pilihan.` : ''}
         </div>
 
         <div class="attr-pool-section">
@@ -620,8 +620,8 @@ function renderMapping(container) {
     retryBtn.addEventListener('click', function () {
       if (!confirmAction('Reset penempatan atribut?')) return;
       State.attrAssignments = {};
-      State.selectedAttrId  = null;
-      State.mappingChecked  = false;
+      State.selectedAttrId = null;
+      State.mappingChecked = false;
       saveState();
       renderMapping(container);
     });
@@ -642,9 +642,9 @@ function renderMapping(container) {
 
 function renderPK(container) {
   const challenges = DATA.pkChallenges;
-  const idx        = Math.min(State.pkCurrentIdx, challenges.length - 1);
-  const ch         = challenges[idx];
-  const ans        = State.pkAnswers[idx] || { selectedPK: null, selectedReasons: [], checked: false };
+  const idx = Math.min(State.pkCurrentIdx, challenges.length - 1);
+  const ch = challenges[idx];
+  const ans = State.pkAnswers[idx] || { selectedPK: null, selectedReasons: [], checked: false };
 
   /* Step indicator */
   const stepDots = challenges.map(function (_, i) {
@@ -659,8 +659,8 @@ function renderPK(container) {
     let optCls = 'pk-option';
     if (ans.selectedPK === attr.id) optCls += ' is-selected';
     if (ans.checked) {
-      if (attr.id === ch.correctPK)          optCls += ' is-correct';
-      else if (ans.selectedPK === attr.id)   optCls += ' is-incorrect';
+      if (attr.id === ch.correctPK) optCls += ' is-correct';
+      else if (ans.selectedPK === attr.id) optCls += ' is-incorrect';
     }
     return `<label class="${optCls}">
       <input type="radio" name="pk_choice" value="${esc(attr.id)}" ${ans.selectedPK === attr.id ? 'checked' : ''}>
@@ -673,11 +673,11 @@ function renderPK(container) {
 
   /* Reasoning options */
   const reasonHTML = ch.reasoningOptions.map(function (r) {
-    const isSel     = ans.selectedReasons.indexOf(r.id) >= 0;
-    let optCls      = 'reasoning-option';
-    if (isSel)       optCls += ' is-selected';
+    const isSel = ans.selectedReasons.indexOf(r.id) >= 0;
+    let optCls = 'reasoning-option';
+    if (isSel) optCls += ' is-selected';
     if (ans.checked) {
-      if (isSel && r.isGood)   optCls += ' checked-good';
+      if (isSel && r.isGood) optCls += ' checked-good';
       else if (isSel && !r.isGood) optCls += ' checked-poor';
       else if (!isSel && r.isGood) optCls += ' unchecked-missed';
     }
@@ -696,7 +696,7 @@ function renderPK(container) {
         return ch.reasoningOptions.find(function (r) { return r.id === rid && r.isGood; });
       });
       const txt = hasGoodReason ? fb.goodReason : fb.poorReason;
-      const ok  = ans.selectedPK === ch.correctPK;
+      const ok = ans.selectedPK === ch.correctPK;
       feedbackHTML = `<div class="feedback-box feedback-box--${ok && hasGoodReason ? 'success' : ok ? 'warning' : 'error'}" style="margin-top:var(--space-4);">
         <span class="feedback-box__icon">${ok ? (hasGoodReason ? '✅' : '⚠️') : '❌'}</span>
         <div class="feedback-box__body">${txt}</div>
@@ -724,8 +724,8 @@ function renderPK(container) {
           ${stepDots}
           <span>Challenge ${idx + 1} dari ${challenges.length}</span>
           ${challenges.map(function (c, i) {
-            return `<span style="font-weight:${i===idx?700:400};color:${i===idx?'var(--color-primary)':'var(--color-ink-muted)'};">${esc(c.entityName)}</span>`;
-          }).join(' → ')}
+    return `<span style="font-weight:${i === idx ? 700 : 400};color:${i === idx ? 'var(--color-primary)' : 'var(--color-ink-muted)'};">${esc(c.entityName)}</span>`;
+  }).join(' → ')}
         </div>
 
         <h3>Entitas: ${esc(ch.entityName)}</h3>
@@ -770,7 +770,7 @@ function renderPK(container) {
     radio.addEventListener('change', function () {
       ensurePkAnswer(idx);
       State.pkAnswers[idx].selectedPK = radio.value;
-      State.pkAnswers[idx].checked    = false;
+      State.pkAnswers[idx].checked = false;
       saveState();
       renderPK(container);
     });
@@ -860,9 +860,9 @@ function ensurePkAnswer(idx) {
    ============================================================ */
 
 function renderUniqueness(container) {
-  const uData    = DATA.uniqueness;
-  const tested   = State.testedColumns;
-  const active   = Object.keys(tested).find(function (k) { return tested[k] === 'active'; }) || null;
+  const uData = DATA.uniqueness;
+  const tested = State.testedColumns;
+  const active = Object.keys(tested).find(function (k) { return tested[k] === 'active'; }) || null;
 
   /* Find duplicate rows for active column */
   const dupPairs = active ? (DATA.uniqueness.duplicates[active] || []) : [];
@@ -871,8 +871,8 @@ function renderUniqueness(container) {
 
   /* Table header */
   const thHTML = uData.columns.map(function (col) {
-    const isActive  = active === col.id;
-    const isDone    = tested[col.id] && tested[col.id] !== 'active';
+    const isActive = active === col.id;
+    const isDone = tested[col.id] && tested[col.id] !== 'active';
     return `<th>
       <div style="font-family:var(--font-mono);font-size:0.82rem;margin-bottom:4px;">${esc(col.label)}</div>
       <div style="font-size:0.72rem;color:var(--color-ink-muted);margin-bottom:6px;">${esc(col.hint)}</div>
@@ -896,15 +896,15 @@ function renderUniqueness(container) {
   let resultHTML = '';
   if (active) {
     const analysis = uData.analysis[active];
-    const cls      = analysis.hasDuplicate ? 'result--dup' : 'result--ok';
+    const cls = analysis.hasDuplicate ? 'result--dup' : 'result--ok';
     resultHTML = `<div class="uniqueness-result ${cls}">
       <div>${analysis.feedback}</div>
       <div class="verdict-badge verdict-badge--${analysis.hasDuplicate ? 'dup' : 'ok'}">${esc(analysis.verdict)}</div>
     </div>`;
   }
 
-  const testedCount   = Object.keys(tested).length;
-  const canProceed    = testedCount >= uData.columns.length;
+  const testedCount = Object.keys(tested).length;
+  const canProceed = testedCount >= uData.columns.length;
 
   container.innerHTML = `
     <section aria-label="Simulasi Keunikan Data">
@@ -932,8 +932,8 @@ function renderUniqueness(container) {
 
         <div class="btn-group btn-group--end" style="margin-top:var(--space-4);">
           ${canProceed
-            ? '<button type="button" class="btn btn--primary" id="nextFromUniqueness">Lanjut ke Studi Kasus →</button>'
-            : `<button type="button" class="btn btn--ghost" disabled>Uji semua kolom untuk melanjutkan (${testedCount}/${uData.columns.length})</button>`}
+      ? '<button type="button" class="btn btn--primary" id="nextFromUniqueness">Lanjut ke Studi Kasus →</button>'
+      : `<button type="button" class="btn btn--ghost" disabled>Uji semua kolom untuk melanjutkan (${testedCount}/${uData.columns.length})</button>`}
         </div>
       </div>
     </section>`;
@@ -965,13 +965,13 @@ function renderUniqueness(container) {
    ============================================================ */
 
 function renderCaseStudy(container) {
-  const cases    = DATA.casestudies;
-  const selCase  = State.selectedCase ? cases[State.selectedCase] : null;
+  const cases = DATA.casestudies;
+  const selCase = State.selectedCase ? cases[State.selectedCase] : null;
   const entities = State.caseEntities;
 
   /* Case selector */
   const caseSelHTML = Object.keys(cases).map(function (cid) {
-    const c    = cases[cid];
+    const c = cases[cid];
     const isSel = State.selectedCase === cid;
     return `<button type="button" class="case-card ${isSel ? 'is-selected' : ''}" data-caseid="${esc(cid)}">
       <span class="case-card__icon">${c.icon}</span>
@@ -1032,11 +1032,11 @@ function renderCaseStudy(container) {
           <div class="field-group">
             <label for="pksel-${eidx}">Kandidat Primary Key</label>
             ${ent.attrs.length > 0
-              ? `<select id="pksel-${eidx}" class="input-select" data-eidx="${eidx}" data-field="pk">
+          ? `<select id="pksel-${eidx}" class="input-select" data-eidx="${eidx}" data-field="pk">
                   <option value="">— Pilih salah satu atribut —</option>
                   ${pkOptions}
                 </select>`
-              : '<p style="font-size:0.85rem;color:var(--color-ink-muted);margin:0;">Tambahkan atribut terlebih dahulu.</p>'}
+          : '<p style="font-size:0.85rem;color:var(--color-ink-muted);margin:0;">Tambahkan atribut terlebih dahulu.</p>'}
           </div>
           <div class="field-group" style="margin-bottom:0;">
             <label for="preason-${eidx}">Alasan Pemilihan PK</label>
@@ -1106,8 +1106,8 @@ function renderCaseStudy(container) {
               Validasi Analisis
             </button>
             ${State.caseChecked && validateCaseEntities().length === 0
-              ? '<button type="button" class="btn btn--primary" id="nextFromCase">Lanjut ke Tabel →</button>'
-              : ''}
+        ? '<button type="button" class="btn btn--primary" id="nextFromCase">Lanjut ke Tabel →</button>'
+        : ''}
           </div>
         </div>
       </div>` : ''}
@@ -1116,9 +1116,9 @@ function renderCaseStudy(container) {
   /* --- Events --- */
   container.querySelectorAll('.case-card').forEach(function (card) {
     card.addEventListener('click', function () {
-      State.selectedCase  = card.dataset.caseid;
-      State.caseEntities  = [];
-      State.caseChecked   = false;
+      State.selectedCase = card.dataset.caseid;
+      State.caseEntities = [];
+      State.caseChecked = false;
       saveState();
       renderCaseStudy(container);
     });
@@ -1158,7 +1158,7 @@ function renderCaseStudy(container) {
     /* Add attribute */
     container.querySelectorAll('[data-add-attr]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        const i   = parseInt(btn.dataset.addAttr, 10);
+        const i = parseInt(btn.dataset.addAttr, 10);
         const inp = document.getElementById('attrInput-' + i);
         addAttrToEntity(i, inp ? inp.value : '', container);
       });
@@ -1255,9 +1255,9 @@ function addAttrToEntity(idx, val, container) {
 }
 
 function validateCaseEntities() {
-  const errs     = [];
-  const selCase  = DATA.casestudies[State.selectedCase];
-  const min      = selCase ? selCase.minEntities : 3;
+  const errs = [];
+  const selCase = DATA.casestudies[State.selectedCase];
+  const min = selCase ? selCase.minEntities : 3;
   const entities = State.caseEntities;
 
   if (entities.length < min) {
@@ -1267,9 +1267,9 @@ function validateCaseEntities() {
   entities.forEach(function (ent, i) {
     const label = ent.name || 'Entitas ' + (i + 1);
     if (!ent.name.trim()) errs.push('Entitas ' + (i + 1) + ': nama entitas tidak boleh kosong.');
-    if (ent.attrs.length < 2)   errs.push(label + ': tambahkan minimal 2 atribut.');
-    if (!ent.pk.trim())          errs.push(label + ': pilih kandidat primary key.');
-    if (!ent.reason.trim())      errs.push(label + ': isi alasan pemilihan PK.');
+    if (ent.attrs.length < 2) errs.push(label + ': tambahkan minimal 2 atribut.');
+    if (!ent.pk.trim()) errs.push(label + ': pilih kandidat primary key.');
+    if (!ent.reason.trim()) errs.push(label + ': isi alasan pemilihan PK.');
   });
   return errs;
 }
@@ -1279,7 +1279,7 @@ function validateCaseEntities() {
    ============================================================ */
 
 function renderTable(container) {
-  const rows    = State.tableRows;
+  const rows = State.tableRows;
   const checked = State.tableChecked;
 
   const rowsHTML = rows.map(function (row) {
@@ -1311,7 +1311,7 @@ function renderTable(container) {
   }
 
   const canValidate = rows.length >= 3;
-  const canProceed  = checked && validateTableRows().length === 0;
+  const canProceed = checked && validateTableRows().length === 0;
 
   container.innerHTML = `
     <section aria-label="Tabel Pemetaan Entitas">
@@ -1366,8 +1366,8 @@ function renderTable(container) {
   container.querySelectorAll('.cell-input').forEach(function (inp) {
     inp.addEventListener('input', function () {
       const rowId = parseInt(inp.dataset.rowid, 10);
-      const col   = inp.dataset.col;
-      const row   = State.tableRows.find(function (r) { return r.id === rowId; });
+      const col = inp.dataset.col;
+      const row = State.tableRows.find(function (r) { return r.id === rowId; });
       if (row) row[col] = inp.value;
       State.tableChecked = false;
       saveState();
@@ -1394,8 +1394,8 @@ function renderTable(container) {
 
   document.getElementById('resetTableBtn').addEventListener('click', function () {
     if (!confirmAction('Reset seluruh tabel? Semua isian akan dihapus.')) return;
-    State.tableRows    = [];
-    State.tableNextId  = 1;
+    State.tableRows = [];
+    State.tableNextId = 1;
     State.tableChecked = false;
     saveState();
     renderTable(container);
@@ -1420,10 +1420,10 @@ function validateTableRows() {
   const errs = [];
   State.tableRows.forEach(function (row, i) {
     const label = row.entity.trim() || 'Baris ' + (i + 1);
-    if (!row.entity.trim())     errs.push(label + ': nama entitas kosong.');
+    if (!row.entity.trim()) errs.push(label + ': nama entitas kosong.');
     if (!row.attributes.trim()) errs.push(label + ': kolom atribut kosong.');
-    if (!row.pk.trim())         errs.push(label + ': kandidat PK kosong.');
-    if (!row.reason.trim())     errs.push(label + ': alasan pemilihan PK kosong.');
+    if (!row.pk.trim()) errs.push(label + ': kandidat PK kosong.');
+    if (!row.reason.trim()) errs.push(label + ': alasan pemilihan PK kosong.');
   });
   return errs;
 }
@@ -1433,8 +1433,8 @@ function validateTableRows() {
    ============================================================ */
 
 function renderPeerReview(container) {
-  const pr         = DATA.peerReview;
-  const checked    = State.peerChecked;
+  const pr = DATA.peerReview;
+  const checked = State.peerChecked;
   const totalItems = pr.items.length;
   const checkedCnt = Object.values(checked).filter(Boolean).length;
 
@@ -1478,8 +1478,8 @@ function renderPeerReview(container) {
 
         <div class="btn-group btn-group--end" style="margin-top:var(--space-3);">
           ${canProceed
-            ? '<button type="button" class="btn btn--primary" id="nextFromPR">Lanjut ke Hasil →</button>'
-            : `<button type="button" class="btn btn--ghost" disabled>Centang minimal ${Math.ceil(totalItems * 0.6)} kriteria untuk lanjut</button>`}
+      ? '<button type="button" class="btn btn--primary" id="nextFromPR">Lanjut ke Hasil →</button>'
+      : `<button type="button" class="btn btn--ghost" disabled>Centang minimal ${Math.ceil(totalItems * 0.6)} kriteria untuk lanjut</button>`}
         </div>
       </div>
     </section>`;
@@ -1508,15 +1508,15 @@ function renderPeerReview(container) {
 function renderResults(container) {
   completeStage('results');
 
-  const sc      = State.score;
-  const prDone  = Object.values(State.peerChecked).filter(Boolean).length;
+  const sc = State.score;
+  const prDone = Object.values(State.peerChecked).filter(Boolean).length;
   const refDone = Object.values(State.reflections).filter(function (v) { return v && v.trim().length > 10; }).length;
   const entCount = State.caseEntities.length;
-  const tblRows  = State.tableRows.length;
+  const tblRows = State.tableRows.length;
 
   const classifPct = sc.classifTotal ? Math.round((sc.classifCorrect / sc.classifTotal) * 100) : 0;
   const mappingPct = sc.mappingTotal ? Math.round((sc.mappingCorrect / sc.mappingTotal) * 100) : 0;
-  const pkPct      = sc.pkTotal      ? Math.round((sc.pkCorrect      / sc.pkTotal)      * 100) : 0;
+  const pkPct = sc.pkTotal ? Math.round((sc.pkCorrect / sc.pkTotal) * 100) : 0;
 
   function card(label, score, detail, variant) {
     return `<div class="result-card ${variant || ''}">

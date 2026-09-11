@@ -47,18 +47,18 @@ const STORAGE_KEY = 'mpi-1-3-v1';
    ============================================================ */
 
 const State = {
-  currentStage:    'orientasi',
+  currentStage: 'orientasi',
   completedStages: {},
 
   /* Stage: contoh (sub-steps: 1=kardinalitas, 2=fk, 3=hasil) */
   contoh: {
-    step:              1,
-    cardinality:       null,
-    fkChoice:          null,
-    cardinalityDone:   false,
-    fkDone:            false,
+    step: 1,
+    cardinality: null,
+    fkChoice: null,
+    cardinalityDone: false,
+    fkDone: false,
     cardinalityCorrect: false,
-    fkCorrect:         false
+    fkCorrect: false
   },
 
   /* Stage: simulasi (highlighted row index in peminjaman, null=none) */
@@ -71,14 +71,14 @@ const State = {
                           cardinalityDone, fkDone, attempts, done }] */
     cases: DATA.cases.map(function () {
       return {
-        cardinality:        null,
-        fkChoice:           null,
+        cardinality: null,
+        fkChoice: null,
         cardinalityCorrect: false,
-        fkCorrect:          false,
-        cardinalityDone:    false,
-        fkDone:             false,
-        attempts:           0,
-        done:               false
+        fkCorrect: false,
+        cardinalityDone: false,
+        fkDone: false,
+        attempts: 0,
+        done: false
       };
     })
   },
@@ -88,14 +88,14 @@ const State = {
     currentQIdx: 0,
     questions: DATA.assessment.map(function () {
       return {
-        cardinality:        null,
-        fkChoice:           null,
+        cardinality: null,
+        fkChoice: null,
         cardinalityCorrect: false,
-        fkCorrect:          false,
-        cardinalityDone:    false,
-        fkDone:             false,
-        attempts:           0,
-        done:               false
+        fkCorrect: false,
+        cardinalityDone: false,
+        fkDone: false,
+        attempts: 0,
+        done: false
       };
     })
   },
@@ -116,9 +116,9 @@ function loadState() {
     if (!raw) return false;
     const saved = JSON.parse(raw);
     /* Deep merge to preserve structure from new DATA additions */
-    if (saved.currentStage)    State.currentStage    = saved.currentStage;
+    if (saved.currentStage) State.currentStage = saved.currentStage;
     if (saved.completedStages) State.completedStages = saved.completedStages;
-    if (saved.contoh)          Object.assign(State.contoh,  saved.contoh);
+    if (saved.contoh) Object.assign(State.contoh, saved.contoh);
     if (saved.simHighlight !== undefined) State.simHighlight = saved.simHighlight;
     if (saved.latihan) {
       State.latihan.currentCaseIdx = saved.latihan.currentCaseIdx || 0;
@@ -143,20 +143,20 @@ function loadState() {
 
 function clearState() {
   try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ }
-  State.currentStage    = 'orientasi';
+  State.currentStage = 'orientasi';
   State.completedStages = {};
-  State.contoh          = { step:1, cardinality:null, fkChoice:null, cardinalityDone:false, fkDone:false, cardinalityCorrect:false, fkCorrect:false };
-  State.simHighlight    = null;
-  State.latihan         = {
+  State.contoh = { step: 1, cardinality: null, fkChoice: null, cardinalityDone: false, fkDone: false, cardinalityCorrect: false, fkCorrect: false };
+  State.simHighlight = null;
+  State.latihan = {
     currentCaseIdx: 0,
     cases: DATA.cases.map(function () {
-      return { cardinality:null, fkChoice:null, cardinalityCorrect:false, fkCorrect:false, cardinalityDone:false, fkDone:false, attempts:0, done:false };
+      return { cardinality: null, fkChoice: null, cardinalityCorrect: false, fkCorrect: false, cardinalityDone: false, fkDone: false, attempts: 0, done: false };
     })
   };
   State.asesmen = {
     currentQIdx: 0,
     questions: DATA.assessment.map(function () {
-      return { cardinality:null, fkChoice:null, cardinalityCorrect:false, fkCorrect:false, cardinalityDone:false, fkDone:false, attempts:0, done:false };
+      return { cardinality: null, fkChoice: null, cardinalityCorrect: false, fkCorrect: false, cardinalityDone: false, fkDone: false, attempts: 0, done: false };
     })
   };
   State.refleksiText = '';
@@ -167,7 +167,7 @@ function clearState() {
    ============================================================ */
 
 function navigateTo(stageId) {
-  const targetIdx  = STAGES.indexOf(stageId);
+  const targetIdx = STAGES.indexOf(stageId);
   const currentIdx = STAGES.indexOf(State.currentStage);
   if (targetIdx === -1) return;
 
@@ -195,7 +195,7 @@ function completeStage(stageId) {
 }
 
 function updateStageNav() {
-  const items      = document.querySelectorAll('.stage-nav__item');
+  const items = document.querySelectorAll('.stage-nav__item');
   const currentIdx = STAGES.indexOf(State.currentStage);
   items.forEach(function (item) {
     const sid = item.dataset.stage;
@@ -216,13 +216,13 @@ function updateStageNav() {
 }
 
 function updateProgress() {
-  const total   = STAGES.length;
-  const done    = Object.keys(State.completedStages).length;
-  const pct     = Math.round((done / total) * 100);
+  const total = STAGES.length;
+  const done = Object.keys(State.completedStages).length;
+  const pct = Math.round((done / total) * 100);
   const barFill = document.getElementById('progressFill');
-  const label   = document.getElementById('progressLabel');
+  const label = document.getElementById('progressLabel');
   if (barFill) barFill.style.width = pct + '%';
-  if (label)   label.textContent   = done + ' dari ' + total + ' tahap selesai';
+  if (label) label.textContent = done + ' dari ' + total + ' tahap selesai';
 }
 
 function buildStageNav() {
@@ -247,16 +247,16 @@ function renderCurrentStage() {
   updateProgress();
 
   switch (State.currentStage) {
-    case 'orientasi':  renderOrientasi(container);  break;
+    case 'orientasi': renderOrientasi(container); break;
     case 'eksplorasi': renderEksplorasi(container); break;
-    case 'contoh':     renderContoh(container);     break;
-    case 'simulasi':   renderSimulasi(container);   break;
-    case 'latihan':    renderLatihan(container);    break;
-    case 'asesmen':    renderAsesmen(container);    break;
-    case 'review':     renderReview(container);     break;
-    case 'refleksi':   renderRefleksi(container);   break;
-    case 'hasil':      renderHasil(container);      break;
-    default:           container.innerHTML = '<p class="panel">Tahap tidak ditemukan.</p>';
+    case 'contoh': renderContoh(container); break;
+    case 'simulasi': renderSimulasi(container); break;
+    case 'latihan': renderLatihan(container); break;
+    case 'asesmen': renderAsesmen(container); break;
+    case 'review': renderReview(container); break;
+    case 'refleksi': renderRefleksi(container); break;
+    case 'hasil': renderHasil(container); break;
+    default: container.innerHTML = '<p class="panel">Tahap tidak ditemukan.</p>';
   }
 }
 
@@ -294,8 +294,8 @@ function renderOrientasi(container) {
           <h3 style="margin-bottom:var(--space-3);">Alur pembelajaran</h3>
           <div class="flow-steps">
             ${['Entitas', 'Relationship', 'Kardinalitas', 'Foreign Key', 'Hubungan PK–FK', 'Uji dengan Data'].map(function (step, i) {
-              return `<div class="flow-step"><span class="flow-step__num">${i + 1}</span><span>${esc(step)}</span></div>`;
-            }).join('<div style="padding-left:14px;color:var(--color-ink-muted);font-size:1.1rem;">↓</div>')}
+    return `<div class="flow-step"><span class="flow-step__num">${i + 1}</span><span>${esc(step)}</span></div>`;
+  }).join('<div style="padding-left:14px;color:var(--color-ink-muted);font-size:1.1rem;">↓</div>')}
           </div>
         </div>
       </div>
@@ -458,8 +458,8 @@ function renderContohStep1(ex, cs) {
       feedbackHtml = buildFeedbackBox('success', '✓ Tepat!', ex.cardinalityFeedback.correct);
     } else {
       const wrongKey = cs.cardinality;
-      const msg      = ex.cardinalityFeedback.wrong[wrongKey] || 'Jawaban kurang tepat. Coba lagi.';
-      feedbackHtml   = buildFeedbackBox('error', '✗ Kurang tepat', msg);
+      const msg = ex.cardinalityFeedback.wrong[wrongKey] || 'Jawaban kurang tepat. Coba lagi.';
+      feedbackHtml = buildFeedbackBox('error', '✗ Kurang tepat', msg);
     }
   }
 
@@ -495,26 +495,26 @@ function renderContohStep1(ex, cs) {
         <p style="font-weight:600;margin-bottom:var(--space-2);">Pilih kardinalitas yang tepat:</p>
         <div class="cardinality-selector" role="radiogroup" aria-label="Pilihan kardinalitas" id="contohCardinalityGroup">
           ${DATA.cardinalityTypes.map(function (ct) {
-            const checked  = cs.cardinality === ct.id ? 'checked' : '';
-            const isChosen = cs.cardinalityDone && cs.cardinality === ct.id;
-            const optCls   = isChosen ? (cs.cardinalityCorrect ? 'is-correct' : 'is-incorrect') : '';
-            return `<div class="cardinality-option ${optCls}">
+    const checked = cs.cardinality === ct.id ? 'checked' : '';
+    const isChosen = cs.cardinalityDone && cs.cardinality === ct.id;
+    const optCls = isChosen ? (cs.cardinalityCorrect ? 'is-correct' : 'is-incorrect') : '';
+    return `<div class="cardinality-option ${optCls}">
               <input type="radio" name="contohCardinality" id="cc_${ct.id}" value="${ct.id}" ${checked} ${cs.cardinalityDone && cs.cardinalityCorrect ? 'disabled' : ''}>
               <label class="cardinality-option__label" for="cc_${ct.id}">
                 <span class="cardinality-option__val">${esc(ct.label)}</span>
                 <span class="cardinality-option__name">${esc(ct.name)}</span>
               </label>
             </div>`;
-          }).join('')}
+  }).join('')}
         </div>
         ${feedbackHtml}
       </div>
 
       <div class="btn-group">
         ${!cs.cardinalityDone || !cs.cardinalityCorrect
-          ? `<button type="button" class="btn btn--primary" data-action="checkContohCardinality">Periksa Jawaban</button>`
-          : `<button type="button" class="btn btn--primary" data-action="contohNextStep">Lanjut ke Langkah 2 →</button>`
-        }
+      ? `<button type="button" class="btn btn--primary" data-action="checkContohCardinality">Periksa Jawaban</button>`
+      : `<button type="button" class="btn btn--primary" data-action="contohNextStep">Lanjut ke Langkah 2 →</button>`
+    }
       </div>
     </div>`;
 }
@@ -562,26 +562,26 @@ function renderContohStep2(ex, cs) {
         <p style="font-weight:600;margin-bottom:var(--space-2);">Pilih cara merepresentasikan foreign key untuk relasi N:M ini:</p>
         <div class="fk-options" role="radiogroup" aria-label="Pilihan lokasi FK" id="contohFKGroup">
           ${ex.fkOptions.map(function (opt) {
-            const checked  = cs.fkChoice === opt.id ? 'checked' : '';
-            const isChosen = cs.fkDone && cs.fkChoice === opt.id;
-            const optCls   = isChosen ? (cs.fkCorrect ? 'is-correct' : 'is-incorrect') : '';
-            return `<div class="fk-option ${optCls}">
+    const checked = cs.fkChoice === opt.id ? 'checked' : '';
+    const isChosen = cs.fkDone && cs.fkChoice === opt.id;
+    const optCls = isChosen ? (cs.fkCorrect ? 'is-correct' : 'is-incorrect') : '';
+    return `<div class="fk-option ${optCls}">
               <input type="radio" name="contohFK" id="cfk_${opt.id}" value="${opt.id}" ${checked} ${cs.fkDone && cs.fkCorrect ? 'disabled' : ''}>
               <label class="fk-option__label" for="cfk_${opt.id}">
                 <span class="fk-option__title">${esc(opt.label)}</span>
                 <span class="fk-option__desc">${esc(opt.desc)}</span>
               </label>
             </div>`;
-          }).join('')}
+  }).join('')}
         </div>
         ${feedbackHtml}
       </div>
 
       <div class="btn-group">
         ${!cs.fkDone || !cs.fkCorrect
-          ? `<button type="button" class="btn btn--primary" data-action="checkContohFK">Periksa Jawaban</button>`
-          : `<button type="button" class="btn btn--primary" data-action="contohNextStep">Lihat Hasil →</button>`
-        }
+      ? `<button type="button" class="btn btn--primary" data-action="checkContohFK">Periksa Jawaban</button>`
+      : `<button type="button" class="btn btn--primary" data-action="contohNextStep">Lihat Hasil →</button>`
+    }
       </div>
     </div>`;
 }
@@ -626,12 +626,12 @@ function renderContohStep3(ex, cs) {
    ============================================================ */
 
 function renderSimulasi(container) {
-  const sim   = DATA.simulation;
-  const hl    = State.simHighlight;
+  const sim = DATA.simulation;
+  const hl = State.simHighlight;
 
-  const hlRow     = hl !== null ? sim.peminjaman[hl] : null;
+  const hlRow = hl !== null ? sim.peminjaman[hl] : null;
   const hlAnggota = hlRow ? hlRow.nomor_anggota : null;
-  const hlBuku    = hlRow ? hlRow.kode_buku     : null;
+  const hlBuku = hlRow ? hlRow.kode_buku : null;
 
   function buildAnggotaTable() {
     const rows = sim.anggota.map(function (row) {
@@ -761,13 +761,13 @@ function renderSimulasi(container) {
    ============================================================ */
 
 function renderLatihan(container) {
-  const idx     = State.latihan.currentCaseIdx;
+  const idx = State.latihan.currentCaseIdx;
   const caseData = DATA.cases[idx];
   const caseState = State.latihan.cases[idx];
-  const allDone  = State.latihan.cases.every(function (c) { return c.done; });
+  const allDone = State.latihan.cases.every(function (c) { return c.done; });
 
   const tabs = DATA.cases.map(function (c, i) {
-    const isDone   = State.latihan.cases[i].done;
+    const isDone = State.latihan.cases[i].done;
     const isActive = i === idx;
     return `<button type="button" class="case-tab ${isActive ? 'is-active' : ''} ${isDone ? 'is-done' : ''}"
       data-action="latihanTab" data-idx="${i}">
@@ -803,13 +803,13 @@ function renderLatihan(container) {
    ============================================================ */
 
 function renderAsesmen(container) {
-  const idx      = State.asesmen.currentQIdx;
-  const qData    = DATA.assessment[idx];
-  const qState   = State.asesmen.questions[idx];
-  const allDone  = State.asesmen.questions.every(function (q) { return q.done; });
+  const idx = State.asesmen.currentQIdx;
+  const qData = DATA.assessment[idx];
+  const qState = State.asesmen.questions[idx];
+  const allDone = State.asesmen.questions.every(function (q) { return q.done; });
 
   const tabs = DATA.assessment.map(function (q, i) {
-    const isDone   = State.asesmen.questions[i].done;
+    const isDone = State.asesmen.questions[i].done;
     const isActive = i === idx;
     return `<button type="button" class="case-tab ${isActive ? 'is-active' : ''} ${isDone ? 'is-done' : ''}"
       data-action="asesmenTab" data-idx="${i}">
@@ -1000,11 +1000,11 @@ function renderHasil(container) {
   });
 
   const latihanCardOk = latihanResults.filter(function (r) { return r.cardinalityCorrect; }).length;
-  const latihanFKOk   = latihanResults.filter(function (r) { return r.fkCorrect; }).length;
+  const latihanFKOk = latihanResults.filter(function (r) { return r.fkCorrect; }).length;
   const asesmenCardOk = asesmenResults.filter(function (r) { return r.cardinalityCorrect; }).length;
-  const asesmenFKOk   = asesmenResults.filter(function (r) { return r.fkCorrect; }).length;
+  const asesmenFKOk = asesmenResults.filter(function (r) { return r.fkCorrect; }).length;
   const totalAsesmenOk = asesmenResults.filter(function (r) { return r.cardinalityCorrect && r.fkCorrect; }).length;
-  const totalAsesmenQ  = DATA.assessment.length;
+  const totalAsesmenQ = DATA.assessment.length;
 
   const pct = Math.round((totalAsesmenOk / totalAsesmenQ) * 100);
 
@@ -1098,7 +1098,7 @@ function buildEntityCard(entity, extraAttrs) {
 
   const attrList = entity.attrs.map(function (a) {
     const extra = extras.find(function (e) { return e.attr === a; });
-    const isFk  = extra && extra.isFk;
+    const isFk = extra && extra.isFk;
     return `<li class="entity-card__attr-item ${isFk ? 'entity-card__attr-item--fk' : ''}">
       ${isFk ? '<span class="attr-badge attr-badge--fk">FK</span>' : ''}
       <span>${esc(a)}</span>
@@ -1184,17 +1184,17 @@ function buildBridgeDiagram(entityA, bridge, entityB) {
 function buildCardinalitySelector(groupName, selectedValue, disabled, prefix) {
   return `<div class="cardinality-selector" role="radiogroup" aria-label="Pilihan kardinalitas">
     ${DATA.cardinalityTypes.map(function (ct) {
-      const id       = prefix + '_' + ct.id;
-      const checked  = selectedValue === ct.id ? 'checked' : '';
-      const dis      = disabled ? 'disabled' : '';
-      return `<div class="cardinality-option">
+    const id = prefix + '_' + ct.id;
+    const checked = selectedValue === ct.id ? 'checked' : '';
+    const dis = disabled ? 'disabled' : '';
+    return `<div class="cardinality-option">
         <input type="radio" name="${groupName}" id="${id}" value="${ct.id}" ${checked} ${dis}>
         <label class="cardinality-option__label" for="${id}">
           <span class="cardinality-option__val">${esc(ct.label)}</span>
           <span class="cardinality-option__name">${esc(ct.name)}</span>
         </label>
       </div>`;
-    }).join('')}
+  }).join('')}
   </div>`;
 }
 
@@ -1207,17 +1207,17 @@ function buildFKOptions(entities, groupName, selectedValue, disabled, prefix, in
   }
   return `<div class="fk-options" role="radiogroup" aria-label="Pilihan lokasi FK">
     ${options.map(function (opt) {
-      const id      = prefix + '_fk_' + opt.id;
-      const checked = selectedValue === opt.id ? 'checked' : '';
-      const dis     = disabled ? 'disabled' : '';
-      return `<div class="fk-option">
+    const id = prefix + '_fk_' + opt.id;
+    const checked = selectedValue === opt.id ? 'checked' : '';
+    const dis = disabled ? 'disabled' : '';
+    return `<div class="fk-option">
         <input type="radio" name="${groupName}" id="${id}" value="${opt.id}" ${checked} ${dis}>
         <label class="fk-option__label" for="${id}">
           <span class="fk-option__title">${esc(opt.title)}</span>
           <span class="fk-option__desc">${esc(opt.desc)}</span>
         </label>
       </div>`;
-    }).join('')}
+  }).join('')}
   </div>`;
 }
 
@@ -1234,17 +1234,17 @@ function buildCaseExercise(caseData, caseState, mode, idx) {
        </div>`
     : '';
 
-  const prefix      = mode + '_' + idx;
-  const isNM        = caseData.correctCardinality === 'N-M';
-  const groupCard   = prefix + '_card';
-  const groupFK     = prefix + '_fk';
+  const prefix = mode + '_' + idx;
+  const isNM = caseData.correctCardinality === 'N-M';
+  const groupCard = prefix + '_card';
+  const groupFK = prefix + '_fk';
 
   /* Entity cards */
   const entityACard = buildEntityCard(caseData.entities[0]);
   const entityBCard = buildEntityCard(caseData.entities[1]);
 
   /* Step 1: Cardinality */
-  const cardDone    = caseState.cardinalityDone;
+  const cardDone = caseState.cardinalityDone;
   const cardCorrect = caseState.cardinalityCorrect;
 
   let cardFeedback = '';
@@ -1263,7 +1263,7 @@ function buildCaseExercise(caseData, caseState, mode, idx) {
   /* Step 2: FK Placement (only shown after cardinality is correct) */
   let fkSection = '';
   if (cardCorrect) {
-    const fkDone    = caseState.fkDone;
+    const fkDone = caseState.fkDone;
     const fkCorrect = caseState.fkCorrect;
 
     let fkFeedback = '';
@@ -1332,13 +1332,13 @@ function buildCaseExercise(caseData, caseState, mode, idx) {
         ${fkResultCard}
         <div class="btn-group">
           ${!fkDone || !fkCorrect
-            ? `<button type="button" class="btn btn--primary" data-action="checkFK" data-mode="${mode}" data-idx="${idx}">Periksa FK</button>`
-            : `<span class="feedback-box feedback-box--success" style="margin-top:0;display:inline-flex;">✓ Kasus selesai!</span>`
-          }
+        ? `<button type="button" class="btn btn--primary" data-action="checkFK" data-mode="${mode}" data-idx="${idx}">Periksa FK</button>`
+        : `<span class="feedback-box feedback-box--success" style="margin-top:0;display:inline-flex;">✓ Kasus selesai!</span>`
+      }
           ${fkDone && !fkCorrect
-            ? `<button type="button" class="btn btn--ghost" data-action="retryFK" data-mode="${mode}" data-idx="${idx}">Coba Lagi</button>`
-            : ''
-          }
+        ? `<button type="button" class="btn btn--ghost" data-action="retryFK" data-mode="${mode}" data-idx="${idx}">Coba Lagi</button>`
+        : ''
+      }
         </div>
       </div>`;
   }
@@ -1363,13 +1363,13 @@ function buildCaseExercise(caseData, caseState, mode, idx) {
     ${cardFeedback}
     <div class="btn-group">
       ${!cardDone || !cardCorrect
-        ? `<button type="button" class="btn btn--primary" data-action="checkCardinality" data-mode="${mode}" data-idx="${idx}">Periksa Kardinalitas</button>`
-        : ''
-      }
+      ? `<button type="button" class="btn btn--primary" data-action="checkCardinality" data-mode="${mode}" data-idx="${idx}">Periksa Kardinalitas</button>`
+      : ''
+    }
       ${cardDone && !cardCorrect
-        ? `<button type="button" class="btn btn--ghost" data-action="retryCardinality" data-mode="${mode}" data-idx="${idx}">Coba Lagi</button>`
-        : ''
-      }
+      ? `<button type="button" class="btn btn--ghost" data-action="retryCardinality" data-mode="${mode}" data-idx="${idx}">Coba Lagi</button>`
+      : ''
+    }
     </div>
     ${fkSection}
   </div>`;
@@ -1495,7 +1495,7 @@ function handleAction(actionName, el) {
         showNotice('Pilih kardinalitas terlebih dahulu.');
         return;
       }
-      State.contoh.cardinality    = selected.value;
+      State.contoh.cardinality = selected.value;
       State.contoh.cardinalityDone = true;
       State.contoh.cardinalityCorrect = selected.value === DATA.guidedExample.correctCardinality;
       State.contoh.attempts = (State.contoh.attempts || 0) + 1;
@@ -1517,8 +1517,8 @@ function handleAction(actionName, el) {
         showNotice('Pilih opsi lokasi FK terlebih dahulu.');
         return;
       }
-      State.contoh.fkChoice  = selected.value;
-      State.contoh.fkDone    = true;
+      State.contoh.fkChoice = selected.value;
+      State.contoh.fkDone = true;
       State.contoh.fkCorrect = selected.value === DATA.guidedExample.correctFKPlacement;
       saveState();
       renderCurrentStage();
@@ -1527,18 +1527,18 @@ function handleAction(actionName, el) {
 
     case 'checkCardinality': {
       const mode = el.dataset.mode;
-      const idx  = parseInt(el.dataset.idx, 10);
+      const idx = parseInt(el.dataset.idx, 10);
       const caseData = mode === 'latihan' ? DATA.cases[idx] : DATA.assessment[idx];
       const caseState = mode === 'latihan' ? State.latihan.cases[idx] : State.asesmen.questions[idx];
 
       const groupName = mode + '_' + idx + '_card';
-      const selected  = document.querySelector('input[name="' + groupName + '"]:checked');
+      const selected = document.querySelector('input[name="' + groupName + '"]:checked');
       if (!selected) {
         showNotice('Pilih kardinalitas terlebih dahulu.');
         return;
       }
-      caseState.cardinality        = selected.value;
-      caseState.cardinalityDone    = true;
+      caseState.cardinality = selected.value;
+      caseState.cardinalityDone = true;
       caseState.cardinalityCorrect = selected.value === caseData.correctCardinality;
       caseState.attempts = (caseState.attempts || 0) + 1;
       saveState();
@@ -1548,10 +1548,10 @@ function handleAction(actionName, el) {
 
     case 'retryCardinality': {
       const mode = el.dataset.mode;
-      const idx  = parseInt(el.dataset.idx, 10);
+      const idx = parseInt(el.dataset.idx, 10);
       const caseState = mode === 'latihan' ? State.latihan.cases[idx] : State.asesmen.questions[idx];
       caseState.cardinalityDone = false;
-      caseState.cardinality     = null;
+      caseState.cardinality = null;
       saveState();
       renderCurrentStage();
       break;
@@ -1559,18 +1559,18 @@ function handleAction(actionName, el) {
 
     case 'checkFK': {
       const mode = el.dataset.mode;
-      const idx  = parseInt(el.dataset.idx, 10);
-      const caseData  = mode === 'latihan' ? DATA.cases[idx] : DATA.assessment[idx];
+      const idx = parseInt(el.dataset.idx, 10);
+      const caseData = mode === 'latihan' ? DATA.cases[idx] : DATA.assessment[idx];
       const caseState = mode === 'latihan' ? State.latihan.cases[idx] : State.asesmen.questions[idx];
 
       const groupName = mode + '_' + idx + '_fk';
-      const selected  = document.querySelector('input[name="' + groupName + '"]:checked');
+      const selected = document.querySelector('input[name="' + groupName + '"]:checked');
       if (!selected) {
         showNotice('Pilih opsi FK terlebih dahulu.');
         return;
       }
       caseState.fkChoice = selected.value;
-      caseState.fkDone   = true;
+      caseState.fkDone = true;
 
       let correct = false;
       if (caseData.acceptBothFKEntities && caseData.entities.some(function (e) { return e.id === selected.value; })) {
@@ -1609,9 +1609,9 @@ function handleAction(actionName, el) {
 
     case 'retryFK': {
       const mode = el.dataset.mode;
-      const idx  = parseInt(el.dataset.idx, 10);
+      const idx = parseInt(el.dataset.idx, 10);
       const caseState = mode === 'latihan' ? State.latihan.cases[idx] : State.asesmen.questions[idx];
-      caseState.fkDone  = false;
+      caseState.fkDone = false;
       caseState.fkChoice = null;
       saveState();
       renderCurrentStage();
@@ -1639,11 +1639,11 @@ function handleAction(actionName, el) {
       const text = ta ? ta.value.trim() : '';
       if (!text) {
         if (err) err.textContent = 'Tulis jawaban refleksimu sebelum melanjutkan.';
-        if (ta)  ta.classList.add('has-error');
+        if (ta) ta.classList.add('has-error');
         return;
       }
       if (err) err.textContent = '';
-      if (ta)  ta.classList.remove('has-error');
+      if (ta) ta.classList.remove('has-error');
       State.refleksiText = text;
       completeStage('refleksi');
       navigateTo('hasil');
