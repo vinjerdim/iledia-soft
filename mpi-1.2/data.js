@@ -1,404 +1,534 @@
 'use strict';
 
-/* ============================================================
-   data.js — Konten pembelajaran
-   Semua narasi, kandidat, feedback, dan data simulasi ada di sini.
-   Pisahkan dari app.js agar mudah dikustomisasi guru.
-   ============================================================ */
-
 const DATA = {
-
   meta: {
-    title: 'Entitas, Atribut & Primary Key',
+    title: 'Analisis Entitas & Atribut Utama',
     subject: 'Rekayasa Perangkat Lunak — Fase F',
-    goal: 'Menganalisis Entitas, Atribut, dan Primary Key Kebutuhan Sistem'
+    goal: 'Menganalisis dokumen spesifikasi sistem untuk menentukan calon entitas dan atribut utama.'
   },
 
-  /* ----------------------------------------------------------
-     TAHAP 2 — Narasi SRS & Klasifikasi
-     ---------------------------------------------------------- */
-  srs: {
-    title: 'Narasi Spesifikasi Kebutuhan Sistem — Perpustakaan Sekolah',
-    instruction: 'Baca narasi berikut. Kata/frasa yang dicetak tebal dan bergaris bawah adalah kandidat yang perlu kamu klasifikasikan di bawah.',
-    /* Gunakan {ID|teks tampil} sebagai penanda kandidat */
-    paragraphs: [
-      'Sistem informasi {anggota|anggota perpustakaan} digunakan untuk mengelola data keanggotaan dan proses peminjaman buku.',
-      'Setiap {anggota|anggota perpustakaan} memiliki {nomor_anggota|nomor anggota}, {nama_anggota|nama anggota}, {kelas|kelas}, dan {tanggal_bergabung|tanggal bergabung}.',
-      'Anggota dapat meminjam {buku|buku} yang tersedia. Setiap {buku|buku} memiliki {kode_buku|kode buku}, {judul_buku|judul buku}, {pengarang|nama pengarang}, {penerbit|penerbit}, dan {tahun_terbit|tahun terbit}.',
-      'Ketika anggota meminjam buku, sistem mencatat {peminjaman|transaksi peminjaman} yang memiliki {nomor_peminjaman|nomor peminjaman}, {tanggal_pinjam|tanggal pinjam}, dan {tanggal_kembali|tanggal harus kembali}.',
-      'Petugas perpustakaan bertanggung jawab mencatat pengembalian dan memperbarui status buku.'
-    ],
-    candidates: [
-      {
-        id: 'anggota', label: 'anggota perpustakaan', correct: 'entitas',
-        feedback: {
-          entitas: 'Tepat! "Anggota perpustakaan" adalah objek utama yang perlu dikelola datanya secara terstruktur. Karena memiliki banyak karakteristik sendiri (nomor, nama, kelas, dll.), ini layak disebut <strong>entitas</strong>.',
-          atribut: 'Kurang tepat. "Anggota perpustakaan" bukan sekadar karakteristik dari objek lain — justru objek inilah yang <em>memiliki</em> banyak atribut. Bandingkan: "nama anggota" adalah keterangan <em>tentang</em> anggota (atribut), sedangkan "anggota" sendiri adalah objek yang dideskripsikan (entitas).',
-          bukan: 'Kurang tepat. Sistem perpustakaan perlu menyimpan dan mengelola data setiap anggota. Ini adalah objek utama yang penting dalam sistem.'
-        }
-      },
-      {
-        id: 'nomor_anggota', label: 'nomor anggota', correct: 'atribut',
-        feedback: {
-          entitas: 'Kurang tepat. "Nomor anggota" bukan objek utama — ini adalah karakteristik yang melekat pada Anggota. Pertanyaan panduan: "nomor anggota dari siapa?" → dari Anggota. Itu berarti ia adalah atribut.',
-          atribut: 'Tepat! "Nomor anggota" adalah atribut dari entitas Anggota. Catatan: karena setiap anggota memiliki nomor berbeda dan tidak berubah, ini adalah kandidat primary key yang sangat baik.',
-          bukan: 'Kurang tepat. Nomor anggota adalah informasi penting yang harus dicatat untuk setiap anggota — ia adalah atribut.'
-        }
-      },
-      {
-        id: 'nama_anggota', label: 'nama anggota', correct: 'atribut',
-        feedback: {
-          entitas: 'Kurang tepat. "Nama anggota" adalah keterangan tentang anggota, bukan objek tersendiri.',
-          atribut: 'Tepat! "Nama anggota" adalah atribut dari entitas Anggota. Catatan penting: nama dapat berulang (dua siswa bisa bernama sama), sehingga <strong>kurang tepat dijadikan primary key</strong>.',
-          bukan: 'Kurang tepat. Nama adalah informasi yang wajib dicatat untuk setiap anggota — ia adalah atribut.'
-        }
-      },
-      {
-        id: 'kelas', label: 'kelas', correct: 'atribut',
-        feedback: {
-          entitas: 'Dalam konteks sistem perpustakaan sederhana ini, "kelas" hanyalah informasi tambahan tentang anggota — cukup sebagai atribut. Di sistem yang lebih kompleks (seperti sistem akademik), kelas bisa menjadi entitas tersendiri. Ini menunjukkan bahwa klasifikasi bergantung pada cakupan sistem.',
-          atribut: 'Tepat! Dalam konteks ini, "kelas" adalah atribut dari Anggota. Perhatikan: nilai kelas berubah setiap tahun ajaran, sehingga tidak stabil sebagai primary key.',
-          bukan: 'Kurang tepat. Kelas adalah informasi relevan yang perlu dicatat untuk setiap anggota.'
-        }
-      },
-      {
-        id: 'tanggal_bergabung', label: 'tanggal bergabung', correct: 'atribut',
-        feedback: {
-          entitas: 'Kurang tepat. "Tanggal bergabung" adalah informasi waktu, bukan objek utama.',
-          atribut: 'Tepat! "Tanggal bergabung" adalah atribut dari Anggota yang mencatat kapan anggota mendaftar. Banyak anggota bisa bergabung di tanggal yang sama, sehingga tidak tepat sebagai primary key.',
-          bukan: 'Kurang tepat. Tanggal bergabung adalah informasi yang perlu dicatat untuk setiap anggota.'
-        }
-      },
-      {
-        id: 'buku', label: 'buku', correct: 'entitas',
-        feedback: {
-          entitas: 'Tepat! "Buku" adalah entitas kedua dalam sistem ini. Sistem perlu menyimpan data terstruktur tentang setiap buku yang dimiliki perpustakaan.',
-          atribut: 'Kurang tepat. "Buku" memiliki banyak karakteristik sendiri (kode, judul, pengarang, dll.) — ia adalah objek utama (entitas), bukan keterangan dari objek lain.',
-          bukan: 'Kurang tepat. Buku adalah objek utama yang harus dikelola dalam sistem perpustakaan.'
-        }
-      },
-      {
-        id: 'kode_buku', label: 'kode buku', correct: 'atribut',
-        feedback: {
-          entitas: 'Kurang tepat. "Kode buku" adalah keterangan tentang buku, bukan objek tersendiri.',
-          atribut: 'Tepat! "Kode buku" adalah atribut dari entitas Buku. Karena setiap buku memiliki kode unik yang tidak berubah, ini adalah kandidat primary key yang ideal.',
-          bukan: 'Kurang tepat. Kode buku adalah informasi penting yang harus dicatat untuk setiap buku.'
-        }
-      },
-      {
-        id: 'judul_buku', label: 'judul buku', correct: 'atribut',
-        feedback: {
-          entitas: 'Kurang tepat. "Judul buku" adalah keterangan tentang buku, bukan objek tersendiri.',
-          atribut: 'Tepat! "Judul buku" adalah atribut dari entitas Buku. Catatan: buku berbeda bisa memiliki judul serupa (edisi, terjemahan), sehingga judul kurang tepat sebagai primary key.',
-          bukan: 'Kurang tepat. Judul buku adalah informasi penting yang harus dicatat.'
-        }
-      },
-      {
-        id: 'peminjaman', label: 'transaksi peminjaman', correct: 'entitas',
-        feedback: {
-          entitas: 'Tepat! "Peminjaman" adalah entitas karena merepresentasikan sebuah kejadian (transaksi) yang perlu dicatat. <strong>Entitas tidak harus berupa benda fisik</strong> — transaksi dan kejadian bisnis juga bisa menjadi entitas.',
-          atribut: 'Kurang tepat. "Peminjaman" adalah objek yang mencatat relasi antara anggota dan buku — ia berdiri sendiri sebagai entitas, bukan sekadar keterangan dari objek lain.',
-          bukan: 'Kurang tepat. Setiap transaksi peminjaman perlu dicatat dan dilacak. Ini adalah entitas penting dalam sistem.'
-        }
-      },
-      {
-        id: 'nomor_peminjaman', label: 'nomor peminjaman', correct: 'atribut',
-        feedback: {
-          entitas: 'Kurang tepat. "Nomor peminjaman" adalah keterangan tentang transaksi, bukan objek tersendiri.',
-          atribut: 'Tepat! "Nomor peminjaman" adalah atribut dari entitas Peminjaman. Setiap transaksi memiliki nomor unik, sehingga ini adalah kandidat primary key yang baik.',
-          bukan: 'Kurang tepat. Nomor peminjaman adalah informasi penting yang harus ada dalam setiap transaksi.'
-        }
-      },
-      {
-        id: 'tanggal_pinjam', label: 'tanggal pinjam', correct: 'atribut',
-        feedback: {
-          entitas: 'Kurang tepat. "Tanggal pinjam" adalah informasi waktu, bukan objek tersendiri.',
-          atribut: 'Tepat! "Tanggal pinjam" adalah atribut dari entitas Peminjaman. Banyak transaksi bisa terjadi di tanggal yang sama, sehingga tanggal tidak tepat sebagai primary key.',
-          bukan: 'Kurang tepat. Tanggal pinjam adalah informasi yang wajib dicatat dalam setiap transaksi.'
-        }
-      },
-      {
-        id: 'tanggal_kembali', label: 'tanggal harus kembali', correct: 'atribut',
-        feedback: {
-          entitas: 'Kurang tepat. Tanggal harus kembali adalah informasi waktu, bukan objek tersendiri.',
-          atribut: 'Tepat! "Tanggal harus kembali" adalah atribut dari entitas Peminjaman yang menentukan batas waktu pengembalian buku.',
-          bukan: 'Kurang tepat. Tanggal harus kembali adalah informasi penting dalam setiap transaksi peminjaman.'
-        }
-      }
-    ]
-  },
-
-  /* ----------------------------------------------------------
-     TAHAP 3 — Peta Entitas–Atribut
-     ---------------------------------------------------------- */
-  mapping: {
-    instruction: 'Klik sebuah atribut untuk memilihnya, lalu klik kolom entitas yang sesuai untuk menempatkannya. Klik atribut yang sudah ditempatkan untuk mengembalikannya ke daftar.',
-    entities: [
-      { id: 'anggota', label: 'Anggota', colorKey: 'blue' },
-      { id: 'buku', label: 'Buku', colorKey: 'green' },
-      { id: 'peminjaman', label: 'Peminjaman', colorKey: 'orange' }
-    ],
-    attributes: [
-      { id: 'nomor_anggota', label: 'nomor_anggota', entityId: 'anggota' },
-      { id: 'nama_anggota', label: 'nama_anggota', entityId: 'anggota' },
-      { id: 'kelas', label: 'kelas', entityId: 'anggota' },
-      { id: 'tanggal_bergabung', label: 'tanggal_bergabung', entityId: 'anggota' },
-      { id: 'kode_buku', label: 'kode_buku', entityId: 'buku' },
-      { id: 'judul_buku', label: 'judul_buku', entityId: 'buku' },
-      { id: 'pengarang', label: 'pengarang', entityId: 'buku' },
-      { id: 'penerbit', label: 'penerbit', entityId: 'buku' },
-      { id: 'tahun_terbit', label: 'tahun_terbit', entityId: 'buku' },
-      { id: 'nomor_peminjaman', label: 'nomor_peminjaman', entityId: 'peminjaman' },
-      { id: 'tanggal_pinjam', label: 'tanggal_pinjam', entityId: 'peminjaman' },
-      { id: 'tanggal_kembali', label: 'tanggal_kembali', entityId: 'peminjaman' }
-    ]
-  },
-
-  /* ----------------------------------------------------------
-     TAHAP 4 — Primary Key Challenge
-     ---------------------------------------------------------- */
-  pkChallenges: [
+  activityFlow: [
     {
-      id: 'anggota_pk',
-      entityName: 'Anggota',
-      context: 'Dalam tabel Anggota, setiap baris mewakili satu orang anggota perpustakaan yang terdaftar.',
-      attributes: [
-        { id: 'nomor_anggota', label: 'nomor_anggota', note: 'Nomor unik yang ditetapkan sistem' },
-        { id: 'nama_anggota', label: 'nama_anggota', note: 'Nama lengkap anggota' },
-        { id: 'kelas', label: 'kelas', note: 'Kelas saat ini (misal: XI RPL 1)' },
-        { id: 'tanggal_bergabung', label: 'tanggal_bergabung', note: 'Tanggal mendaftar sebagai anggota' }
-      ],
-      correctPK: 'nomor_anggota',
-      reasoningOptions: [
-        { id: 'ra1', label: 'Nilainya dijamin unik untuk setiap anggota karena ditetapkan oleh sistem.', isGood: true },
-        { id: 'ra2', label: 'Nilainya tidak akan berubah selama anggota masih aktif (stabil).', isGood: true },
-        { id: 'ra3', label: 'Ia adalah kolom pertama dalam tabel sehingga paling penting.', isGood: false },
-        { id: 'ra4', label: 'Nama anggota lebih mudah diingat dan dikenali manusia.', isGood: false }
-      ],
-      feedbackMap: {
-        nomor_anggota: {
-          goodReason: 'Pilihan PK dan alasan kamu sudah tepat! nomor_anggota memenuhi semua kriteria: unik, stabil, tidak null, dan dapat mengidentifikasi satu record secara tepat.',
-          poorReason: 'Pilihan PK kamu tepat (nomor_anggota), tetapi alasannya perlu diperbaiki. Primary key dipilih bukan karena posisinya dalam tabel atau kemudahan mengingat, melainkan karena keunikan dan kestabilan nilainya dalam mengidentifikasi setiap record.'
-        },
-        nama_anggota: 'Nama anggota tidak ideal sebagai primary key. Ada kemungkinan dua anggota memiliki nama yang sama (misal: dua siswa bernama "Budi Santoso"). Primary key harus benar-benar unik — tidak boleh ada dua record dengan nilai PK yang sama.',
-        kelas: 'Kelas tidak bisa menjadi primary key karena satu kelas dimiliki oleh banyak anggota, artinya nilainya pasti berulang. Selain itu, kelas seorang siswa berubah setiap tahun ajaran — ini melanggar syarat kestabilan PK.',
-        tanggal_bergabung: 'Tanggal bergabung tidak ideal sebagai primary key. Banyak anggota bisa mendaftar di tanggal yang sama. Nilai yang berulang berarti tidak memenuhi syarat keunikan. Selain itu, jika ada kesalahan input dan tanggal dikoreksi, mengubah PK bisa merusak relasi data di seluruh sistem.'
-      }
+      title: 'Orientasi',
+      description: 'Murid memahami tujuan pembelajaran, alur aktivitas, dan hasil akhir yang diharapkan.'
     },
     {
-      id: 'buku_pk',
-      entityName: 'Buku',
-      context: 'Dalam tabel Buku, setiap baris mewakili satu judul buku yang tersedia di perpustakaan.',
-      attributes: [
-        { id: 'kode_buku', label: 'kode_buku', note: 'Kode unik yang ditetapkan sistem perpustakaan' },
-        { id: 'judul_buku', label: 'judul_buku', note: 'Judul lengkap buku' },
-        { id: 'pengarang', label: 'pengarang', note: 'Nama penulis atau pengarang buku' },
-        { id: 'tahun_terbit', label: 'tahun_terbit', note: 'Tahun buku pertama diterbitkan' }
-      ],
-      correctPK: 'kode_buku',
-      reasoningOptions: [
-        { id: 'rb1', label: 'Setiap buku memiliki kode yang berbeda — dijamin unik oleh sistem.', isGood: true },
-        { id: 'rb2', label: 'Kode buku tidak berubah meskipun data lain diperbarui (stabil).', isGood: true },
-        { id: 'rb3', label: 'Judul buku sudah cukup karena setiap buku punya judul berbeda.', isGood: false },
-        { id: 'rb4', label: 'Kode buku efisien digunakan sebagai referensi (foreign key) di tabel lain.', isGood: true }
-      ],
-      feedbackMap: {
-        kode_buku: {
-          goodReason: 'Pilihan PK dan alasan kamu sudah tepat! kode_buku unik, stabil, dan efisien digunakan sebagai referensi di tabel Peminjaman.',
-          poorReason: 'Pilihan PK kamu tepat (kode_buku), tetapi perhatikan alasannya. PK yang baik dipilih karena keunikan, kestabilan, dan kemampuan identifikasi — bukan karena paling populer atau mudah dikenali.'
-        },
-        judul_buku: 'Judul buku tidak ideal sebagai primary key. Dua edisi atau cetakan buku yang berbeda bisa memiliki judul yang sama. Perpustakaan juga mungkin punya beberapa eksemplar buku berjudul sama yang perlu dibedakan satu sama lain.',
-        pengarang: 'Pengarang tidak bisa menjadi primary key karena satu pengarang menulis banyak buku — nilai pengarang pasti berulang di banyak baris. Primary key harus dapat membedakan <em>setiap</em> record.',
-        tahun_terbit: 'Tahun terbit tidak bisa menjadi primary key. Banyak buku diterbitkan pada tahun yang sama — nilai ini pasti berulang. Primary key harus unik untuk setiap baris, bukan hanya untuk sebagian baris.'
-      }
+      title: 'Bekal konsep',
+      description: 'Murid mempelajari kembali arti dokumen spesifikasi sistem, entitas, atribut, dan data yang bukan fokus inti.'
+    },
+    {
+      title: 'Bedah dokumen',
+      description: 'Murid membaca narasi spesifikasi sistem lalu menandai mana kandidat entitas, atribut, atau bukan fokus utama.'
+    },
+    {
+      title: 'Peta entitas-atribut',
+      description: 'Murid menempatkan atribut ke entitas yang tepat agar struktur data lebih jelas.'
+    },
+    {
+      title: 'Analisis mandiri',
+      description: 'Murid mencoba kasus baru untuk melihat apakah cara berpikirnya sudah konsisten.'
+    },
+    {
+      title: 'Evaluasi',
+      description: 'Murid menguji alasan berpikirnya melalui soal pemahaman konsep dan penerapan.'
+    },
+    {
+      title: 'Refleksi',
+      description: 'Murid menyimpulkan apa yang dipelajari dan bagaimana menggunakannya pada rancangan basis data berikutnya.'
     }
   ],
 
-  /* ----------------------------------------------------------
-     TAHAP 5 — Simulasi Keunikan
-     ---------------------------------------------------------- */
-  uniqueness: {
-    title: 'Simulasi Keunikan Data',
-    tableName: 'Tabel: Anggota',
-    instruction: 'Klik tombol "Uji sebagai PK" di bawah nama kolom untuk melihat apakah kolom tersebut memenuhi syarat keunikan. Perhatikan baris mana yang memiliki nilai sama.',
-    columns: [
-      { id: 'nomor_anggota', label: 'nomor_anggota', hint: 'Nomor unik ditetapkan sistem' },
-      { id: 'nama_anggota', label: 'nama_anggota', hint: 'Nama lengkap anggota' },
-      { id: 'kelas', label: 'kelas', hint: 'Kelas saat ini' },
-      { id: 'tanggal_lahir', label: 'tanggal_lahir', hint: 'Tanggal lahir anggota' }
-    ],
-    rows: [
-      { nomor_anggota: 'A001', nama_anggota: 'Budi Santoso', kelas: 'XI RPL 1', tanggal_lahir: '15 Mar 2008' },
-      { nomor_anggota: 'A002', nama_anggota: 'Siti Rahayu', kelas: 'XI RPL 1', tanggal_lahir: '22 Jul 2008' },
-      { nomor_anggota: 'A003', nama_anggota: 'Budi Santoso', kelas: 'XI RPL 2', tanggal_lahir: '10 Mei 2008' },
-      { nomor_anggota: 'A004', nama_anggota: 'Ahmad Fauzi', kelas: 'X RPL 1', tanggal_lahir: '30 Jan 2009' },
-      { nomor_anggota: 'A005', nama_anggota: 'Dewi Lestari', kelas: 'XII RPL 1', tanggal_lahir: '8 Nov 2007' },
-      { nomor_anggota: 'A006', nama_anggota: 'Rizky Pratama', kelas: 'X RPL 2', tanggal_lahir: '15 Mar 2009' },
-      { nomor_anggota: 'A007', nama_anggota: 'Dewi Lestari', kelas: 'XI RPL 3', tanggal_lahir: '20 Sep 2008' },
-      { nomor_anggota: 'A008', nama_anggota: 'Fani Kusuma', kelas: 'XII RPL 1', tanggal_lahir: '8 Nov 2007' }
-    ],
-    /* Daftar pasangan baris yang nilainya sama (0-based index) */
-    duplicates: {
-      nomor_anggota: [],
-      nama_anggota: [[0, 2], [4, 6]],
-      kelas: [[0, 1], [4, 7]],
-      tanggal_lahir: [[4, 7]]
-    },
-    analysis: {
-      nomor_anggota: {
-        hasDuplicate: false,
-        feedback: 'Tidak ditemukan duplikasi. Setiap nilai nomor_anggota berbeda dan unik — tidak ada dua baris dengan nilai yang sama. Kolom ini <strong>memenuhi syarat keunikan</strong> untuk primary key.',
-        verdict: 'MEMENUHI syarat keunikan ✓'
+  conceptPrep: {
+    intro: 'Sebelum menjawab pertanyaan, pelajari dulu empat petunjuk berikut agar kamu tahu apa yang sedang dicari dari sebuah dokumen spesifikasi sistem.',
+    cards: [
+      {
+        icon: '📄',
+        term: 'Dokumen spesifikasi sistem',
+        definition: 'Deskripsi kebutuhan sistem yang menjelaskan objek apa saja yang dikelola dan data apa saja yang perlu disimpan.',
+        example: 'Contoh: sistem perpustakaan menyimpan data anggota, buku, dan transaksi peminjaman.'
       },
-      nama_anggota: {
-        hasDuplicate: true,
-        feedback: '"Budi Santoso" muncul di baris A001 dan A003; "Dewi Lestari" muncul di baris A005 dan A007. Nilai yang sama berarti sistem tidak dapat membedakan satu anggota dari yang lain berdasarkan nama saja.',
-        verdict: 'TIDAK memenuhi syarat keunikan ✗'
+      {
+        icon: '🧱',
+        term: 'Entitas',
+        definition: 'Objek utama atau kejadian utama yang datanya perlu dicatat berulang kali oleh sistem.',
+        example: 'Contoh: siswa, buku, laptop, pesanan, atau transaksi peminjaman.'
       },
-      kelas: {
-        hasDuplicate: true,
-        feedback: '"XI RPL 1" muncul di A001 dan A002; "XII RPL 1" di A005 dan A008, dan masih banyak lagi. Wajar — satu kelas berisi banyak siswa. Nilai berulang = tidak bisa menjadi primary key.',
-        verdict: 'TIDAK memenuhi syarat keunikan ✗'
+      {
+        icon: '🏷️',
+        term: 'Atribut utama',
+        definition: 'Informasi penting yang menjelaskan sebuah entitas agar sistem dapat mengenali dan mengolahnya.',
+        example: 'Contoh: nama siswa, kelas, kode laptop, harga menu, atau tanggal pinjam.'
       },
-      tanggal_lahir: {
-        hasDuplicate: true,
-        feedback: '"8 Nov 2007" muncul di A005 dan A008. Dua orang yang berbeda bisa lahir di tanggal yang sama. Ini cukup membuktikan bahwa tanggal lahir tidak memenuhi syarat keunikan untuk primary key.',
-        verdict: 'TIDAK memenuhi syarat keunikan ✗'
+      {
+        icon: '🎨',
+        term: 'Bukan fokus inti',
+        definition: 'Informasi tampilan atau pelengkap yang tidak terlalu memengaruhi proses utama saat analisis awal basis data.',
+        example: 'Contoh: warna banner, slogan aplikasi, atau gambar dekorasi pada dashboard.'
       }
-    }
-  },
-
-  /* ----------------------------------------------------------
-     TAHAP 6 — Studi Kasus
-     ---------------------------------------------------------- */
-  casestudies: {
-    sewamobil: {
-      id: 'sewamobil',
-      title: 'Sewa Mobil Nusantara',
-      icon: '🚗',
-      narasi: [
-        'PT Sewa Mobil Nusantara adalah perusahaan rental kendaraan yang melayani pelanggan perorangan maupun perusahaan.',
-        'Setiap pelanggan yang ingin menyewa harus mendaftar terlebih dahulu. Data pelanggan yang dicatat meliputi: nomor KTP, nama lengkap, alamat, nomor telepon, dan tanggal lahir.',
-        'Perusahaan memiliki armada kendaraan dari berbagai merek dan tipe. Setiap kendaraan memiliki: nomor polisi (plat nomor), merek, tipe, tahun pembuatan, warna, tarif sewa per hari, dan status ketersediaan.',
-        'Ketika pelanggan menyewa kendaraan, sistem mencatat transaksi penyewaan: nomor sewa, tanggal mulai sewa, tanggal rencana kembali, tanggal aktual kembali, dan total biaya. Setiap transaksi menghubungkan satu pelanggan dengan satu kendaraan.',
-        'Data karyawan yang melayani penyewaan juga dicatat: nomor karyawan, nama karyawan, dan jabatan.'
-      ],
-      minEntities: 3,
-      hints: [
-        'Kata benda yang disebut berkali-kali biasanya adalah entitas.',
-        'Setiap kalimat "Setiap X memiliki Y, Z, W" menunjukkan bahwa X adalah entitas dengan Y, Z, W sebagai atributnya.',
-        'Entitas dalam kasus ini meliputi: Pelanggan, Kendaraan, Penyewaan, dan bisa juga Karyawan.',
-        'PK yang baik biasanya adalah nomor/kode unik yang ditetapkan oleh sistem atau lembaga berwenang.'
-      ]
-    },
-    klinik: {
-      id: 'klinik',
-      title: 'Klinik Kesehatan Sehat Sejahtera',
-      icon: '🏥',
-      narasi: [
-        'Klinik Kesehatan Sehat Sejahtera adalah fasilitas layanan kesehatan yang melayani pasien rawat jalan.',
-        'Setiap pasien yang pertama kali berobat dibuatkan nomor rekam medis. Data pasien meliputi: nomor rekam medis, nama pasien, tanggal lahir, jenis kelamin, alamat, dan nomor telepon.',
-        'Klinik memiliki beberapa dokter dengan jadwal berbeda. Data dokter meliputi: kode dokter, nama dokter, spesialisasi, dan nomor STR (Surat Tanda Registrasi Dokter).',
-        'Setiap kunjungan pasien dicatat: nomor kunjungan, tanggal kunjungan, keluhan utama, diagnosa, dan tindakan yang diberikan. Setiap kunjungan terkait dengan satu pasien dan satu dokter pemeriksa.',
-        'Obat yang diresepkan dalam setiap kunjungan dicatat: kode obat, nama obat, satuan, dan kategori. Satu kunjungan bisa menghasilkan lebih dari satu resep obat.'
-      ],
-      minEntities: 3,
-      hints: [
-        'Perhatikan kata benda yang muncul sebagai subjek kalimat: Pasien, Dokter, Kunjungan, Obat.',
-        'Entitas adalah objek yang "punya data tersendiri" dan perlu dikelola secara terstruktur.',
-        'Entitas dalam kasus ini meliputi: Pasien, Dokter, Kunjungan, dan bisa juga Obat.',
-        'Nomor/kode yang "ditetapkan sistem" biasanya adalah kandidat primary key terbaik.'
-      ]
-    }
-  },
-
-  /* ----------------------------------------------------------
-     TAHAP 8 — Peer-Review Checklist
-     ---------------------------------------------------------- */
-  peerReview: {
-    intro: 'Gunakan checklist ini untuk memeriksa kualitas analisis — misalnya hasil analisis kelompok lain. Peer-review sesungguhnya tetap dilakukan antarkelompok di kelas, dipandu guru.',
-    items: [
+    ],
+    signals: [
+      'Kata benda utama yang terus muncul dalam narasi sering menjadi kandidat entitas.',
+      'Bagian kalimat seperti "memiliki", "menyimpan", atau "mencatat" sering diikuti atribut.',
+      'Fokuskan dulu pada data yang mendukung proses inti sistem, bukan dekorasi antarmuka.',
+      'Transaksi atau kejadian juga bisa menjadi entitas jika sistem harus mencatatnya berulang kali.'
+    ],
+    questions: [
       {
-        id: 'pr1',
-        question: 'Apakah setiap PK yang dipilih bersifat unik (tidak ada dua record dengan nilai PK yang sama)?',
-        hint: 'Bayangkan jika ada dua baris dengan nilai PK yang sama — bisakah sistem membedakan keduanya?'
+        id: 'prep1',
+        prompt: 'Pada kalimat "setiap pelanggan memiliki id pelanggan dan nama pelanggan", kata "pelanggan" adalah ...',
+        correct: 'entitas',
+        options: [
+          { id: 'entitas', label: 'entitas karena pelanggan adalah objek utama yang datanya dikelola sistem' },
+          { id: 'atribut', label: 'atribut karena pelanggan hanya menjelaskan data lain' },
+          { id: 'bukan', label: 'bukan fokus inti karena cukup ditampilkan saja' }
+        ],
+        feedback: {
+          entitas: 'Tepat. "Pelanggan" adalah objek utama yang akan memiliki beberapa data rinci sendiri.',
+          atribut: 'Belum tepat. Justru pelanggan adalah objek yang dijelaskan oleh atribut seperti id pelanggan dan nama pelanggan.',
+          bukan: 'Belum tepat. Jika sistem melayani pelanggan, datanya termasuk bagian inti yang perlu disimpan.'
+        }
       },
       {
-        id: 'pr2',
-        question: 'Apakah satu nilai PK dapat mengidentifikasi tepat satu record (bukan dua atau lebih)?',
-        hint: 'PK harus bersifat 1-to-1: satu nilai PK → satu baris data.'
+        id: 'prep2',
+        prompt: 'Masih pada kalimat yang sama, frasa "id pelanggan" paling tepat disebut ...',
+        correct: 'atribut',
+        options: [
+          { id: 'entitas', label: 'entitas karena bisa berdiri sendiri tanpa pelanggan' },
+          { id: 'atribut', label: 'atribut karena menjelaskan detail tentang pelanggan' },
+          { id: 'bukan', label: 'bukan fokus inti karena hanya angka' }
+        ],
+        feedback: {
+          entitas: 'Belum tepat. "Id pelanggan" tidak menjadi objek utama, melainkan informasi milik pelanggan.',
+          atribut: 'Tepat. "Id pelanggan" adalah atribut karena berfungsi menjelaskan dan membedakan data pelanggan.',
+          bukan: 'Belum tepat. Walau berupa angka, id pelanggan tetap data inti untuk mengenali pelanggan.'
+        }
       },
       {
-        id: 'pr3',
-        question: 'Apakah PK yang dipilih bersifat stabil (nilainya tidak mudah berubah)?',
-        hint: 'Jika PK berubah, semua referensi ke data tersebut harus ikut diperbarui — ini berisiko.'
+        id: 'prep3',
+        prompt: 'Jika spesifikasi menyebut "aplikasi menampilkan warna banner promosi", data itu pada analisis awal basis data biasanya ...',
+        correct: 'bukan',
+        options: [
+          { id: 'entitas', label: 'menjadi entitas karena tampil di aplikasi' },
+          { id: 'atribut', label: 'menjadi atribut utama karena semua data tampilan wajib disimpan lebih dulu' },
+          { id: 'bukan', label: 'bukan fokus inti karena tidak menentukan proses utama sistem' }
+        ],
+        feedback: {
+          entitas: 'Belum tepat. Warna banner bukan objek utama yang dikelola berulang sebagai data inti.',
+          atribut: 'Belum tepat. Bisa saja disimpan kemudian, tetapi pada analisis awal ia bukan atribut utama proses inti.',
+          bukan: 'Tepat. Warna banner lebih dekat ke pengaturan tampilan, bukan kebutuhan inti basis data.'
+        }
       },
       {
-        id: 'pr4',
-        question: 'Apakah semua entitas yang diidentifikasi benar-benar memerlukan pengelolaan data tersendiri dalam sistem?',
-        hint: 'Tanyakan: apakah objek ini perlu punya "tabel sendiri" dalam database?'
-      },
-      {
-        id: 'pr5',
-        question: 'Apakah tidak ada atribut yang seharusnya menjadi entitas (atau sebaliknya)?',
-        hint: 'Atribut yang memiliki banyak sub-informasi mungkin lebih tepat dijadikan entitas tersendiri.'
+        id: 'prep4',
+        prompt: 'Cara cepat mengenali kandidat atribut dalam dokumen spesifikasi adalah ...',
+        correct: 'petunjuk',
+        options: [
+          { id: 'petunjuk', label: 'mencari detail yang menjelaskan entitas, biasanya muncul setelah kata "memiliki" atau "mencatat"' },
+          { id: 'warna', label: 'mencari semua kata yang berkaitan dengan warna, ukuran huruf, atau dekorasi' },
+          { id: 'acak', label: 'memilih kata yang paling panjang karena biasanya itulah atribut' }
+        ],
+        feedback: {
+          petunjuk: 'Tepat. Atribut biasanya muncul sebagai detail yang menerangkan sebuah entitas atau transaksi.',
+          warna: 'Belum tepat. Warna dan dekorasi justru sering bukan fokus inti pada analisis awal basis data.',
+          acak: 'Belum tepat. Panjang kata tidak menentukan apakah sesuatu adalah atribut atau bukan.'
+        }
       }
     ]
   },
 
-  /* ----------------------------------------------------------
-     TAHAP 10 — Refleksi
-     ---------------------------------------------------------- */
-  reflection: {
+  specAnalysis: {
+    title: 'Dokumen Spesifikasi Sistem — Peminjaman Laptop Laboratorium',
+    instruction: 'Baca narasi berikut. Frasa yang disorot adalah kandidat yang perlu kamu analisis. Setelah memahami narasi, klasifikasikan setiap kandidat menjadi entitas, atribut, atau bukan fokus inti.',
+    categories: [
+      { id: 'entitas', label: 'Entitas' },
+      { id: 'atribut', label: 'Atribut Utama' },
+      { id: 'bukan', label: 'Bukan Fokus Inti' }
+    ],
+    paragraphs: [
+      'SMK Bina Teknologi ingin membuat aplikasi untuk mengelola peminjaman perangkat saat kegiatan praktikum.',
+      'Setiap {peminjam|peminjam siswa} memiliki {id_peminjam|id peminjam}, {nama_siswa|nama siswa}, dan {kelas|kelas}.',
+      'Setiap {laptop|laptop} yang tersedia memiliki {kode_laptop|kode laptop}, {merk_laptop|merk laptop}, dan {status_laptop|status laptop}.',
+      'Saat praktikum berlangsung, sistem mencatat {transaksi_peminjaman|transaksi peminjaman} yang berisi {tanggal_pinjam|tanggal pinjam} dan {tanggal_kembali|tanggal kembali rencana}.',
+      'Sekolah juga ingin menampilkan {warna_dashboard|warna dashboard} dan {pesan_sambutan|pesan sambutan} pada halaman awal aplikasi.'
+    ],
+    candidates: [
+      {
+        id: 'peminjam',
+        label: 'peminjam siswa',
+        correct: 'entitas',
+        feedback: {
+          entitas: 'Tepat. Peminjam siswa adalah objek utama yang datanya perlu dicatat agar sistem tahu siapa yang meminjam perangkat.',
+          atribut: 'Belum tepat. Peminjam siswa bukan detail dari data lain, melainkan objek yang memiliki detail seperti id, nama, dan kelas.',
+          bukan: 'Belum tepat. Data peminjam jelas mendukung proses inti peminjaman, jadi termasuk kandidat utama.'
+        }
+      },
+      {
+        id: 'id_peminjam',
+        label: 'id peminjam',
+        correct: 'atribut',
+        feedback: {
+          entitas: 'Belum tepat. Id peminjam bukan objek utama, tetapi informasi yang menjelaskan peminjam.',
+          atribut: 'Tepat. Id peminjam adalah atribut utama karena membantu mengenali data peminjam secara jelas.',
+          bukan: 'Belum tepat. Id peminjam dibutuhkan langsung dalam proses inti peminjaman.'
+        }
+      },
+      {
+        id: 'nama_siswa',
+        label: 'nama siswa',
+        correct: 'atribut',
+        feedback: {
+          entitas: 'Belum tepat. Nama siswa hanya menjelaskan siapa peminjamnya.',
+          atribut: 'Tepat. Nama siswa adalah atribut karena menerangkan entitas peminjam.',
+          bukan: 'Belum tepat. Nama siswa tetap termasuk data inti agar data peminjam mudah dipahami.'
+        }
+      },
+      {
+        id: 'kelas',
+        label: 'kelas',
+        correct: 'atribut',
+        feedback: {
+          entitas: 'Belum tepat. Pada konteks dokumen ini, kelas dipakai sebagai keterangan tentang peminjam siswa.',
+          atribut: 'Tepat. Kelas adalah atribut yang menjelaskan peminjam.',
+          bukan: 'Belum tepat. Kelas masih relevan untuk proses laporan dan identifikasi peminjam.'
+        }
+      },
+      {
+        id: 'laptop',
+        label: 'laptop',
+        correct: 'entitas',
+        feedback: {
+          entitas: 'Tepat. Laptop adalah objek utama yang dikelola sistem karena setiap perangkat perlu dicatat.',
+          atribut: 'Belum tepat. Laptop memiliki atribut seperti kode, merk, dan status sehingga ia adalah entitas.',
+          bukan: 'Belum tepat. Tanpa data laptop, sistem tidak dapat mengelola perangkat yang dipinjam.'
+        }
+      },
+      {
+        id: 'kode_laptop',
+        label: 'kode laptop',
+        correct: 'atribut',
+        feedback: {
+          entitas: 'Belum tepat. Kode laptop hanyalah detail identitas milik entitas laptop.',
+          atribut: 'Tepat. Kode laptop adalah atribut utama untuk membedakan satu laptop dengan laptop lain.',
+          bukan: 'Belum tepat. Kode laptop dibutuhkan dalam proses inti pengelolaan peminjaman perangkat.'
+        }
+      },
+      {
+        id: 'merk_laptop',
+        label: 'merk laptop',
+        correct: 'atribut',
+        feedback: {
+          entitas: 'Belum tepat. Merk laptop tidak berdiri sebagai objek utama terpisah pada kasus ini.',
+          atribut: 'Tepat. Merk laptop adalah atribut karena menjelaskan data laptop.',
+          bukan: 'Belum tepat. Merk tetap termasuk informasi penting untuk mengenali perangkat yang dipinjam.'
+        }
+      },
+      {
+        id: 'status_laptop',
+        label: 'status laptop',
+        correct: 'atribut',
+        feedback: {
+          entitas: 'Belum tepat. Status laptop adalah keterangan kondisi laptop, bukan objek utama.',
+          atribut: 'Tepat. Status laptop merupakan atribut yang membantu sistem mengetahui apakah perangkat siap dipinjam.',
+          bukan: 'Belum tepat. Status laptop penting untuk proses inti karena memengaruhi ketersediaan perangkat.'
+        }
+      },
+      {
+        id: 'transaksi_peminjaman',
+        label: 'transaksi peminjaman',
+        correct: 'entitas',
+        feedback: {
+          entitas: 'Tepat. Transaksi peminjaman adalah kejadian utama yang perlu disimpan berulang oleh sistem.',
+          atribut: 'Belum tepat. Transaksi peminjaman bukan detail kecil, tetapi catatan kejadian yang memiliki detail sendiri.',
+          bukan: 'Belum tepat. Justru inilah inti dari proses yang sedang dibangun sistem.'
+        }
+      },
+      {
+        id: 'tanggal_pinjam',
+        label: 'tanggal pinjam',
+        correct: 'atribut',
+        feedback: {
+          entitas: 'Belum tepat. Tanggal pinjam adalah detail tentang transaksi peminjaman.',
+          atribut: 'Tepat. Tanggal pinjam adalah atribut karena menjelaskan kapan transaksi terjadi.',
+          bukan: 'Belum tepat. Tanggal pinjam dibutuhkan untuk pencatatan transaksi dan pelacakan peminjaman.'
+        }
+      },
+      {
+        id: 'tanggal_kembali',
+        label: 'tanggal kembali rencana',
+        correct: 'atribut',
+        feedback: {
+          entitas: 'Belum tepat. Tanggal kembali rencana adalah detail dari transaksi peminjaman.',
+          atribut: 'Tepat. Ini adalah atribut yang menerangkan batas waktu pengembalian perangkat.',
+          bukan: 'Belum tepat. Informasi ini tetap penting untuk proses peminjaman dan pengembalian.'
+        }
+      },
+      {
+        id: 'warna_dashboard',
+        label: 'warna dashboard',
+        correct: 'bukan',
+        feedback: {
+          entitas: 'Belum tepat. Warna dashboard bukan objek utama yang dikelola sistem.',
+          atribut: 'Belum tepat. Pada analisis awal basis data, warna dashboard belum menjadi atribut utama proses inti.',
+          bukan: 'Tepat. Warna dashboard lebih dekat ke pengaturan tampilan daripada inti proses peminjaman.'
+        }
+      },
+      {
+        id: 'pesan_sambutan',
+        label: 'pesan sambutan',
+        correct: 'bukan',
+        feedback: {
+          entitas: 'Belum tepat. Pesan sambutan bukan objek utama yang dicatat berulang oleh sistem.',
+          atribut: 'Belum tepat. Pesan sambutan bukan atribut utama dari peminjam, laptop, atau transaksi.',
+          bukan: 'Tepat. Pesan sambutan adalah konten antarmuka, bukan fokus inti analisis data peminjaman.'
+        }
+      }
+    ]
+  },
+
+  mapping: {
+    instruction: 'Klik satu atribut dari daftar, lalu klik entitas yang paling tepat. Jika ingin memindahkan atribut, klik kembali chip yang sudah berada di kolom entitas.',
+    explanation: 'Pada tahap ini entitasnya sudah diketahui. Tugasmu adalah menempatkan setiap atribut ke entitas yang dijelaskannya.',
+    entities: [
+      { id: 'peminjam', label: 'Peminjam', colorKey: 'blue' },
+      { id: 'laptop', label: 'Laptop', colorKey: 'green' },
+      { id: 'transaksi', label: 'Transaksi Peminjaman', colorKey: 'orange' }
+    ],
+    attributes: [
+      { id: 'id_peminjam', label: 'id_peminjam', entityId: 'peminjam' },
+      { id: 'nama_siswa', label: 'nama_siswa', entityId: 'peminjam' },
+      { id: 'kelas', label: 'kelas', entityId: 'peminjam' },
+      { id: 'kode_laptop', label: 'kode_laptop', entityId: 'laptop' },
+      { id: 'merk_laptop', label: 'merk_laptop', entityId: 'laptop' },
+      { id: 'status_laptop', label: 'status_laptop', entityId: 'laptop' },
+      { id: 'tanggal_pinjam', label: 'tanggal_pinjam', entityId: 'transaksi' },
+      { id: 'tanggal_kembali', label: 'tanggal_kembali', entityId: 'transaksi' }
+    ]
+  },
+
+  independentCase: {
+    title: 'Kasus Baru — Sistem Kantin Digital Sekolah',
+    instruction: 'Sekarang gunakan cara berpikir yang sama pada kasus baru. Baca narasi, pahami dulu proses utamanya, lalu kelompokkan tiap kandidat data.',
+    categories: [
+      { id: 'entitas', label: 'Entitas' },
+      { id: 'atribut', label: 'Atribut Utama' },
+      { id: 'bukan', label: 'Bukan Fokus Inti' }
+    ],
+    paragraphs: [
+      'Sekolah ingin membuat sistem kantin digital untuk mencatat pesanan makanan murid.',
+      'Setiap pelanggan memiliki id pelanggan dan nama pelanggan.',
+      'Setiap menu memiliki kode menu, nama menu, dan harga menu.',
+      'Saat pembelian terjadi, sistem menyimpan pesanan dengan waktu pesan dan total bayar.',
+      'Kantin juga ingin mengganti warna banner dan slogan harian pada halaman promosi.'
+    ],
+    items: [
+      {
+        id: 'pelanggan',
+        label: 'pelanggan',
+        correct: 'entitas',
+        feedback: {
+          entitas: 'Tepat. Pelanggan adalah objek utama yang terlibat langsung dalam proses pemesanan.',
+          atribut: 'Belum tepat. Pelanggan memiliki atribut seperti id pelanggan dan nama pelanggan.',
+          bukan: 'Belum tepat. Tanpa data pelanggan, sistem tidak dapat mencatat siapa yang memesan.'
+        }
+      },
+      {
+        id: 'id_pelanggan',
+        label: 'id pelanggan',
+        correct: 'atribut',
+        feedback: {
+          entitas: 'Belum tepat. Id pelanggan hanya menjelaskan pelanggan.',
+          atribut: 'Tepat. Id pelanggan adalah atribut utama milik entitas pelanggan.',
+          bukan: 'Belum tepat. Id pelanggan masih dibutuhkan untuk mengenali data pelanggan.'
+        }
+      },
+      {
+        id: 'nama_pelanggan',
+        label: 'nama pelanggan',
+        correct: 'atribut',
+        feedback: {
+          entitas: 'Belum tepat. Nama pelanggan bukan objek utama, melainkan detail tentang pelanggan.',
+          atribut: 'Tepat. Nama pelanggan adalah atribut karena menjelaskan entitas pelanggan.',
+          bukan: 'Belum tepat. Nama pelanggan masih termasuk data inti agar sistem mudah dibaca.'
+        }
+      },
+      {
+        id: 'menu',
+        label: 'menu',
+        correct: 'entitas',
+        feedback: {
+          entitas: 'Tepat. Menu adalah objek utama yang ditawarkan dan perlu dikelola sistem.',
+          atribut: 'Belum tepat. Menu memiliki atribut sendiri seperti kode, nama, dan harga.',
+          bukan: 'Belum tepat. Menu jelas termasuk bagian inti dari proses pemesanan.'
+        }
+      },
+      {
+        id: 'harga_menu',
+        label: 'harga menu',
+        correct: 'atribut',
+        feedback: {
+          entitas: 'Belum tepat. Harga menu adalah detail tentang menu, bukan objek utama.',
+          atribut: 'Tepat. Harga menu menerangkan entitas menu.',
+          bukan: 'Belum tepat. Harga menu penting untuk proses pemesanan dan perhitungan pembayaran.'
+        }
+      },
+      {
+        id: 'pesanan',
+        label: 'pesanan',
+        correct: 'entitas',
+        feedback: {
+          entitas: 'Tepat. Pesanan adalah kejadian utama yang dicatat sistem setiap kali pembelian terjadi.',
+          atribut: 'Belum tepat. Pesanan memiliki rincian seperti waktu pesan dan total bayar.',
+          bukan: 'Belum tepat. Pesanan adalah inti dari proses yang dikelola sistem kantin digital.'
+        }
+      },
+      {
+        id: 'waktu_pesan',
+        label: 'waktu pesan',
+        correct: 'atribut',
+        feedback: {
+          entitas: 'Belum tepat. Waktu pesan adalah detail kapan pesanan terjadi.',
+          atribut: 'Tepat. Waktu pesan termasuk atribut utama untuk menjelaskan pesanan.',
+          bukan: 'Belum tepat. Waktu pesan masih relevan untuk pencatatan transaksi.'
+        }
+      },
+      {
+        id: 'total_bayar',
+        label: 'total bayar',
+        correct: 'atribut',
+        feedback: {
+          entitas: 'Belum tepat. Total bayar adalah rincian nilai dari sebuah pesanan.',
+          atribut: 'Tepat. Total bayar adalah atribut yang menjelaskan hasil transaksi pesanan.',
+          bukan: 'Belum tepat. Total bayar mendukung proses inti pembayaran.'
+        }
+      },
+      {
+        id: 'warna_banner',
+        label: 'warna banner',
+        correct: 'bukan',
+        feedback: {
+          entitas: 'Belum tepat. Warna banner bukan objek utama dalam proses pemesanan makanan.',
+          atribut: 'Belum tepat. Pada analisis awal basis data, warna banner bukan atribut utama dari entitas inti.',
+          bukan: 'Tepat. Warna banner lebih berkaitan dengan tampilan promosi, bukan data inti sistem.'
+        }
+      },
+      {
+        id: 'slogan_harian',
+        label: 'slogan harian',
+        correct: 'bukan',
+        feedback: {
+          entitas: 'Belum tepat. Slogan harian bukan objek utama yang perlu dikelola seperti pelanggan, menu, atau pesanan.',
+          atribut: 'Belum tepat. Slogan harian bukan atribut utama dari proses pemesanan.',
+          bukan: 'Tepat. Ini hanya pelengkap tampilan promosi, bukan fokus inti analisis basis data.'
+        }
+      }
+    ]
+  },
+
+  evaluation: {
+    intro: 'Tahap ini memeriksa apakah kamu sudah memahami alasan di balik pemilihan entitas dan atribut, bukan hanya menghafal contohnya.',
     questions: [
       {
+        id: 'eval1',
+        prompt: 'Mengapa kata "pesanan" pada sistem kantin digital layak dianggap entitas?',
+        correct: 'kejadian',
+        options: [
+          { id: 'kejadian', label: 'Karena pesanan adalah kejadian utama yang dicatat berulang oleh sistem.' },
+          { id: 'warna', label: 'Karena kata pesanan terdengar lebih menarik daripada pelanggan.' },
+          { id: 'dekorasi', label: 'Karena semua kata benda otomatis harus menjadi dekorasi tabel.' }
+        ],
+        feedback: {
+          kejadian: 'Tepat. Entitas tidak selalu benda fisik; kejadian atau transaksi juga bisa menjadi entitas.',
+          warna: 'Belum tepat. Entitas dipilih karena perannya dalam proses, bukan karena bunyinya menarik.',
+          dekorasi: 'Belum tepat. Entitas dipilih dari kebutuhan data sistem, bukan untuk "menghias" tabel.'
+        }
+      },
+      {
+        id: 'eval2',
+        prompt: 'Pilihan atribut utama yang paling tepat untuk entitas Laptop adalah ...',
+        correct: 'laptopset',
+        options: [
+          { id: 'laptopset', label: 'kode laptop, merk laptop, status laptop' },
+          { id: 'campur', label: 'nama siswa, tanggal pinjam, warna dashboard' },
+          { id: 'tampilan', label: 'warna dashboard, slogan aplikasi, gambar header' }
+        ],
+        feedback: {
+          laptopset: 'Tepat. Semua pilihan tersebut langsung menjelaskan data laptop.',
+          campur: 'Belum tepat. Daftar itu mencampur atribut dari entitas lain dan data yang bukan fokus inti.',
+          tampilan: 'Belum tepat. Itu adalah elemen tampilan, bukan atribut utama laptop.'
+        }
+      },
+      {
+        id: 'eval3',
+        prompt: 'Mengapa "warna banner" tidak diprioritaskan saat analisis awal basis data?',
+        correct: 'inti',
+        options: [
+          { id: 'inti', label: 'Karena tidak mendukung proses inti pencatatan data pelanggan, menu, atau pesanan.' },
+          { id: 'angka', label: 'Karena semua atribut wajib berupa angka.' },
+          { id: 'harus', label: 'Karena sistem basis data tidak boleh menyimpan data tampilan sama sekali.' }
+        ],
+        feedback: {
+          inti: 'Tepat. Analisis awal fokus pada data yang membuat proses utama sistem dapat berjalan.',
+          angka: 'Belum tepat. Atribut tidak harus berupa angka; teks juga bisa menjadi atribut.',
+          harus: 'Belum tepat. Data tampilan bisa saja disimpan, tetapi bukan prioritas utama pada analisis awal ini.'
+        }
+      },
+      {
+        id: 'eval4',
+        prompt: 'Jika spesifikasi menyebut "setiap menu memiliki kode menu, nama menu, dan harga menu", maka "harga menu" adalah ...',
+        correct: 'atribut',
+        options: [
+          { id: 'entitas', label: 'entitas karena berdiri sendiri' },
+          { id: 'atribut', label: 'atribut karena menjelaskan detail tentang menu' },
+          { id: 'bukan', label: 'bukan fokus inti karena berupa angka uang' }
+        ],
+        feedback: {
+          entitas: 'Belum tepat. Harga menu tidak menjadi objek utama terpisah, melainkan detail milik menu.',
+          atribut: 'Tepat. Harga menu adalah atribut utama dari entitas menu.',
+          bukan: 'Belum tepat. Harga justru penting untuk proses pemesanan dan pembayaran.'
+        }
+      }
+    ]
+  },
+
+  reflection: {
+    prompts: [
+      {
         id: 'r1',
-        question: 'Mengapa atribut seperti Nama_Murid atau Tanggal_Lahir tidak ideal dijadikan sebagai primary key?',
-        placeholder: 'Tuliskan penjelasanmu di sini...',
-        guidance: 'Petunjuk: Pikirkan tentang kemungkinan duplikasi, kestabilan nilai, dan kemampuan membedakan satu record dari yang lain.'
+        title: 'Apa petunjuk yang paling membantumu menemukan entitas dari dokumen spesifikasi?',
+        guidance: 'Tuliskan kata kunci, pola kalimat, atau cara berpikir yang menurutmu paling efektif.'
       },
       {
         id: 'r2',
-        question: 'Bagian mana yang paling sulit ketika membedakan entitas dan atribut dari narasi sistem?',
-        placeholder: 'Ceritakan pengalamanmu di sini...',
-        guidance: 'Tidak ada jawaban benar atau salah. Refleksi ini membantu kamu dan gurumu memahami bagian yang perlu dibahas lebih lanjut di kelas.'
+        title: 'Mengapa membedakan atribut utama dan data pelengkap penting saat merancang basis data?',
+        guidance: 'Hubungkan jawabanmu dengan kerapian struktur data atau kemudahan pengembangan aplikasi.'
       }
     ]
   },
 
-  /* ----------------------------------------------------------
-     TAHAP 11 — Ringkasan Konsep
-     ---------------------------------------------------------- */
   summaryConcepts: [
     {
-      term: 'Entitas',
-      icon: '📦',
-      definition: 'Objek utama dalam sistem yang perlu dikelola datanya secara terstruktur. Biasanya merupakan kata benda utama dalam narasi bisnis yang memiliki banyak karakteristik sendiri.',
-      example: 'Anggota, Buku, Peminjaman, Pelanggan, Kendaraan, Pasien'
+      icon: '📄',
+      term: 'Baca proses utamanya',
+      definition: 'Mulailah dari tujuan sistem dan proses inti yang benar-benar harus didukung data.',
+      example: 'Contoh: meminjam laptop, memesan makanan, atau mencatat absensi.'
     },
     {
-      term: 'Atribut',
+      icon: '🧱',
+      term: 'Temukan entitas',
+      definition: 'Cari objek atau kejadian utama yang datanya perlu disimpan berulang kali.',
+      example: 'Contoh: pelanggan, menu, pesanan, peminjam, laptop.'
+    },
+    {
       icon: '🏷️',
-      definition: 'Karakteristik atau properti yang mendeskripsikan suatu entitas. Setiap entitas memiliki satu atau lebih atribut.',
-      example: 'nomor_anggota, nama_anggota, kelas → atribut dari entitas Anggota'
+      term: 'Temukan atribut utama',
+      definition: 'Cari detail yang menjelaskan setiap entitas agar sistem bisa mengenali dan mengolahnya.',
+      example: 'Contoh: id pelanggan, harga menu, status laptop, tanggal pinjam.'
     },
     {
-      term: 'Primary Key (PK)',
-      icon: '🔑',
-      definition: 'Satu atribut (atau kombinasi atribut minimal) yang dapat mengidentifikasi setiap record secara unik dalam sebuah tabel. Tiga syarat utama: UNIK, TIDAK NULL, dan STABIL.',
-      example: 'nomor_anggota sebagai PK di tabel Anggota'
-    },
-    {
-      term: 'Kriteria Pemilihan PK',
-      icon: '✅',
-      definition: '① UNIK: tidak ada dua record dengan nilai PK yang sama. ② TIDAK NULL: setiap record harus memiliki nilai PK. ③ STABIL: nilainya tidak berubah setelah ditetapkan. ④ MINIMAL: pilih atribut paling ringkas yang memenuhi ketiga syarat di atas.',
-      example: 'nomor_anggota ✓ Unik ✓ Tidak null ✓ Stabil'
-    },
-    {
-      term: 'Mengapa Nama atau Tanggal Lahir bukan PK?',
-      icon: '⚠️',
-      definition: 'Nama dapat berulang (dua orang bisa bernama sama) dan bisa berubah (menikah, dll.). Tanggal lahir juga bisa berulang karena dua orang berbeda bisa lahir di hari yang sama. Kelayakan suatu atribut sebagai PK bergantung pada sifat data dan kebutuhan sistem nyata.',
-      example: 'Dua anggota bernama "Budi Santoso" → nama tidak bisa jadi PK'
+      icon: '🎯',
+      term: 'Fokus pada data inti',
+      definition: 'Pisahkan data inti dari data tampilan atau pelengkap agar rancangan basis data tetap rapi.',
+      example: 'Contoh: warna banner bisa ditunda, sedangkan data pesanan harus dianalisis lebih dulu.'
     }
   ]
 };

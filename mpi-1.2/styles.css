@@ -1,7 +1,7 @@
 /* =========================================================================
    mpi-1.2 — Media Pembelajaran Interaktif
-   Rekayasa Perangkat Lunak: Entitas, Atribut & Primary Key
-   Design: "technical notebook" — clean, light, professional
+   Rekayasa Perangkat Lunak: Analisis Entitas & Atribut Utama
+   Design: referensi visual mpi-1.1
    ========================================================================= */
 
 :root {
@@ -14,10 +14,10 @@
   --color-ink: #21262b;
   --color-ink-muted: #565c5f;
 
-  /* --- primary (deep blue — database/tech theme) --- */
-  --color-primary: #1856a4;
-  --color-primary-soft: #dde8f5;
-  --color-primary-strong: #0f3d75;
+  /* --- primary (selaras dengan mpi-1.1) --- */
+  --color-primary: #CA8A04;
+  --color-primary-soft: #FEFCE8;
+  --color-primary-strong: #A16207;
 
   /* --- entity accent colors --- */
   --color-blue: #1856a4;
@@ -41,7 +41,7 @@
   --color-warning-soft: #fdf3d0;
   --color-warning-strong: #6a4c00;
 
-  --color-focus: #1c4e9c;
+  --color-focus: #A16207;
 
   /* --- type tokens --- */
   --font-display: "Avenir Next", "Segoe UI Semibold", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
