@@ -14,10 +14,9 @@
   --color-ink: #21262b;
   --color-ink-muted: #565c5f;
 
-  /* --- primary (deep blue — database/tech theme) --- */
-  --color-primary: #1856a4;
-  --color-primary-soft: #dde8f5;
-  --color-primary-strong: #0f3d75;
+  --color-primary: #CA8A04;
+  --color-primary-soft: #FEFCE8;
+  --color-primary-strong: #A16207;
 
   /* --- entity accent colors --- */
   --color-blue: #1856a4;
@@ -44,7 +43,7 @@
   --color-warning-soft: #fdf3d0;
   --color-warning-strong: #6a4c00;
 
-  --color-focus: #1c4e9c;
+  --color-focus: #A16207;
 
   /* --- type tokens --- */
   --font-display: "Avenir Next", "Segoe UI Semibold", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
@@ -949,7 +948,7 @@ strong {
 
 .cardinality-card:hover {
   border-color: var(--color-primary);
-  box-shadow: 0 3px 12px rgba(24, 86, 164, 0.1);
+  box-shadow: 0 3px 12px rgba(202, 138, 4, 0.12);
 }
 
 .cardinality-card__header {
