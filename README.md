@@ -24,14 +24,19 @@ Lalu akses `http://localhost:5173`.
 
 ## Struktur Folder
 
-Setiap folder materi memiliki struktur yang sama:
-
 ```
-mpi-X.Y/
-├── index.html   # kerangka halaman
-├── data.js      # konten materi (teks, soal, studi kasus)
-├── app.js       # logika interaksi
-└── styles.css   # tampilan
+├── index.html            # halaman utama (daftar materi)
+├── shared/               # dipakai bersama oleh semua materi
+│   ├── tokens.css        # warna, font, dan spasi (ubah tema di sini)
+│   ├── base.css          # gaya dasar yang sama di semua materi
+│   └── engine.js         # penyimpanan progres, navigasi tahap, progress bar
+└── mpi-X.Y/              # satu folder per materi, strukturnya sama
+    ├── index.html        # kerangka halaman
+    ├── data.js           # konten materi (teks, soal, studi kasus)
+    ├── app.js            # tampilan tiap tahap dan logika interaksi materi
+    └── styles.css        # gaya khusus materi
 ```
 
 Konten materi dipisahkan di `data.js`, sehingga teks dan soal dapat diubah tanpa menyentuh logika di `app.js`.
+
+Urutan pemuatan di setiap materi: `data.js`, `../shared/engine.js`, lalu `app.js`; untuk gaya: `../shared/tokens.css`, `../shared/base.css`, lalu `styles.css`. Setiap `app.js` mendaftarkan tahap-tahapnya lewat `Engine.createLesson()` sehingga penyimpanan progres, penguncian tahap, dan progress bar tidak perlu ditulis ulang per materi.

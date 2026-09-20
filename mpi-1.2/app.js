@@ -1,211 +1,61 @@
 'use strict';
 
-const STAGES = [
-  'orientasi',
-  'bekal',
-  'dokumen',
-  'peta',
-  'analisis',
-  'evaluasi',
-  'refleksi',
-  'selesai'
-];
+const lesson = Engine.createLesson({
+  storageKey: 'mpi-1-2-v2',
 
-const STAGE_LABELS = [
-  'Orientasi',
-  'Bekal Konsep',
-  'Bedah Dokumen',
-  'Peta Entitas',
-  'Analisis Mandiri',
-  'Evaluasi',
-  'Refleksi',
-  'Selesai'
-];
+  stages: [
+    { id: 'orientasi', label: 'Orientasi', render: renderOrientasi },
+    { id: 'bekal', label: 'Bekal Konsep', render: renderBekal },
+    { id: 'dokumen', label: 'Bedah Dokumen', render: renderDokumen },
+    { id: 'peta', label: 'Peta Entitas', render: renderPeta },
+    { id: 'analisis', label: 'Analisis Mandiri', render: renderAnalisis },
+    { id: 'evaluasi', label: 'Evaluasi', render: renderEvaluasi },
+    { id: 'refleksi', label: 'Refleksi', render: renderRefleksi },
+    { id: 'selesai', label: 'Selesai', render: renderSelesai }
+  ],
 
-const STORAGE_KEY = 'mpi-1-2-v2';
+  createState: function () {
+    return {
+      currentStage: 'orientasi',
+      completedStages: {},
 
-const defaultScore = function () {
-  return {
-    prepCorrect: 0,
-    prepTotal: 0,
-    classifCorrect: 0,
-    classifTotal: 0,
-    mappingCorrect: 0,
-    mappingTotal: 0,
-    caseCorrect: 0,
-    caseTotal: 0,
-    evaluationCorrect: 0,
-    evaluationTotal: 0
-  };
-};
+      prepAnswers: {},
+      prepChecked: false,
 
-const State = {
-  currentStage: 'orientasi',
-  completedStages: {},
+      classification: {},
+      classifChecked: false,
 
-  prepAnswers: {},
-  prepChecked: false,
+      attrAssignments: {},
+      selectedAttrId: null,
+      mappingChecked: false,
 
-  classification: {},
-  classifChecked: false,
+      caseAnswers: {},
+      caseChecked: false,
 
-  attrAssignments: {},
-  selectedAttrId: null,
-  mappingChecked: false,
+      evaluationAnswers: {},
+      evaluationChecked: false,
 
-  caseAnswers: {},
-  caseChecked: false,
+      reflections: {},
 
-  evaluationAnswers: {},
-  evaluationChecked: false,
-
-  reflections: {},
-
-  score: defaultScore()
-};
-
-function saveState() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(State));
-  } catch (e) { }
-}
-
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return false;
-    const parsed = JSON.parse(raw);
-    Object.assign(State, parsed);
-    State.score = Object.assign(defaultScore(), State.score || {});
-    State.prepAnswers = State.prepAnswers || {};
-    State.classification = State.classification || {};
-    State.attrAssignments = State.attrAssignments || {};
-    State.caseAnswers = State.caseAnswers || {};
-    State.evaluationAnswers = State.evaluationAnswers || {};
-    State.reflections = State.reflections || {};
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-function clearState() {
-  try { localStorage.removeItem(STORAGE_KEY); } catch (e) { }
-  State.currentStage = 'orientasi';
-  State.completedStages = {};
-  State.prepAnswers = {};
-  State.prepChecked = false;
-  State.classification = {};
-  State.classifChecked = false;
-  State.attrAssignments = {};
-  State.selectedAttrId = null;
-  State.mappingChecked = false;
-  State.caseAnswers = {};
-  State.caseChecked = false;
-  State.evaluationAnswers = {};
-  State.evaluationChecked = false;
-  State.reflections = {};
-  State.score = defaultScore();
-}
-
-function navigateTo(stageId) {
-  const targetIdx = STAGES.indexOf(stageId);
-  const currentIdx = STAGES.indexOf(State.currentStage);
-  if (targetIdx === -1) return;
-
-  if (targetIdx > currentIdx) {
-    for (let i = currentIdx; i < targetIdx; i += 1) {
-      if (!State.completedStages[STAGES[i]]) {
-        showNotice('Selesaikan tahap ' + STAGE_LABELS[i] + ' terlebih dahulu.');
-        return;
+      score: {
+        prepCorrect: 0,
+        prepTotal: 0,
+        classifCorrect: 0,
+        classifTotal: 0,
+        mappingCorrect: 0,
+        mappingTotal: 0,
+        caseCorrect: 0,
+        caseTotal: 0,
+        evaluationCorrect: 0,
+        evaluationTotal: 0
       }
-    }
+    };
   }
+});
 
-  State.currentStage = stageId;
-  saveState();
-  updateStageNav();
-  renderCurrentStage();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function completeStage(stageId) {
-  State.completedStages[stageId] = true;
-  saveState();
-  updateStageNav();
-}
-
-function updateStageNav() {
-  const items = document.querySelectorAll('.stage-nav__item');
-  const currentIdx = STAGES.indexOf(State.currentStage);
-
-  items.forEach(function (item) {
-    const stageId = item.dataset.stage;
-    const idx = STAGES.indexOf(stageId);
-    item.removeAttribute('aria-current');
-    item.classList.remove('is-complete');
-    item.disabled = false;
-
-    if (stageId === State.currentStage) {
-      item.setAttribute('aria-current', 'step');
-    } else if (State.completedStages[stageId]) {
-      item.classList.add('is-complete');
-    }
-
-    if (idx > currentIdx && !State.completedStages[STAGES[idx - 1]]) {
-      item.disabled = true;
-    }
-  });
-}
-
-function updateProgress() {
-  const total = STAGES.length;
-  const done = Object.keys(State.completedStages).length;
-  const pct = Math.round((done / total) * 100);
-  const progressFill = document.getElementById('progressFill');
-  const progressLabel = document.getElementById('progressLabel');
-
-  if (progressFill) progressFill.style.width = pct + '%';
-  if (progressLabel) progressLabel.textContent = done + ' dari ' + total + ' tahap selesai';
-}
-
-function renderCurrentStage() {
-  const container = document.getElementById('stageContainer');
-  if (!container) return;
-
-  container.innerHTML = '';
-  updateProgress();
-
-  switch (State.currentStage) {
-    case 'orientasi':
-      renderOrientasi(container);
-      break;
-    case 'bekal':
-      renderBekal(container);
-      break;
-    case 'dokumen':
-      renderDokumen(container);
-      break;
-    case 'peta':
-      renderPeta(container);
-      break;
-    case 'analisis':
-      renderAnalisis(container);
-      break;
-    case 'evaluasi':
-      renderEvaluasi(container);
-      break;
-    case 'refleksi':
-      renderRefleksi(container);
-      break;
-    case 'selesai':
-      renderSelesai(container);
-      break;
-    default:
-      container.innerHTML = '<p>Tahap tidak ditemukan.</p>';
-      break;
-  }
-}
+const State = lesson.state;
+const { saveState, navigateTo, completeStage, renderCurrentStage, resetProgress } = lesson;
+const { esc, showNotice, confirmAction } = Engine;
 
 function renderOrientasi(container) {
   const activityHTML = DATA.activityFlow.map(function (item, idx) {
@@ -942,7 +792,6 @@ function renderRefleksi(container) {
 
 function renderSelesai(container) {
   completeStage('selesai');
-  updateProgress();
 
   const conceptHTML = DATA.summaryConcepts.map(function (item) {
     return `<div class="concept-card">
@@ -1005,10 +854,7 @@ function renderSelesai(container) {
 
   document.getElementById('restartBtn').addEventListener('click', function () {
     if (!confirmAction('Mulai dari awal? Semua progres pada materi ini akan dihapus.')) return;
-    clearState();
-    saveState();
-    updateStageNav();
-    renderCurrentStage();
+    resetProgress();
   });
 }
 
@@ -1030,67 +876,4 @@ function findAttribute(attributes, id) {
   });
 }
 
-function esc(value) {
-  if (value === null || value === undefined) return '';
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-let noticeTimer = null;
-
-function showNotice(message) {
-  const el = document.getElementById('appNotice');
-  if (!el) return;
-  el.textContent = message;
-  el.classList.add('is-visible');
-  if (noticeTimer) clearTimeout(noticeTimer);
-  noticeTimer = setTimeout(function () {
-    el.classList.remove('is-visible');
-  }, 3200);
-}
-
-function confirmAction(message) {
-  return window.confirm(message);
-}
-
-function buildStageNav() {
-  const nav = document.getElementById('stageNavList');
-  if (!nav) return;
-  nav.innerHTML = STAGES.map(function (stageId, idx) {
-    return `<li><button type="button" class="stage-nav__item" data-stage="${stageId}">
-      <span class="stage-nav__num">${idx + 1}</span>
-      <span class="stage-nav__label">${STAGE_LABELS[idx]}</span>
-    </button></li>`;
-  }).join('');
-
-  nav.querySelectorAll('.stage-nav__item').forEach(function (button) {
-    button.addEventListener('click', function () {
-      navigateTo(button.dataset.stage);
-    });
-  });
-}
-
-function init() {
-  buildStageNav();
-  loadState();
-
-  const resetBtn = document.getElementById('resetAppBtn');
-  if (resetBtn) {
-    resetBtn.addEventListener('click', function () {
-      if (!confirmAction('Reset seluruh aplikasi? Semua progres pada materi ini akan dihapus.')) return;
-      clearState();
-      saveState();
-      updateStageNav();
-      renderCurrentStage();
-    });
-  }
-
-  updateStageNav();
-  renderCurrentStage();
-}
-
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', lesson.init);
