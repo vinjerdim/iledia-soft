@@ -1,0 +1,63 @@
+/* =========================================================================
+   shared/tokens.css — design tokens for every lesson and the landing page.
+   Change a color, font, or spacing value here to retheme the whole site.
+   ========================================================================= */
+
+:root {
+  /* --- color tokens (base) --- */
+  --color-bg: #f7f7f2;
+  --color-bg-grid: #eeede4;
+  --color-surface: #ffffff;
+  --color-border: #d9d6cb;
+  --color-border-strong: #b9b6aa;
+  --color-ink: #21262b;
+  --color-ink-muted: #565c5f;
+
+  /* --- primary (selaras dengan mpi-1.1) --- */
+  --color-primary: #CA8A04;
+  --color-primary-soft: #FEFCE8;
+  --color-primary-strong: #A16207;
+
+  /* --- entity accent colors --- */
+  --color-blue: #1856a4;
+  --color-blue-soft: #dde8f5;
+  --color-blue-strong: #0f3d75;
+  --color-green: #2a7d4f;
+  --color-green-soft: #d9ede2;
+  --color-green-strong: #1a5234;
+  --color-orange: #b1500a;
+  --color-orange-soft: #f4dcc7;
+  --color-orange-strong: #8a3d07;
+
+  /* --- semantic states --- */
+  --color-success: #2f7d4f;
+  --color-success-soft: #dceee1;
+  --color-success-strong: #1a5234;
+  --color-error: #a63535;
+  --color-error-soft: #f5dede;
+  --color-error-strong: #7a2525;
+  --color-warning: #8a6200;
+  --color-warning-soft: #fdf3d0;
+  --color-warning-strong: #6a4c00;
+
+  --color-focus: #A16207;
+
+  /* --- type tokens --- */
+  --font-display: "Avenir Next", "Segoe UI Semibold", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+
+  /* --- spacing scale --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+
+  --max-content-width: 1100px;
+}
