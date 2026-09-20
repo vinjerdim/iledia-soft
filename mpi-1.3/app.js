@@ -5,10 +5,8 @@
    MPI 1.3: Relationship, Kardinalitas & Foreign Key
    ============================================================
    Bagian:
-   1.  Konstanta & konfigurasi tahap
-   2.  State & storage
-   3.  Navigasi & progress
-   4.  Dispatcher render
+   1.  Konfigurasi tahap & state awal
+   2.  (state, storage, navigasi, progress, dispatcher render: shared/engine.js)
    5.  Stage: Orientasi
    6.  Stage: Eksplorasi
    7.  Stage: Contoh Terbimbing
@@ -25,240 +23,84 @@
    ============================================================ */
 
 /* ============================================================
-   1. KONSTANTA & KONFIGURASI TAHAP
+   1. KONFIGURASI TAHAP & STATE AWAL
+   ============================================================
+   State disimpan, dipulihkan, dan dinavigasi oleh shared/engine.js.
    ============================================================ */
 
-const STAGES = [
-  'orientasi', 'eksplorasi', 'contoh',
-  'simulasi', 'latihan', 'asesmen',
-  'review', 'refleksi', 'hasil'
-];
-
-const STAGE_LABELS = [
-  'Orientasi', 'Eksplorasi', 'Contoh Terbimbing',
-  'Simulasi Data', 'Latihan Kasus', 'Asesmen Formatif',
-  'Review', 'Refleksi', 'Hasil'
-];
-
-const STORAGE_KEY = 'mpi-1-3-v1';
-
-/* ============================================================
-   2. STATE & STORAGE
-   ============================================================ */
-
-const State = {
-  currentStage: 'orientasi',
-  completedStages: {},
-
-  /* Stage: contoh (sub-steps: 1=kardinalitas, 2=fk, 3=hasil) */
-  contoh: {
-    step: 1,
+function newCaseState() {
+  return {
     cardinality: null,
     fkChoice: null,
+    cardinalityCorrect: false,
+    fkCorrect: false,
     cardinalityDone: false,
     fkDone: false,
-    cardinalityCorrect: false,
-    fkCorrect: false
+    attempts: 0,
+    done: false
+  };
+}
+
+const lesson = Engine.createLesson({
+  storageKey: 'mpi-1-3-v1',
+  noticeMs: 3000,
+  lockedNotice: function (label) {
+    return 'Selesaikan tahap "' + label + '" terlebih dahulu.';
   },
+  onResetClick: confirmReset,
 
-  /* Stage: simulasi (highlighted row index in peminjaman, null=none) */
-  simHighlight: null,
+  stages: [
+    { id: 'orientasi', label: 'Orientasi', render: renderOrientasi },
+    { id: 'eksplorasi', label: 'Eksplorasi', render: renderEksplorasi },
+    { id: 'contoh', label: 'Contoh Terbimbing', render: renderContoh },
+    { id: 'simulasi', label: 'Simulasi Data', render: renderSimulasi },
+    { id: 'latihan', label: 'Latihan Kasus', render: renderLatihan },
+    { id: 'asesmen', label: 'Asesmen Formatif', render: renderAsesmen },
+    { id: 'review', label: 'Review', render: renderReview },
+    { id: 'refleksi', label: 'Refleksi', render: renderRefleksi },
+    { id: 'hasil', label: 'Hasil', render: renderHasil }
+  ],
 
-  /* Stage: latihan */
-  latihan: {
-    currentCaseIdx: 0,
-    /* Per-case state: [{ cardinality, fkChoice, cardinalityCorrect, fkCorrect,
-                          cardinalityDone, fkDone, attempts, done }] */
-    cases: DATA.cases.map(function () {
-      return {
+  createState: function () {
+    return {
+      currentStage: 'orientasi',
+      completedStages: {},
+
+      /* Stage: contoh (sub-steps: 1=kardinalitas, 2=fk, 3=hasil) */
+      contoh: {
+        step: 1,
         cardinality: null,
         fkChoice: null,
-        cardinalityCorrect: false,
-        fkCorrect: false,
         cardinalityDone: false,
         fkDone: false,
-        attempts: 0,
-        done: false
-      };
-    })
-  },
-
-  /* Stage: asesmen */
-  asesmen: {
-    currentQIdx: 0,
-    questions: DATA.assessment.map(function () {
-      return {
-        cardinality: null,
-        fkChoice: null,
         cardinalityCorrect: false,
-        fkCorrect: false,
-        cardinalityDone: false,
-        fkDone: false,
-        attempts: 0,
-        done: false
-      };
-    })
-  },
+        fkCorrect: false
+      },
 
-  /* Stage: refleksi */
-  refleksiText: ''
-};
+      /* Stage: simulasi (highlighted row index in peminjaman, null=none) */
+      simHighlight: null,
 
-function saveState() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(State));
-  } catch (e) { /* storage unavailable — silently continue */ }
-}
+      /* Stage: latihan — one entry per case in DATA.cases */
+      latihan: {
+        currentCaseIdx: 0,
+        cases: DATA.cases.map(newCaseState)
+      },
 
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return false;
-    const saved = JSON.parse(raw);
-    /* Deep merge to preserve structure from new DATA additions */
-    if (saved.currentStage) State.currentStage = saved.currentStage;
-    if (saved.completedStages) State.completedStages = saved.completedStages;
-    if (saved.contoh) Object.assign(State.contoh, saved.contoh);
-    if (saved.simHighlight !== undefined) State.simHighlight = saved.simHighlight;
-    if (saved.latihan) {
-      State.latihan.currentCaseIdx = saved.latihan.currentCaseIdx || 0;
-      if (Array.isArray(saved.latihan.cases)) {
-        saved.latihan.cases.forEach(function (sc, i) {
-          if (State.latihan.cases[i]) Object.assign(State.latihan.cases[i], sc);
-        });
-      }
-    }
-    if (saved.asesmen) {
-      State.asesmen.currentQIdx = saved.asesmen.currentQIdx || 0;
-      if (Array.isArray(saved.asesmen.questions)) {
-        saved.asesmen.questions.forEach(function (sq, i) {
-          if (State.asesmen.questions[i]) Object.assign(State.asesmen.questions[i], sq);
-        });
-      }
-    }
-    if (saved.refleksiText !== undefined) State.refleksiText = saved.refleksiText;
-    return true;
-  } catch (e) { return false; }
-}
+      /* Stage: asesmen — one entry per question in DATA.assessment */
+      asesmen: {
+        currentQIdx: 0,
+        questions: DATA.assessment.map(newCaseState)
+      },
 
-function clearState() {
-  try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ }
-  State.currentStage = 'orientasi';
-  State.completedStages = {};
-  State.contoh = { step: 1, cardinality: null, fkChoice: null, cardinalityDone: false, fkDone: false, cardinalityCorrect: false, fkCorrect: false };
-  State.simHighlight = null;
-  State.latihan = {
-    currentCaseIdx: 0,
-    cases: DATA.cases.map(function () {
-      return { cardinality: null, fkChoice: null, cardinalityCorrect: false, fkCorrect: false, cardinalityDone: false, fkDone: false, attempts: 0, done: false };
-    })
-  };
-  State.asesmen = {
-    currentQIdx: 0,
-    questions: DATA.assessment.map(function () {
-      return { cardinality: null, fkChoice: null, cardinalityCorrect: false, fkCorrect: false, cardinalityDone: false, fkDone: false, attempts: 0, done: false };
-    })
-  };
-  State.refleksiText = '';
-}
-
-/* ============================================================
-   3. NAVIGASI & PROGRESS
-   ============================================================ */
-
-function navigateTo(stageId) {
-  const targetIdx = STAGES.indexOf(stageId);
-  const currentIdx = STAGES.indexOf(State.currentStage);
-  if (targetIdx === -1) return;
-
-  if (targetIdx > currentIdx) {
-    for (let i = currentIdx; i < targetIdx; i++) {
-      if (!State.completedStages[STAGES[i]]) {
-        showNotice('Selesaikan tahap "' + STAGE_LABELS[i] + '" terlebih dahulu.');
-        return;
-      }
-    }
+      /* Stage: refleksi */
+      refleksiText: ''
+    };
   }
+});
 
-  State.currentStage = stageId;
-  saveState();
-  updateStageNav();
-  renderCurrentStage();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function completeStage(stageId) {
-  State.completedStages[stageId] = true;
-  saveState();
-  updateStageNav();
-  updateProgress();
-}
-
-function updateStageNav() {
-  const items = document.querySelectorAll('.stage-nav__item');
-  const currentIdx = STAGES.indexOf(State.currentStage);
-  items.forEach(function (item) {
-    const sid = item.dataset.stage;
-    const idx = STAGES.indexOf(sid);
-    item.removeAttribute('aria-current');
-    item.classList.remove('is-complete');
-    item.disabled = false;
-
-    if (sid === State.currentStage) {
-      item.setAttribute('aria-current', 'step');
-    } else if (State.completedStages[sid]) {
-      item.classList.add('is-complete');
-    }
-    if (idx > currentIdx && !State.completedStages[STAGES[idx - 1]]) {
-      item.disabled = true;
-    }
-  });
-}
-
-function updateProgress() {
-  const total = STAGES.length;
-  const done = Object.keys(State.completedStages).length;
-  const pct = Math.round((done / total) * 100);
-  const barFill = document.getElementById('progressFill');
-  const label = document.getElementById('progressLabel');
-  if (barFill) barFill.style.width = pct + '%';
-  if (label) label.textContent = done + ' dari ' + total + ' tahap selesai';
-}
-
-function buildStageNav() {
-  const nav = document.getElementById('stageNavList');
-  if (!nav) return;
-  nav.innerHTML = STAGES.map(function (sid, idx) {
-    return '<li><button type="button" class="stage-nav__item" data-stage="' + sid + '">' +
-      '<span class="stage-nav__num">' + (idx + 1) + '</span>' +
-      esc(STAGE_LABELS[idx]) +
-      '</button></li>';
-  }).join('');
-}
-
-/* ============================================================
-   4. DISPATCHER RENDER
-   ============================================================ */
-
-function renderCurrentStage() {
-  const container = document.getElementById('stageContainer');
-  if (!container) return;
-  container.innerHTML = '';
-  updateProgress();
-
-  switch (State.currentStage) {
-    case 'orientasi': renderOrientasi(container); break;
-    case 'eksplorasi': renderEksplorasi(container); break;
-    case 'contoh': renderContoh(container); break;
-    case 'simulasi': renderSimulasi(container); break;
-    case 'latihan': renderLatihan(container); break;
-    case 'asesmen': renderAsesmen(container); break;
-    case 'review': renderReview(container); break;
-    case 'refleksi': renderRefleksi(container); break;
-    case 'hasil': renderHasil(container); break;
-    default: container.innerHTML = '<p class="panel">Tahap tidak ditemukan.</p>';
-  }
-}
+const State = lesson.state;
+const { saveState, navigateTo, completeStage, renderCurrentStage, resetProgress } = lesson;
+const { esc, showNotice } = Engine;
 
 /* ============================================================
    5. STAGE: ORIENTASI
@@ -1387,31 +1229,9 @@ function buildFeedbackBox(type, title, body) {
    16. UTILITAS UMUM
    ============================================================ */
 
-function esc(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
 function stripHtml(str) {
   if (!str) return '';
   return String(str).replace(/<[^>]*>/g, '');
-}
-
-let noticeTimer = null;
-function showNotice(msg, duration) {
-  const el = document.getElementById('appNotice');
-  if (!el) return;
-  el.textContent = msg;
-  el.classList.add('is-visible');
-  clearTimeout(noticeTimer);
-  noticeTimer = setTimeout(function () {
-    el.classList.remove('is-visible');
-  }, duration || 3000);
 }
 
 function confirmReset() {
@@ -1437,11 +1257,7 @@ function confirmReset() {
   document.getElementById('cancelResetBtn').addEventListener('click', close);
   document.getElementById('confirmResetBtn').addEventListener('click', function () {
     close();
-    clearState();
-    saveState();
-    buildStageNav();
-    updateStageNav();
-    renderCurrentStage();
+    resetProgress();
     showNotice('Progress direset. Mulai dari awal.');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
@@ -1663,22 +1479,8 @@ function handleAction(actionName, el) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-  /* Load saved state */
-  loadState();
-
-  /* Build nav */
-  buildStageNav();
-  updateStageNav();
-  updateProgress();
-
-  /* Stage nav clicks */
-  document.getElementById('stageNavList').addEventListener('click', function (e) {
-    const btn = e.target.closest('.stage-nav__item');
-    if (btn && btn.dataset.stage) navigateTo(btn.dataset.stage);
-  });
-
-  /* Reset button */
-  document.getElementById('resetAppBtn').addEventListener('click', confirmReset);
+  /* Load saved state, build nav, wire nav + reset button, first render */
+  lesson.init();
 
   /* Main event delegation */
   document.getElementById('stageContainer').addEventListener('click', function (e) {
@@ -1702,7 +1504,4 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
   });
-
-  /* Initial render */
-  renderCurrentStage();
 });

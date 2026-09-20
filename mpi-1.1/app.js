@@ -1,203 +1,63 @@
 'use strict';
 
-const STAGES = [
-  'orientasi',
-  'aktivasi',
-  'konsep',
-  'kasus',
-  'struktur',
-  'evaluasi',
-  'refleksi',
-  'selesai'
-];
+const lesson = Engine.createLesson({
+  storageKey: 'mpi-1-1-v1',
 
-const STAGE_LABELS = [
-  'Orientasi',
-  'Aktivasi',
-  'Konsep Inti',
-  'Studi Kasus',
-  'Struktur Data',
-  'Evaluasi',
-  'Refleksi',
-  'Selesai'
-];
+  stages: [
+    { id: 'orientasi', label: 'Orientasi', render: renderOrientasi },
+    { id: 'aktivasi', label: 'Aktivasi', render: renderAktivasi },
+    { id: 'konsep', label: 'Konsep Inti', render: renderKonsep },
+    { id: 'kasus', label: 'Studi Kasus', render: renderKasus },
+    { id: 'struktur', label: 'Struktur Data', render: renderStruktur },
+    { id: 'evaluasi', label: 'Evaluasi', render: renderEvaluasi },
+    { id: 'refleksi', label: 'Refleksi', render: renderRefleksi },
+    { id: 'selesai', label: 'Selesai', render: renderSelesai }
+  ],
 
-const STORAGE_KEY = 'mpi-1-1-v1';
+  createState: function () {
+    return {
+      currentStage: 'orientasi',
+      completedStages: {},
 
-const State = {
-  currentStage: 'orientasi',
-  completedStages: {},
+      activationAnswers: {},
+      activationChecked: false,
 
-  activationAnswers: {},
-  activationChecked: false,
+      conceptAnswers: {},
+      conceptChecked: false,
 
-  conceptAnswers: {},
-  conceptChecked: false,
+      caseAnswers: {},
+      caseChecked: false,
 
-  caseAnswers: {},
-  caseChecked: false,
+      attrAssignments: {},
+      selectedAttrId: null,
+      structureChecked: false,
 
-  attrAssignments: {},
-  selectedAttrId: null,
-  structureChecked: false,
+      evaluation: {
+        selectedDesign: null,
+        selectedReasons: [],
+        checked: false
+      },
 
-  evaluation: {
-    selectedDesign: null,
-    selectedReasons: [],
-    checked: false
-  },
+      reflections: {},
 
-  reflections: {},
-
-  score: {
-    activationCorrect: 0,
-    activationTotal: 0,
-    conceptCorrect: 0,
-    conceptTotal: 0,
-    caseCorrect: 0,
-    caseTotal: 0,
-    structureCorrect: 0,
-    structureTotal: 0,
-    evaluationCorrect: 0
-  }
-};
-
-function saveState() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(State));
-  } catch (e) { }
-}
-
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return false;
-    const parsed = JSON.parse(raw);
-    Object.assign(State, parsed);
-    State.evaluation = Object.assign({ selectedDesign: null, selectedReasons: [], checked: false }, State.evaluation || {});
-    State.score = Object.assign({
-      activationCorrect: 0,
-      activationTotal: 0,
-      conceptCorrect: 0,
-      conceptTotal: 0,
-      caseCorrect: 0,
-      caseTotal: 0,
-      structureCorrect: 0,
-      structureTotal: 0,
-      evaluationCorrect: 0
-    }, State.score || {});
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-function clearState() {
-  try { localStorage.removeItem(STORAGE_KEY); } catch (e) { }
-  State.currentStage = 'orientasi';
-  State.completedStages = {};
-  State.activationAnswers = {};
-  State.activationChecked = false;
-  State.conceptAnswers = {};
-  State.conceptChecked = false;
-  State.caseAnswers = {};
-  State.caseChecked = false;
-  State.attrAssignments = {};
-  State.selectedAttrId = null;
-  State.structureChecked = false;
-  State.evaluation = { selectedDesign: null, selectedReasons: [], checked: false };
-  State.reflections = {};
-  State.score = {
-    activationCorrect: 0,
-    activationTotal: 0,
-    conceptCorrect: 0,
-    conceptTotal: 0,
-    caseCorrect: 0,
-    caseTotal: 0,
-    structureCorrect: 0,
-    structureTotal: 0,
-    evaluationCorrect: 0
-  };
-}
-
-function navigateTo(stageId) {
-  const targetIdx = STAGES.indexOf(stageId);
-  const currentIdx = STAGES.indexOf(State.currentStage);
-  if (targetIdx === -1) return;
-
-  if (targetIdx > currentIdx) {
-    for (let i = currentIdx; i < targetIdx; i++) {
-      if (!State.completedStages[STAGES[i]]) {
-        showNotice('Selesaikan tahap ' + STAGE_LABELS[i] + ' terlebih dahulu.');
-        return;
+      score: {
+        activationCorrect: 0,
+        activationTotal: 0,
+        conceptCorrect: 0,
+        conceptTotal: 0,
+        caseCorrect: 0,
+        caseTotal: 0,
+        structureCorrect: 0,
+        structureTotal: 0,
+        evaluationCorrect: 0
       }
-    }
+    };
   }
+});
 
-  State.currentStage = stageId;
-  saveState();
-  updateStageNav();
-  renderCurrentStage();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function completeStage(stageId) {
-  State.completedStages[stageId] = true;
-  saveState();
-  updateStageNav();
-}
-
-function updateStageNav() {
-  const items = document.querySelectorAll('.stage-nav__item');
-  const currentIdx = STAGES.indexOf(State.currentStage);
-
-  items.forEach(function (item) {
-    const sid = item.dataset.stage;
-    const idx = STAGES.indexOf(sid);
-    item.removeAttribute('aria-current');
-    item.classList.remove('is-complete');
-    item.disabled = false;
-
-    if (sid === State.currentStage) {
-      item.setAttribute('aria-current', 'step');
-    } else if (State.completedStages[sid]) {
-      item.classList.add('is-complete');
-    }
-
-    if (idx > currentIdx && !State.completedStages[STAGES[idx - 1]]) {
-      item.disabled = true;
-    }
-  });
-}
-
-function updateProgress() {
-  const total = STAGES.length;
-  const done = Object.keys(State.completedStages).length;
-  const pct = Math.round((done / total) * 100);
-  const barFill = document.getElementById('progressFill');
-  const barLabel = document.getElementById('progressLabel');
-  if (barFill) barFill.style.width = pct + '%';
-  if (barLabel) barLabel.textContent = done + ' dari ' + total + ' tahap selesai';
-}
-
-function renderCurrentStage() {
-  const container = document.getElementById('stageContainer');
-  if (!container) return;
-  container.innerHTML = '';
-  updateProgress();
-
-  switch (State.currentStage) {
-    case 'orientasi': renderOrientasi(container); break;
-    case 'aktivasi': renderAktivasi(container); break;
-    case 'konsep': renderKonsep(container); break;
-    case 'kasus': renderKasus(container); break;
-    case 'struktur': renderStruktur(container); break;
-    case 'evaluasi': renderEvaluasi(container); break;
-    case 'refleksi': renderRefleksi(container); break;
-    case 'selesai': renderSelesai(container); break;
-    default: container.innerHTML = '<p>Tahap tidak ditemukan.</p>';
-  }
-}
+const State = lesson.state;
+const { saveState, navigateTo, completeStage, renderCurrentStage, resetProgress } = lesson;
+const { esc, showNotice, confirmAction } = Engine;
 
 function renderOrientasi(container) {
   const activityHTML = DATA.activityFlow.map(function (item, idx) {
@@ -1023,10 +883,7 @@ function renderSelesai(container) {
 
   document.getElementById('restartBtn').addEventListener('click', function () {
     if (!confirmAction('Mulai dari awal? Semua progres pada materi ini akan dihapus.')) return;
-    clearState();
-    saveState();
-    updateStageNav();
-    renderCurrentStage();
+    resetProgress();
   });
 }
 
@@ -1044,66 +901,4 @@ function findAttribute(attributes, id) {
   return attributes.find(function (item) { return item.id === id; });
 }
 
-function esc(value) {
-  if (value === null || value === undefined) return '';
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-let noticeTimer = null;
-function showNotice(message) {
-  const el = document.getElementById('appNotice');
-  if (!el) return;
-  el.textContent = message;
-  el.classList.add('is-visible');
-  if (noticeTimer) clearTimeout(noticeTimer);
-  noticeTimer = setTimeout(function () {
-    el.classList.remove('is-visible');
-  }, 3200);
-}
-
-function confirmAction(message) {
-  return window.confirm(message);
-}
-
-function buildStageNav() {
-  const nav = document.getElementById('stageNavList');
-  if (!nav) return;
-  nav.innerHTML = STAGES.map(function (stageId, idx) {
-    return `<li><button type="button" class="stage-nav__item" data-stage="${stageId}">
-      <span class="stage-nav__num">${idx + 1}</span>
-      <span class="stage-nav__label">${STAGE_LABELS[idx]}</span>
-    </button></li>`;
-  }).join('');
-
-  nav.querySelectorAll('.stage-nav__item').forEach(function (button) {
-    button.addEventListener('click', function () {
-      navigateTo(button.dataset.stage);
-    });
-  });
-}
-
-function init() {
-  buildStageNav();
-  loadState();
-
-  const resetBtn = document.getElementById('resetAppBtn');
-  if (resetBtn) {
-    resetBtn.addEventListener('click', function () {
-      if (!confirmAction('Reset seluruh aplikasi? Semua progres pada materi ini akan dihapus.')) return;
-      clearState();
-      saveState();
-      updateStageNav();
-      renderCurrentStage();
-    });
-  }
-
-  updateStageNav();
-  renderCurrentStage();
-}
-
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', lesson.init);
