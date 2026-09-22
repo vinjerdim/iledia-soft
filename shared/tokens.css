@@ -60,4 +60,7 @@
   --radius-md: 8px;
 
   --max-content-width: 1100px;
+
+  /* Tinggi .app-header, dipakai sebagai offset sticky oleh .stage-nav. */
+  --header-height: 61px;
 }

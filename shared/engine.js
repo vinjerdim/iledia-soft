@@ -48,6 +48,75 @@ const Engine = (function () {
     return value !== null && typeof value === 'object' && !Array.isArray(value);
   }
 
+  /* ============================================================
+     Pengacakan urutan pilihan
+     ============================================================
+     Setiap kumpulan pilihan yang ditampilkan ke murid diacak SATU
+     KALI, lalu urutannya ikut tersimpan bersama progres. Render
+     ulang dan reload halaman memakai urutan yang sama, sehingga
+     jawaban yang sudah tersimpan tidak pernah berpindah ke pilihan
+     lain.
+
+     JANGAN memanggil shuffle() langsung dari renderer: setiap
+     interaksi menggambar ulang tahap, jadi urutannya akan berubah
+     tiap klik. Pakai lesson.order() / lesson.orderItems().
+
+     Konsekuensinya: jawaban WAJIB disimpan per id pilihan, bukan
+     per indeks. Indeks tidak bermakna pada daftar yang diacak.
+     ============================================================ */
+
+  /* Fisher-Yates. Mengembalikan array BARU; masukan tidak diubah. */
+  function shuffle(list) {
+    const out = list.slice();
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = out[i];
+      out[i] = out[j];
+      out[j] = tmp;
+    }
+    return out;
+  }
+
+  /* Cocokkan urutan tersimpan dengan daftar id yang berlaku sekarang,
+     untuk kasus isi data.js berubah setelah murid mulai belajar:
+       - id yang sudah tidak ada di data.js dibuang
+       - id ganda pada data tersimpan dibuang
+       - id baru disisipkan pada posisi acak
+       - urutan relatif id lama dipertahankan
+     Bila tidak ada satu pun id lama yang masih terpakai (mis. soal
+     diganti seluruhnya), urutannya diacak penuh. Kembaliannya selalu
+     permutasi persis dari `ids`. */
+  function reconcileOrder(saved, ids) {
+    const valid = Object.create(null);
+    ids.forEach(function (id) { valid[id] = true; });
+
+    const taken = Object.create(null);
+    const kept = [];
+    if (Array.isArray(saved)) {
+      saved.forEach(function (id) {
+        if (valid[id] && !taken[id]) {
+          taken[id] = true;
+          kept.push(id);
+        }
+      });
+    }
+    if (!kept.length) return shuffle(ids);
+
+    const added = ids.filter(function (id) { return !taken[id]; });
+    shuffle(added).forEach(function (id) {
+      kept.splice(Math.floor(Math.random() * (kept.length + 1)), 0, id);
+    });
+    return kept;
+  }
+
+  function sameOrder(a, b) {
+    if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+
   /* Merge saved progress into the fresh default state so that fields added
      to a lesson later still get their defaults for returning students.
      - objects merge key by key; a saved non-object never replaces a default object
@@ -73,8 +142,9 @@ const Engine = (function () {
   /* config:
        storageKey   localStorage key (bump the suffix when the saved shape breaks)
        stages       [{ id, label, render(container) }] in learning order
-       createState  () => fresh state object; must include currentStage
-                    and completedStages
+       createState  () => fresh state object; must include currentStage,
+                    completedStages, and shuffles ({} — rumah bagi
+                    urutan acak, lihat lesson.order())
        lockedNotice optional (label) => message shown when a stage is still locked
        noticeMs     optional default toast duration
        onResetClick optional handler for #resetAppBtn (default: window.confirm,
@@ -111,6 +181,50 @@ const Engine = (function () {
       try { localStorage.removeItem(config.storageKey); } catch (e) { }
       Object.keys(state).forEach(function (key) { delete state[key]; });
       Object.assign(state, config.createState());
+    }
+
+    /* state.shuffles selalu dibaca ulang lewat fungsi ini: clearState()
+       mengganti isi objek state, jadi referensinya tidak boleh di-cache. */
+    function shuffleStore() {
+      if (!isObject(state.shuffles)) state.shuffles = {};
+      return state.shuffles;
+    }
+
+    /* Urutan tampil untuk sekumpulan id pilihan. Dibuat sekali, lalu
+       dipakai apa adanya pada render-render berikutnya.
+         key  string unik, mis. 'uji:c2:opsi'
+         ids  daftar id pilihan versi data.js yang sedang dipakai      */
+    function order(key, ids) {
+      const store = shuffleStore();
+      const saved = store[key];
+      const next = reconcileOrder(saved, ids);
+      if (!sameOrder(saved, next)) {
+        /* Disimpan ke memori lebih dulu, supaya urutan tetap stabil
+           sepanjang sesi walaupun saveState() gagal (kuota penuh). */
+        store[key] = next;
+        saveState();
+      }
+      return next.slice();
+    }
+
+    /* Sama seperti order(), tapi mengembalikan objek datanya.
+       Setiap item wajib punya id unik (default properti 'id'). */
+    function orderItems(key, items, idProp) {
+      const prop = idProp || 'id';
+      const byId = Object.create(null);
+      const ids = items.map(function (item) {
+        byId[item[prop]] = item;
+        return item[prop];
+      });
+      return order(key, ids).map(function (id) { return byId[id]; });
+    }
+
+    /* Buang urutan tersimpan agar render berikutnya mengacak ulang.
+       Tanpa argumen: seluruh urutan pada materi ini. */
+    function reshuffle(key) {
+      if (key === undefined) state.shuffles = {};
+      else delete shuffleStore()[key];
+      saveState();
     }
 
     function updateProgress() {
@@ -237,12 +351,18 @@ const Engine = (function () {
       navigateTo: navigateTo,
       completeStage: completeStage,
       resetProgress: resetProgress,
+      order: order,
+      orderItems: orderItems,
+      reshuffle: reshuffle,
       init: init
     };
   }
 
   return {
     createLesson: createLesson,
+    /* shuffle() sengaja diekspos hanya untuk pengujian. Renderer harus
+       memakai lesson.order()/lesson.orderItems() agar urutannya stabil. */
+    shuffle: shuffle,
     esc: esc,
     showNotice: showNotice,
     confirmAction: confirmAction
