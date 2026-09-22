@@ -7,6 +7,7 @@ Kumpulan media pembelajaran interaktif untuk mata pelajaran Rekayasa Perangkat L
 | TP | Materi | Judul | Model | Folder |
 | -- | ------ | ----- | ----- | ------ |
 | 1 | 1.1 | Konsep Dasar Basis Data Relasional | Discovery Learning | [`fase-f/mpi-1.1/`](fase-f/mpi-1.1/index.html) |
+| 1 | 1.2 | Analisis Entitas dan Atribut dari Dokumen Spesifikasi | Problem Based Learning | [`fase-f/mpi-1.2/`](fase-f/mpi-1.2/index.html) |
 
 Halaman utama ([`index.html`](index.html)) menampilkan daftar materi, dikelompokkan per fase lewat tab dan per tujuan pembelajaran lewat pills **TP**. Pills dibangun otomatis dari atribut `data-tp` pada tiap card, dan judul topiknya diambil dari `data-tp-labels` pada elemen `.tp-filter`.
 
@@ -51,7 +52,9 @@ Skrip: `../../shared/engine.js` → `data.js` → `app-core.js` → `app-stage-*
 
 `shared/engine.js` menyediakan `Engine.createLesson()` sehingga penyimpanan progres, penguncian tahap, dan progress bar tidak perlu ditulis ulang per materi. Kerangka halaman tiap materi wajib menyediakan id berikut: `#stageNavList`, `#stageContainer`, `#progressFill`, `#progressLabel`, `#appNotice`, dan `#resetAppBtn`.
 
-`shared/base.css` memuat komponen yang dipakai lintas materi: tombol, panel, kotak umpan balik, input, kuis pilihan (`.choice-option` beserta state benar/salah), kolam chip (`.attr-pool` / `.attr-chip`), petunjuk yang dapat dibuka (`.hint-reveal`), dan tabel data (`.mini-table`). Pakai komponen ini lebih dulu sebelum menulis gaya baru di `styles.css` materi.
+`shared/base.css` memuat komponen yang dipakai lintas materi: tombol, panel, kotak umpan balik, input, kuis pilihan (`.choice-option` beserta state benar/salah), kolam chip (`.attr-pool` / `.attr-chip`) beserta kolom sasarannya (`.entity-column`), kartu konsep (`.concept-card`), papan menjodohkan (`.match-grid`), daftar penjelasan (`.explain-item`), penghitung temuan (`.find-counter`), skala Likert (`.likert`), panel skor penutup (`.done-panel` / `.score-list`), petunjuk yang dapat dibuka (`.hint-reveal`), dan tabel data (`.mini-table`). Pakai komponen ini lebih dulu sebelum menulis gaya baru di `styles.css` materi.
+
+Jumlah kolom pada `.entity-column` mengikuti `--entity-columns-count` (bawaan 3); materi dengan empat entitas cukup menyetel variabel itu pada elemennya.
 
 ### Pengacakan pilihan jawaban
 
