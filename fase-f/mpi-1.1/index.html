@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Konsep Dasar Basis Data Relasional — Rekayasa Perangkat Lunak Fase F</title>
+    <meta
+      name="description"
+      content="Media pembelajaran interaktif berbasis Discovery Learning untuk mengidentifikasi konsep dasar basis data relasional dan pentingnya perancangan struktur data dalam pengembangan perangkat lunak."
+    />
+    <link rel="stylesheet" href="../../shared/tokens.css" />
+    <link rel="stylesheet" href="../../shared/base.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body>
+    <a href="#konten-utama" class="skip-link">Lewati ke konten utama</a>
+
+    <header class="app-header">
+      <div class="app-header__brand">
+        <span class="app-header__kicker">Rekayasa Perangkat Lunak — Fase F (SMK)</span>
+        <h1 class="app-header__title">Konsep Dasar Basis Data Relasional</h1>
+      </div>
+      <div class="app-header__actions">
+        <button type="button" id="resetAppBtn" class="btn btn--ghost btn--small">Reset</button>
+        <a href="../../index.html" class="btn btn--ghost btn--small">Beranda</a>
+      </div>
+    </header>
+
+    <nav class="stage-nav" aria-label="Tahapan pembelajaran">
+      <ol class="stage-nav__list" id="stageNavList">
+        <!-- Diisi oleh engine.js -->
+      </ol>
+    </nav>
+
+    <main id="konten-utama">
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-label">
+          <span id="progressLabel">0 dari 9 tahap selesai</span>
+          <span class="progress-bar-note">Progres disimpan otomatis di perangkat ini</span>
+        </div>
+        <div
+          class="progress-bar"
+          role="progressbar"
+          aria-label="Progres pembelajaran"
+          aria-valuenow="0"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
+          <div class="progress-bar__fill" id="progressFill" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div id="stageContainer">
+        <p class="loading-state">Memuat media pembelajaran…</p>
+      </div>
+    </main>
+
+    <div class="app-notice" id="appNotice" role="status" aria-live="polite"></div>
+
+    <!-- URUTAN MUAT INI WAJIB DIJAGA.
+         app.js merujuk fungsi render* saat menyusun daftar tahap, jadi
+         seluruh berkas app-stage-*.js harus sudah dimuat lebih dulu.
+         app.js memeriksa kelengkapannya dan menampilkan pesan jelas
+         bila ada berkas yang lupa didaftarkan di sini. -->
+    <script src="../../shared/engine.js"></script>
+    <script src="data.js"></script>
+    <script src="app-core.js"></script>
+    <script src="app-stage-awal.js"></script>
+    <script src="app-stage-inti.js"></script>
+    <script src="app-stage-akhir.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -158,6 +158,23 @@ strong {
    Stage navigation
    ========================================================================= */
 
+.stage-nav {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+  position: sticky;
+  top: var(--header-height);
+  z-index: 19;
+}
+
+/* Di layar sempit header bisa membungkus, sehingga offset sticky tidak
+   lagi tepat dan nav menutupi konten. Lebih aman dibiarkan mengalir. */
+@media (max-width: 560px) {
+  .stage-nav {
+    position: static;
+  }
+}
+
 .stage-nav__list {
   display: flex;
   list-style: none;
@@ -181,6 +198,24 @@ strong {
   cursor: pointer;
   white-space: nowrap;
   transition: background-color 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.stage-nav__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border-strong);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  flex-shrink: 0;
+}
+
+.stage-nav__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .stage-nav__item:hover:not(:disabled) {
@@ -248,6 +283,27 @@ strong {
 
 .progress-bar-wrap {
   margin-bottom: var(--space-4);
+}
+
+.progress-bar-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--color-ink-muted);
+  margin-bottom: var(--space-2);
+}
+
+.progress-bar-note {
+  font-size: 0.78rem;
+}
+
+.loading-state {
+  text-align: center;
+  padding: var(--space-7);
+  color: var(--color-ink-muted);
 }
 
 .progress-bar {
@@ -435,6 +491,48 @@ strong {
   display: none;
 }
 
+.input-text,
+.input-textarea,
+.input-select {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  padding: 9px 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  min-height: 44px;
+}
+
+.input-textarea {
+  min-height: 110px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.input-text:focus,
+.input-textarea:focus,
+.input-select:focus {
+  border-color: var(--color-primary);
+}
+
+.input-text.has-error,
+.input-textarea.has-error,
+.input-select.has-error {
+  border-color: var(--color-error);
+  background: var(--color-error-soft);
+}
+
+.input-text:disabled,
+.input-textarea:disabled,
+.input-select:disabled,
+.input-text[readonly],
+.input-textarea[readonly] {
+  background: var(--color-bg-grid);
+  color: var(--color-ink-muted);
+}
+
 /* =========================================================================
    Feedback boxes
    ========================================================================= */
@@ -508,6 +606,12 @@ strong {
   pointer-events: none;
 }
 
+/* engine.js menyalakan toast dengan menambah kelas ini. Tanpa aturan
+   di bawah, showNotice() tidak pernah terlihat. */
+.app-notice.is-visible {
+  opacity: 1;
+}
+
 /* =========================================================================
    Modal (confirm dialog)
    ========================================================================= */
@@ -543,7 +647,7 @@ strong {
 }
 
 /* =========================================================================
-   STAGE 1 — Orientasi
+   Komponen bersama — Daftar tujuan
    ========================================================================= */
 
 .objectives-list {
@@ -577,44 +681,264 @@ strong {
 }
 
 /* =========================================================================
-   STAGE 2 — SRS Reader & Classifier
+   Komponen bersama — Kuis pilihan
    ========================================================================= */
 
-.candidate-list {
+.question-stack {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
 }
 
-.candidate-item__header {
+.question-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background: var(--color-surface);
+}
+
+.question-card__prompt {
+  font-weight: 600;
+  margin-bottom: var(--space-3);
+}
+
+.choice-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.choice-option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  color: var(--color-ink);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: var(--color-surface);
+  min-height: 44px;
+}
+
+.choice-option:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.choice-option input {
+  margin-top: 2px;
+  accent-color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.choice-option.is-selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.choice-option.is-correct {
+  border-color: var(--color-success);
+  background: var(--color-success-soft);
+}
+
+.choice-option.is-incorrect {
+  border-color: var(--color-error);
+  background: var(--color-error-soft);
+}
+
+/* Jawaban benar yang TIDAK dipilih murid pada soal multi-pilih. */
+.choice-option.unchecked-missed {
+  border-color: var(--color-warning);
+  background: var(--color-warning-soft);
+}
+
+.choice-option:disabled {
+  cursor: default;
+}
+
+.question-feedback {
+  margin-top: var(--space-3);
+  font-size: 0.85rem;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+}
+
+.question-feedback.is-correct {
+  background: var(--color-success-soft);
+  color: var(--color-success-strong);
+  border: 1px solid var(--color-success);
+}
+
+.question-feedback.is-incorrect {
+  background: var(--color-error-soft);
+  color: var(--color-error-strong);
+  border: 1px solid var(--color-error);
+}
+
+.question-feedback:empty {
+  display: none;
+}
+
+/* =========================================================================
+   Komponen bersama — Kolam chip (pilih lalu tempatkan)
+   ========================================================================= */
+
+.attr-pool-section {
+  margin-bottom: var(--space-4);
+}
+
+.attr-pool-label {
+  font-weight: 600;
+  font-size: 0.88rem;
+  margin-bottom: var(--space-2);
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-2);
-  flex-wrap: wrap;
-}
-
-.candidate-item__label {
-  font-family: var(--font-mono);
-  font-size: 0.88rem;
-  font-weight: 600;
-  flex: 1;
-}
-
-.candidate-item__actions {
-  display: flex;
   gap: var(--space-2);
+}
+
+.attr-pool-count {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+  border-radius: 10px;
+  padding: 2px 7px;
+}
+
+.attr-pool {
+  display: flex;
   flex-wrap: wrap;
+  gap: var(--space-2);
+  min-height: 48px;
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background: var(--color-bg);
 }
 
-.classify-btn.is-selected[data-classify="bukan"] {
+.attr-chip {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  padding: 6px 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 20px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  cursor: pointer;
+  min-height: 36px;
+  white-space: nowrap;
+}
+
+/* Target sentuh minimal 44px pada perangkat layar sentuh. */
+@media (pointer: coarse) {
+  .attr-chip {
+    min-height: 44px;
+  }
+}
+
+.attr-chip:hover {
   background: var(--color-bg-grid);
-  border-color: var(--color-border-strong);
-  color: var(--color-ink-muted);
+  border-color: var(--color-ink-muted);
 }
 
-.candidate-item__feedback:empty {
+.attr-chip.is-selected {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.attr-chip--blue {
+  background: var(--color-blue-soft);
+  border-color: var(--color-blue);
+  color: var(--color-blue-strong);
+}
+
+.attr-chip--green {
+  background: var(--color-green-soft);
+  border-color: var(--color-green);
+  color: var(--color-green-strong);
+}
+
+.attr-chip--orange {
+  background: var(--color-orange-soft);
+  border-color: var(--color-orange);
+  color: var(--color-orange-strong);
+}
+
+.attr-chip--correct {
+  border-color: var(--color-success);
+}
+
+.attr-chip--correct::after {
+  content: " ✓";
+  color: var(--color-success);
+  font-weight: 700;
+}
+
+.attr-chip--incorrect {
+  border-color: var(--color-error);
+}
+
+.attr-chip--incorrect::after {
+  content: " ✗";
+  color: var(--color-error);
+  font-weight: 700;
+}
+
+/* Pesan visual saat kolam kosong. Renderer tetap wajib menyediakan
+   teks .sr-only yang setara, karena ::after tidak terbaca screen reader. */
+.attr-pool--empty::after {
+  content: "Semua kolom sudah ditempatkan ✓";
+  font-size: 0.85rem;
+  color: var(--color-success);
+  font-style: italic;
+}
+
+/* Penanda chip yang sedang "dibawa" murid. Sticky agar tetap terlihat
+   saat menggulir ke tabel tujuan di layar sempit. */
+.selected-indicator {
+  font-size: 0.85rem;
+  color: var(--color-primary-strong);
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-3);
   display: none;
+  position: sticky;
+  top: calc(var(--header-height) + 44px);
+  z-index: 5;
+}
+
+.selected-indicator.is-visible {
+  display: block;
+}
+
+/* =========================================================================
+   Komponen bersama — Petunjuk yang dapat dibuka
+   ========================================================================= */
+
+.hint-reveal {
+  margin-top: var(--space-3);
+}
+
+.hint-reveal summary {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary-soft);
 }
 
 .hint-reveal summary::-webkit-details-marker {
@@ -626,17 +950,63 @@ strong {
   color: #fff;
 }
 
-/* =========================================================================
-   STAGE 3 — Entity-Attribute Mapper
-   ========================================================================= */
-
-.attr-pool-section {
-  margin-bottom: var(--space-4);
+.hint-reveal__content {
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  color: var(--color-primary-strong);
 }
 
-.attr-pool--empty::after {
-  content: "Semua atribut sudah ditempatkan ✓";
-  font-size: 0.85rem;
-  color: var(--color-success);
-  font-style: italic;
+/* =========================================================================
+   Komponen bersama — Tabel data
+   ========================================================================= */
+
+.mini-table-wrap {
+  overflow-x: auto;
+}
+
+.mini-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.mini-table th,
+.mini-table td {
+  border: 1px solid var(--color-border);
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.mini-table th {
+  background: var(--color-bg-grid);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+/* =========================================================================
+   Komponen bersama — Grid otomatis
+   ========================================================================= */
+
+.auto-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--auto-grid-min, 220px), 1fr));
+  gap: var(--space-3);
+}
+
+/* =========================================================================
+   Gerak
+   ========================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
