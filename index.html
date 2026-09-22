@@ -1,344 +1,350 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Media Pembelajaran Interaktif — Rekayasa Perangkat Lunak</title>
+    <meta
+      name="description"
+      content="Kumpulan media pembelajaran interaktif untuk mata pelajaran Rekayasa Perangkat Lunak SMK (Fase F)."
+    />
+    <link rel="stylesheet" href="shared/tokens.css" />
+    <style>
+      :root {
+        --radius-lg: 12px;
+        --max-width: 1180px;
+      }
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Media Pembelajaran Interaktif — Rekayasa Perangkat Lunak</title>
-  <meta name="description"
-    content="Kumpulan media pembelajaran interaktif untuk mata pelajaran Rekayasa Perangkat Lunak SMK (Fase F).">
-  <link rel="stylesheet" href="shared/tokens.css">
-  <style>
-    :root {
-      --radius-lg: 12px;
-      --max-width: 1180px;
-    }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
 
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
+      html {
+        color-scheme: light;
+      }
 
-    html {
-      color-scheme: light;
-    }
+      body {
+        margin: 0;
+        font-family: var(--font-body);
+        color: var(--color-ink);
+        background-color: var(--color-bg);
+        background-image:
+          linear-gradient(var(--color-bg-grid) 1px, transparent 1px),
+          linear-gradient(90deg, var(--color-bg-grid) 1px, transparent 1px);
+        background-size: 28px 28px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+      }
 
-    body {
-      margin: 0;
-      font-family: var(--font-body);
-      color: var(--color-ink);
-      background-color: var(--color-bg);
-      background-image:
-        linear-gradient(var(--color-bg-grid) 1px, transparent 1px),
-        linear-gradient(90deg, var(--color-bg-grid) 1px, transparent 1px);
-      background-size: 28px 28px;
-      line-height: 1.55;
-      -webkit-font-smoothing: antialiased;
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-    }
+      h1,
+      h2,
+      h3 {
+        font-family: var(--font-display);
+        color: var(--color-ink);
+        margin: 0 0 var(--space-3) 0;
+        line-height: 1.25;
+      }
 
-    h1,
-    h2,
-    h3 {
-      font-family: var(--font-display);
-      color: var(--color-ink);
-      margin: 0 0 var(--space-3) 0;
-      line-height: 1.25;
-    }
+      p {
+        margin: 0 0 var(--space-3) 0;
+      }
 
-    p {
-      margin: 0 0 var(--space-3) 0;
-    }
+      .site-header {
+        background: var(--color-surface);
+        border-bottom: 1px solid var(--color-border);
+        padding: var(--space-5);
+      }
 
-    .site-header {
-      background: var(--color-surface);
-      border-bottom: 1px solid var(--color-border);
-      padding: var(--space-5);
-    }
+      .site-header__inner {
+        max-width: var(--max-width);
+        margin: 0 auto;
+      }
 
-    .site-header__inner {
-      max-width: var(--max-width);
-      margin: 0 auto;
-    }
+      .site-header__kicker {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--color-primary);
+        margin-bottom: 4px;
+      }
 
-    .site-header__kicker {
-      display: block;
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--color-primary);
-      margin-bottom: 4px;
-    }
-
-    .site-header h1 {
-      font-size: 1.8rem;
-      margin-bottom: var(--space-2);
-    }
-
-    .site-header__desc {
-      color: var(--color-ink-muted);
-      font-size: 0.95rem;
-      max-width: none;
-      margin: 0;
-    }
-
-    /* ── Tab bar ── */
-    .tab-bar {
-      background: var(--color-surface);
-      border-bottom: 1px solid var(--color-border);
-    }
-
-    .tab-bar__inner {
-      max-width: var(--max-width);
-      margin: 0 auto;
-      padding: 0 var(--space-5);
-      display: flex;
-      gap: 0;
-    }
-
-    .tab-btn {
-      font-family: var(--font-display);
-      font-size: 0.9rem;
-      font-weight: 600;
-      padding: var(--space-3) var(--space-5);
-      background: none;
-      border: none;
-      border-bottom: 3px solid transparent;
-      cursor: pointer;
-      color: var(--color-ink-muted);
-      transition: color 0.15s, border-color 0.15s;
-      margin-bottom: -1px;
-    }
-
-    .tab-btn:hover {
-      color: var(--color-ink);
-    }
-
-    .tab-btn[aria-selected="true"] {
-      color: var(--color-primary);
-      border-bottom-color: var(--color-primary);
-    }
-
-    /* ── Tab panels ── */
-    .tab-panel {
-      display: none;
-      flex: 1;
-    }
-
-    .tab-panel.is-active {
-      display: block;
-    }
-
-    .main {
-      max-width: var(--max-width);
-      margin: 0 auto;
-      padding: var(--space-6) var(--space-5);
-    }
-
-    .section-label {
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--color-ink-muted);
-      margin-bottom: var(--space-4);
-      padding-bottom: var(--space-2);
-      border-bottom: 1px solid var(--color-border);
-    }
-
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: var(--space-5);
-      margin-bottom: var(--space-7);
-    }
-
-    .card {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      display: flex;
-      flex-direction: column;
-      text-decoration: none;
-      color: var(--color-ink);
-      transition: border-color 0.15s, box-shadow 0.15s;
-      overflow: hidden;
-    }
-
-    .card:hover {
-      border-color: var(--color-primary);
-      box-shadow: 0 4px 16px rgba(202, 138, 4, 0.12);
-    }
-
-    .card:focus-visible {
-      outline: 3px solid var(--color-primary);
-      outline-offset: 2px;
-    }
-
-    .card__stripe {
-      height: 4px;
-      background: var(--color-primary);
-    }
-
-    .card__stripe--secondary {
-      background: var(--color-secondary);
-    }
-
-    .card__body {
-      padding: var(--space-5);
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .card__badge {
-      display: inline-block;
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      background: var(--color-primary-soft);
-      color: var(--color-primary-strong);
-      border-radius: 4px;
-      padding: 2px 8px;
-      margin-bottom: 14px;
-      align-self: flex-start;
-    }
-
-    .card__title {
-      font-size: 1.05rem;
-      font-family: var(--font-display);
-      margin-bottom: var(--space-2);
-    }
-
-    .card__desc {
-      font-size: 0.875rem;
-      color: var(--color-ink-muted);
-      line-height: 1.55;
-      margin: 0 0 20px;
-      flex: 1;
-    }
-
-    .card__cta {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--color-primary);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .card__cta::after {
-      content: "→";
-    }
-
-    .site-footer {
-      text-align: center;
-      padding: var(--space-5);
-      color: var(--color-ink-muted);
-      font-size: 0.8rem;
-      border-top: 1px solid var(--color-border);
-      background: var(--color-surface);
-    }
-
-    .link {
-      color: var(--color-primary);
-      text-decoration: none;
-    }
-
-    .link:hover {
-      text-decoration: underline;
-    }
-
-    @media (max-width: 600px) {
       .site-header h1 {
-        font-size: 1.35rem;
+        font-size: 1.8rem;
+        margin-bottom: var(--space-2);
+      }
+
+      .site-header__desc {
+        color: var(--color-ink-muted);
+        font-size: 0.95rem;
+        max-width: none;
+        margin: 0;
+      }
+
+      /* ── Tab bar ── */
+      .tab-bar {
+        background: var(--color-surface);
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      .tab-bar__inner {
+        max-width: var(--max-width);
+        margin: 0 auto;
+        padding: 0 var(--space-5);
+        display: flex;
+        gap: 0;
+      }
+
+      .tab-btn {
+        font-family: var(--font-display);
+        font-size: 0.9rem;
+        font-weight: 600;
+        padding: var(--space-3) var(--space-5);
+        background: none;
+        border: none;
+        border-bottom: 3px solid transparent;
+        cursor: pointer;
+        color: var(--color-ink-muted);
+        transition:
+          color 0.15s,
+          border-color 0.15s;
+        margin-bottom: -1px;
+      }
+
+      .tab-btn:hover {
+        color: var(--color-ink);
+      }
+
+      .tab-btn[aria-selected="true"] {
+        color: var(--color-primary);
+        border-bottom-color: var(--color-primary);
+      }
+
+      /* ── Tab panels ── */
+      .tab-panel {
+        display: none;
+        flex: 1;
+      }
+
+      .tab-panel.is-active {
+        display: block;
       }
 
       .main {
-        padding: var(--space-4) var(--space-3);
+        max-width: var(--max-width);
+        margin: 0 auto;
+        padding: var(--space-6) var(--space-5);
+      }
+
+      .section-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--color-ink-muted);
+        margin-bottom: var(--space-4);
+        padding-bottom: var(--space-2);
+        border-bottom: 1px solid var(--color-border);
       }
 
       .card-grid {
-        grid-template-columns: 1fr;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: var(--space-5);
+        margin-bottom: var(--space-7);
       }
-    }
-  </style>
-</head>
 
-<body>
+      .card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        display: flex;
+        flex-direction: column;
+        text-decoration: none;
+        color: var(--color-ink);
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+        overflow: hidden;
+      }
 
-  <header class="site-header">
-    <div class="site-header__inner">
-      <span class="site-header__kicker">Media Pembelajaran Interaktif</span>
-      <h1 class="site-header__title">Rekayasa Perangkat Lunak</h1>
-      <p class="site-header__desc">Kumpulan media pembelajaran interaktif untuk mendukung proses belajar Rekayasa
-        Perangkat Lunak di SMK.</p>
-      <p class="site-header__desc">Pilih fase dan media sesuai materi yang sedang dipelajari</p>
-    </div>
-  </header>
+      .card:hover {
+        border-color: var(--color-primary);
+        box-shadow: 0 4px 16px rgba(202, 138, 4, 0.12);
+      }
 
-  <nav class="tab-bar" aria-label="Navigasi fase">
-    <div class="tab-bar__inner" role="tablist">
-      <button class="tab-btn" role="tab" aria-selected="true" aria-controls="panel-fase-f" id="tab-fase-f">Fase
-        F</button>
-    </div>
-  </nav>
+      .card:focus-visible {
+        outline: 3px solid var(--color-primary);
+        outline-offset: 2px;
+      }
 
-  <div class="tab-panel is-active" id="panel-fase-f" role="tabpanel" aria-labelledby="tab-fase-f">
-    <main class="main">
-      <p class="section-label">Daftar Materi</p>
-      <div class="card-grid" role="list">
-        <a href="mpi-1.1/index.html" class="card" role="listitem"
-          aria-label="Media 1.1 Konsep Dasar Basis Data Relasional">
-          <span class="card__stripe"></span>
-          <div class="card__body">
-            <span class="card__badge">Materi 1.1</span>
-            <h2 class="card__title">Konsep Dasar Basis Data Relasional</h2>
-            <p class="card__desc">Memahami perbedaan data, informasi, dan basis data relasional serta pentingnya
-              perancangan struktur data melalui studi kasus absensi siswa.</p>
-            <span class="card__cta">Buka materi</span>
-          </div>
-        </a>
+      .card__stripe {
+        height: 4px;
+        background: var(--color-primary);
+      }
 
-        <a href="mpi-1.2/index.html" class="card" role="listitem"
-          aria-label="Media 1.2 Analisis Entitas dan Atribut Utama">
-          <span class="card__stripe"></span>
-          <div class="card__body">
-            <span class="card__badge">Materi 1.2</span>
-            <h2 class="card__title">Analisis Entitas &amp; Atribut Utama</h2>
-            <p class="card__desc">Menganalisis dokumen spesifikasi sistem untuk menentukan calon entitas dan
-              atribut utama melalui aktivitas interaktif bertahap.</p>
-            <span class="card__cta">Buka materi</span>
-          </div>
-        </a>
+      .card__stripe--secondary {
+        background: var(--color-secondary);
+      }
 
-        <a href="mpi-1.3/index.html" class="card" role="listitem"
-          aria-label="Media 1.3 Relationship, Kardinalitas &amp; Foreign Key">
-          <span class="card__stripe"></span>
-          <div class="card__body">
-            <span class="card__badge">Materi 1.3</span>
-            <h2 class="card__title">Relationship, Kardinalitas &amp; Foreign Key</h2>
-            <p class="card__desc">Memetakan relationship, kardinalitas (1:1, 1:N, N:M), dan foreign key
-              antarentitas
-              melalui eksplorasi, contoh terbimbing, simulasi data, dan studi kasus.</p>
-            <span class="card__cta">Buka materi</span>
-          </div>
-        </a>
+      .card__body {
+        padding: var(--space-5);
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
 
+      .card__badge {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        background: var(--color-primary-soft);
+        color: var(--color-primary-strong);
+        border-radius: 4px;
+        padding: 2px 8px;
+        margin-bottom: 14px;
+        align-self: flex-start;
+      }
+
+      .card__title {
+        font-size: 1.05rem;
+        font-family: var(--font-display);
+        margin-bottom: var(--space-2);
+      }
+
+      .card__desc {
+        font-size: 0.875rem;
+        color: var(--color-ink-muted);
+        line-height: 1.55;
+        margin: 0 0 20px;
+        flex: 1;
+      }
+
+      .card__cta {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--color-primary);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .card__cta::after {
+        content: "→";
+      }
+
+      .site-footer {
+        text-align: center;
+        padding: var(--space-5);
+        color: var(--color-ink-muted);
+        font-size: 0.8rem;
+        border-top: 1px solid var(--color-border);
+        background: var(--color-surface);
+      }
+
+      .link {
+        color: var(--color-primary);
+        text-decoration: none;
+      }
+
+      .link:hover {
+        text-decoration: underline;
+      }
+
+      @media (max-width: 600px) {
+        .site-header h1 {
+          font-size: 1.35rem;
+        }
+
+        .main {
+          padding: var(--space-4) var(--space-3);
+        }
+
+        .card-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="site-header">
+      <div class="site-header__inner">
+        <span class="site-header__kicker">Media Pembelajaran Interaktif</span>
+        <h1 class="site-header__title">Rekayasa Perangkat Lunak</h1>
+        <p class="site-header__desc">
+          Kumpulan media pembelajaran interaktif untuk mendukung proses belajar
+          Rekayasa Perangkat Lunak di SMK.
+        </p>
+        <p class="site-header__desc">
+          Pilih fase dan media sesuai materi yang sedang dipelajari
+        </p>
       </div>
-    </main>
-  </div>
+    </header>
 
-  <footer class="site-footer">
-    <p>iLedia — Interactive Learning Media by <a href="https://github.com/vinjerdim" target="_blank" rel="noopener"
-        class="link">vinjerdim</a></p>
-  </footer>
+    <nav class="tab-bar" aria-label="Navigasi fase">
+      <div class="tab-bar__inner" role="tablist">
+        <button
+          class="tab-btn"
+          role="tab"
+          aria-selected="true"
+          aria-controls="panel-fase-f"
+          id="tab-fase-f"
+        >
+          Fase F
+        </button>
+      </div>
+    </nav>
 
-</body>
+    <div
+      class="tab-panel is-active"
+      id="panel-fase-f"
+      role="tabpanel"
+      aria-labelledby="tab-fase-f"
+    >
+      <main class="main">
+        <p class="section-label">Daftar Materi</p>
+        <div class="card-grid">
+          <a
+            href="mpi-1.25/index.html"
+            class="card"
+            aria-label="Media 1.25 Konsep Dasar Basis Data Relasional"
+          >
+            <span class="card__stripe"></span>
+            <div class="card__body">
+              <span class="card__badge">Materi 1.25</span>
+              <h2 class="card__title">Konsep Dasar Basis Data Relasional</h2>
+              <p class="card__desc">
+                Memahami perbedaan data, informasi, dan basis data relasional
+                serta pentingnya perancangan struktur data melalui studi kasus
+                absensi siswa.
+              </p>
+              <span class="card__cta">Buka materi</span>
+            </div>
+          </a>
+        </div>
+      </main>
+    </div>
 
+    <footer class="site-footer">
+      <p>
+        iLedia — Interactive Learning Media by
+        <a
+          href="https://github.com/vinjerdim"
+          target="_blank"
+          rel="noopener"
+          class="link"
+          >vinjerdim</a
+        >
+      </p>
+    </footer>
+  </body>
 </html>
