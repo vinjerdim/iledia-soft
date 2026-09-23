@@ -20,8 +20,8 @@ function renderKonsep(container) {
   var semuaTerbuka = terbuka === d.cards.length;
 
   /* Kartu konsep TIDAK diacak: urutannya membangun pengertian
-     bertahap (entitas -> tabel -> record -> field -> kunci).
-     Yang diacak adalah latihan menjodohkan di bawahnya. */
+     bertahap (entitas -> tabel -> record -> field -> kunci -> analisis
+     kebutuhan). Yang diacak adalah latihan menjodohkan di bawahnya. */
   var kartu =
     '<div class="concept-cards">' +
     d.cards
@@ -239,6 +239,22 @@ function renderRancang(container) {
     })[0];
   }
 
+  /* Bacaan temuan analisis kebutuhan — dibaca dulu sebelum menempatkan
+     kolom. Bukan sesuatu yang diacak: urutannya sengaja mengikuti
+     alur wawancara aslinya. */
+  var temuan =
+    '<div class="panel panel--accent">' +
+    '<h3>' + esc(d.temuanTitle) + '</h3>' +
+    '<p>' + d.temuanInstruction + '</p>' +
+    '<ul class="plain-list">' +
+    d.temuan
+      .map(function (t) {
+        return '<li>' + t + '</li>';
+      })
+      .join('') +
+    '</ul>' +
+    '</div>';
+
   /* Urutan pool diacak sekali atas SELURUH kolom, lalu disaring.
      Menyaring dulu baru mengacak akan mengubah urutan tiap kali
      satu chip diambil. */
@@ -448,6 +464,7 @@ function renderRancang(container) {
 
   container.innerHTML =
     stageHead(d.kicker, d.title, d.goal) +
+    temuan +
     '<div class="panel">' +
     '<h3>' + esc(d.step1Title) + '</h3>' +
     '<p>' + d.step1Instruction + '</p>' +

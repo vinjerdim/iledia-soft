@@ -332,7 +332,7 @@ function renderSelesai(container) {
           return State.rancang.assignments[c.id] === t.id;
         });
         var fk =
-          t.id === 't_pinjam'
+          t.id === 't_transaksi'
             ? r.fkOptions.filter(function (o) {
                 return o.correct && State.rancang.foreignKeys.indexOf(o.id) !== -1;
               })
