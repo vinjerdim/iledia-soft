@@ -1,0 +1,370 @@
+/* =========================================================================
+   fase-f/mpi-2.1/styles.css — gaya khas materi ini saja.
+   Dimuat setelah ../../shared/tokens.css dan ../../shared/base.css.
+   Komponen yang dipakai lintas materi (tombol, panel, kuis, kolam chip,
+   kolom entitas, kartu konsep, papan menjodohkan, penghitung temuan,
+   skala Likert, panel selesai, tabel ringkas) sudah ada di
+   shared/base.css — jangan ditulis ulang di sini.
+   ========================================================================= */
+
+/* Dua warna tambahan untuk papan enam fungsi DBMS (tahap 5). Empat
+   warna lainnya (blue, green, purple, orange) sudah ada di tokens.css. */
+:root {
+  --color-teal: #0f7b7b;
+  --color-teal-soft: #d4ecec;
+  --color-teal-strong: #0a5656;
+  --color-rose: #a8386a;
+  --color-rose-soft: #f5dbe6;
+  --color-rose-strong: #7a2249;
+}
+
+/* =========================================================================
+   TAHAP 2 — Tiga file data siswa
+   ========================================================================= */
+
+.file-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+
+.file-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.file-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-bg-grid);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.file-card__icon {
+  font-size: 1.1rem;
+}
+
+.file-card__name {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.file-card__owner {
+  margin-left: auto;
+  font-size: 0.76rem;
+  color: var(--color-ink-muted);
+}
+
+.file-card .mini-table-wrap {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.flat-table {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.flat-table td {
+  padding: 0;
+}
+
+.flat-cell {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 2px solid transparent;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--color-ink);
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+@media (pointer: coarse) {
+  .flat-cell {
+    min-height: 44px;
+  }
+}
+
+.flat-cell:hover {
+  background: var(--color-primary-soft);
+}
+
+.flat-cell.is-found {
+  background: var(--color-success-soft);
+  border-color: var(--color-success);
+  color: var(--color-success-strong);
+  font-weight: 600;
+}
+
+.flat-cell.is-missed {
+  background: var(--color-bg-grid);
+  border-color: var(--color-border-strong);
+  color: var(--color-ink-muted);
+}
+
+.flat-cell.is-revealed {
+  background: var(--color-warning-soft);
+  border-color: var(--color-warning);
+  color: var(--color-warning-strong);
+}
+
+/* Catatan kejadian */
+.incident-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.incident-card {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-error);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: var(--space-3);
+}
+
+.incident-card__icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.incident-card__title {
+  margin: 0 0 var(--space-1);
+  font-size: 0.9rem;
+}
+
+.incident-card__text {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.stage-locked-note {
+  text-align: center;
+  font-style: italic;
+}
+
+/* =========================================================================
+   TAHAP 5 — Pusat Kendali DBMS
+   ========================================================================= */
+
+/* Enam kolom fungsi terlalu sempit bila berjajar: pecah jadi 3 + 3. */
+.fungsi-board .entity-columns {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* Tiket permintaan berupa kalimat: izinkan membungkus baris agar
+   tidak meluber keluar kolom. */
+.fungsi-board .attr-chip {
+  max-width: 100%;
+  white-space: normal;
+  text-align: left;
+  line-height: 1.35;
+  font-family: var(--font-body);
+}
+
+.bahasa-board .attr-chip {
+  font-family: var(--font-mono);
+}
+
+.entity-column--teal {
+  border-top: 4px solid var(--color-teal);
+}
+
+.entity-column--rose {
+  border-top: 4px solid var(--color-rose);
+}
+
+.attr-chip--teal {
+  background: var(--color-teal-soft);
+  border-color: var(--color-teal);
+  color: var(--color-teal-strong);
+}
+
+.attr-chip--rose {
+  background: var(--color-rose-soft);
+  border-color: var(--color-rose);
+  color: var(--color-rose-strong);
+}
+
+/* Tanda benar/salah harus tetap terlihat di atas warna kolom. */
+.attr-chip--teal.attr-chip--correct,
+.attr-chip--rose.attr-chip--correct {
+  border-color: var(--color-success);
+}
+
+.attr-chip--teal.attr-chip--incorrect,
+.attr-chip--rose.attr-chip--incorrect {
+  border-color: var(--color-error);
+}
+
+/* =========================================================================
+   TAHAP 6 — Simulasi sebelum & sesudah DBMS
+   ========================================================================= */
+
+.verify-case.is-open {
+  border-left: 4px solid var(--color-primary);
+}
+
+.verify-case__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 1rem;
+}
+
+.verify-case__icon {
+  font-size: 1.2rem;
+}
+
+.predict-block {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-grid);
+}
+
+.predict-label {
+  margin: 0 0 var(--space-2);
+  font-weight: 700;
+  font-size: 0.86rem;
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dbms-console {
+  margin-top: var(--space-3);
+  border-radius: var(--radius-md);
+  background: #1d2327;
+  color: #e6efe9;
+  overflow: hidden;
+}
+
+.dbms-console__head {
+  display: block;
+  padding: var(--space-1) var(--space-3);
+  background: #2c353b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #b8c4bd;
+}
+
+.dbms-console__body {
+  margin: 0;
+  padding: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.verify-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.verify-side {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font-size: 0.88rem;
+}
+
+.verify-side--sebelum {
+  background: var(--color-error-soft);
+  border-color: var(--color-error);
+}
+
+.verify-side--sesudah {
+  background: var(--color-success-soft);
+  border-color: var(--color-success);
+}
+
+.verify-side__head {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  margin-bottom: var(--space-1);
+}
+
+.verify-side__verdict {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-2);
+}
+
+.verify-side__verdict--baik {
+  color: var(--color-success-strong);
+}
+
+.verify-side__verdict--buruk {
+  color: var(--color-error-strong);
+}
+
+.verify-side p:last-child {
+  margin-bottom: 0;
+}
+
+.konsep-tag {
+  display: inline-block;
+  margin: var(--space-3) 0 0;
+  font-size: 0.76rem;
+  font-family: var(--font-mono);
+  color: var(--color-primary-strong);
+  background: var(--color-primary-soft);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+}
+
+/* =========================================================================
+   Responsif
+   ========================================================================= */
+
+@media (max-width: 900px) {
+  .fungsi-board .entity-columns {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .verify-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .fungsi-board .entity-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .file-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
