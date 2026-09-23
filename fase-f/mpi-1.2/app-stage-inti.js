@@ -2,13 +2,13 @@
 
 /* ============================================================
    app-stage-inti.js — Tahap 4-6 (PBL fase 3: penyelidikan)
-     4. telusur   menandai frasa pada dokumen spesifikasi
-     5. saring    memilah kandidat: entitas / atribut / bukan data
-     6. atribut   memetakan atribut, kunci, dan penghubungnya
+     4. telusur      menandai kebutuhan pada temuan lapangan
+     5. saring       memilah kutipan menurut teknik penggaliannya
+     6. klasifikasi  mengelompokkan jenis kebutuhan & menyaring usulan
    ============================================================ */
 
 /* ============================================================
-   TAHAP 4 — Telusur dokumen
+   TAHAP 4 — Telusur temuan lapangan
    ============================================================ */
 function renderTelusur(container) {
   var d = DATA.telusur;
@@ -32,10 +32,15 @@ function renderTelusur(container) {
     });
   });
 
-  var entitasTokens = tokens.filter(function (t) {
-    return t.kind === 'entitas';
-  });
-  var ditemukan = entitasTokens.filter(function (t) {
+  /* Kebutuhan sah adalah token berkind 'informasi' atau 'data';
+     kind lain (opini, proses, lain) adalah pengecoh yang dapat
+     ditandai murid, tapi tidak dihitung menuju minTemuan. */
+  function isKebutuhan(t) {
+    return t.kind === 'informasi' || t.kind === 'data';
+  }
+
+  var kebutuhanTokens = tokens.filter(isKebutuhan);
+  var ditemukan = kebutuhanTokens.filter(function (t) {
     return st.marked[t.id];
   }).length;
   var cukup = ditemukan >= d.minTemuan || st.revealed;
@@ -46,9 +51,9 @@ function renderTelusur(container) {
     if (st.marked[part.id]) {
       cls += ' is-marked is-' + part.kind;
       status = ', ditandai sebagai ' + d.kinds[part.kind].label;
-    } else if (st.revealed && part.kind === 'entitas') {
+    } else if (st.revealed && isKebutuhan(part)) {
       cls += ' is-revealed';
-      status = ', calon entitas yang terlewat';
+      status = ', kebutuhan yang terlewat';
     }
     return (
       '<button type="button" class="' + cls + '" data-token="' + esc(part.id) + '"' +
@@ -159,7 +164,7 @@ function renderTelusur(container) {
         st.lastFeedback = {
           tone: d.kinds[part.kind].tone,
           icon: d.kinds[part.kind].icon,
-          html: '<strong>' + esc(part.label) + '</strong> — ' + part.why
+          html: '<strong>' + esc(part.label) + '</strong> — ' + esc(part.why)
         };
       }
       saveState();
@@ -183,7 +188,7 @@ function renderTelusur(container) {
 }
 
 /* ============================================================
-   TAHAP 5 — Saring kandidat
+   TAHAP 5 — Saring sumbernya
    ============================================================ */
 function renderSaring(container) {
   var d = DATA.saring;
@@ -229,7 +234,7 @@ function renderSaring(container) {
     stageHead(d.kicker, d.title, d.goal) +
 
     '<div class="panel">' +
-    '<p>' + d.instruction + '</p>' +
+    '<p>' + esc(d.instruction) + '</p>' +
     board +
     hintReveal(d.hintLabel, d.hint + '<p class="hint-kbd">' + esc(d.keyboardHint) + '</p>') +
     '<div class="btn-group">' +
@@ -271,18 +276,18 @@ function renderSaring(container) {
     });
   }
 
-  bindNext(container, 'saring', 'atribut');
+  bindNext(container, 'saring', 'klasifikasi');
   applyPendingFocus(container);
 }
 
 /* ============================================================
-   TAHAP 6 — Petakan atribut
+   TAHAP 6 — Klasifikasikan kebutuhan
    ============================================================ */
-function renderAtribut(container) {
-  var d = DATA.atribut;
-  var st = State.atribut;
+function renderKlasifikasi(container) {
+  var d = DATA.klasifikasi;
+  var st = State.klasifikasi;
 
-  /* ---- Langkah 1: atribut → entitas pemiliknya ---- */
+  /* ---- Langkah 1: kebutuhan → jenisnya ---- */
   function isRight(chip) {
     return st.assignments[chip.id] === chip.entityId;
   }
@@ -293,7 +298,7 @@ function renderAtribut(container) {
   var chipBenar = d.chips.every(isRight);
 
   var board = chipBoard({
-    key: skey('atribut', 'pool'),
+    key: skey('klasifikasi', 'pool'),
     items: d.chips,
     columns: d.entities,
     st: st,
@@ -313,18 +318,19 @@ function renderAtribut(container) {
           var pemilik = findById(d.entities, c.entityId);
           return {
             right: false,
-            text: '<code>' + esc(c.label) + '</code> seharusnya milik <strong>' + esc(pemilik.name) + '</strong>',
+            text: '<code>' + esc(c.label) + '</code> seharusnya masuk <strong>' + esc(pemilik.name) + '</strong>',
             why: esc(c.why)
           };
         })
     );
   }
 
-  /* ---- Langkah 2: atribut kunci ---- */
-  var kunciBenar =
+  /* ---- Langkah 2: saring usulan tambahan ---- */
+  var usulanBenar =
     chipBenar &&
-    d.entities.every(function (en) {
-      return st.keys[en.id].pick === en.key;
+    st.checkedUsulan &&
+    d.usulan.every(function (u) {
+      return u.simpan === (st.usulan.indexOf(u.id) !== -1);
     });
 
   var langkah2 = '';
@@ -332,75 +338,9 @@ function renderAtribut(container) {
     langkah2 =
       '<div class="panel">' +
       '<h3>' + esc(d.step2Title) + '</h3>' +
-      '<p>' + d.step2Instruction + '</p>' +
-      '<div class="pk-grid">' +
-      d.entities
-        .map(function (en) {
-          /* Pilihan select ikut diacak — isinya adalah atribut milik
-             entitas itu, menurut penempatan murid sendiri. */
-          var isi = orderItems(
-            skey('atribut', 'kunci', en.id),
-            d.chips.filter(function (c) {
-              return st.assignments[c.id] === en.id;
-            })
-          );
-          var dipilih = st.keys[en.id].pick;
-          var status = '';
-          if (st.checkedKeys) {
-            status =
-              dipilih === en.key
-                ? '<span class="pk-status pk-status--ok">✓ tepat</span>'
-                : '<span class="pk-status pk-status--no">✗ belum tepat</span>';
-          }
-          return (
-            '<div class="pk-item">' +
-            '<label for="key-' + esc(en.id) + '"><code>' + esc(en.name) + '</code></label>' +
-            '<select id="key-' + esc(en.id) + '" class="input-select" data-key="' + esc(en.id) + '">' +
-            '<option value="">' + esc(d.keyPlaceholder) + '</option>' +
-            isi
-              .map(function (c) {
-                return (
-                  '<option value="' + esc(c.id) + '"' + (dipilih === c.id ? ' selected' : '') + '>' +
-                  esc(c.label) + '</option>'
-                );
-              })
-              .join('') +
-            '</select>' +
-            status +
-            '</div>'
-          );
-        })
-        .join('') +
-      '</div>' +
-      '<div class="btn-group">' +
-      '<button type="button" class="btn btn--primary" id="cekKunciBtn">' + esc(d.cekKunciLabel) + '</button>' +
-      '</div>' +
-      (st.checkedKeys
-        ? feedbackBox(
-            kunciBenar ? 'success' : 'warning',
-            kunciBenar ? '✓' : '!',
-            kunciBenar ? '<strong>' + esc(d.benarKunci) + '</strong>' : esc(d.salahKunci)
-          )
-        : '') +
-      '</div>';
-  }
-
-  /* ---- Langkah 3: saring usulan atribut penempatan ---- */
-  var usulanBenar =
-    kunciBenar &&
-    st.checkedUsulan &&
-    d.usulan.every(function (u) {
-      return u.simpan === (st.usulan.indexOf(u.id) !== -1);
-    });
-
-  var langkah3 = '';
-  if (kunciBenar) {
-    langkah3 =
-      '<div class="panel">' +
-      '<h3>' + esc(d.step3Title) + '</h3>' +
-      '<p>' + d.step3Instruction + '</p>' +
+      '<p>' + esc(d.step2Instruction) + '</p>' +
       choiceList({
-        key: skey('atribut', 'usulan'),
+        key: skey('klasifikasi', 'usulan'),
         options: d.usulan.map(function (u) {
           return { id: u.id, label: '<code>' + esc(u.label) + '</code>' };
         }),
@@ -429,7 +369,7 @@ function renderAtribut(container) {
             usulanBenar ? '<strong>' + esc(d.benarUsulan) + '</strong>' : esc(d.salahUsulan)
           ) +
           explainList(
-            order(skey('atribut', 'usulan'), d.usulan.map(function (u) { return u.id; })).map(function (id) {
+            order(skey('klasifikasi', 'usulan'), d.usulan.map(function (u) { return u.id; })).map(function (id) {
               var u = findById(d.usulan, id);
               return {
                 right: u.simpan,
@@ -447,9 +387,9 @@ function renderAtribut(container) {
 
     '<div class="panel">' +
     '<h3>' + esc(d.step1Title) + '</h3>' +
-    '<p>' + d.step1Instruction + '</p>' +
+    '<p>' + esc(d.step1Instruction) + '</p>' +
     board +
-    hintReveal('💡 Bingung menentukan pemiliknya?', d.step1Hint + '<p class="hint-kbd">' + esc(d.keyboardHint) + '</p>') +
+    hintReveal('💡 Bingung menentukan jenisnya?', d.step1Hint + '<p class="hint-kbd">' + esc(d.keyboardHint) + '</p>') +
     '<div class="btn-group">' +
     '<button type="button" class="btn btn--primary" id="cekChipBtn"' +
     (semuaDitempatkan ? '' : ' disabled') + '>' + esc(d.cekLabel) + '</button>' +
@@ -463,7 +403,6 @@ function renderAtribut(container) {
       : '') +
     '</div>' +
     langkah2 +
-    langkah3 +
 
     (usulanBenar ? nextButton(d.lanjutLabel) : '');
 
@@ -473,10 +412,9 @@ function renderAtribut(container) {
     st: st,
     onChange: function () {
       st.checkedChips = false;
-      st.checkedKeys = false;
       st.checkedUsulan = false;
       saveState();
-      renderAtribut(container);
+      renderKlasifikasi(container);
     }
   });
 
@@ -485,38 +423,8 @@ function renderAtribut(container) {
     cekChipBtn.addEventListener('click', function () {
       st.checkedChips = true;
       st.score.chips = d.chips.filter(isRight).length;
-      simpanSkorAtribut();
-      renderAtribut(container);
-    });
-  }
-
-  container.querySelectorAll('[data-key]').forEach(function (sel) {
-    sel.addEventListener('change', function () {
-      st.keys[sel.dataset.key].pick = sel.value || null;
-      st.checkedKeys = false;
-      st.checkedUsulan = false;
-      saveState();
-      focusAfter('[data-key="' + sel.dataset.key + '"]');
-      renderAtribut(container);
-    });
-  });
-
-  var cekKunciBtn = container.querySelector('#cekKunciBtn');
-  if (cekKunciBtn) {
-    cekKunciBtn.addEventListener('click', function () {
-      var belum = d.entities.filter(function (en) {
-        return !st.keys[en.id].pick;
-      });
-      if (belum.length) {
-        showNotice('Tentukan dulu atribut kunci untuk setiap entitas.');
-        return;
-      }
-      st.checkedKeys = true;
-      st.score.keys = d.entities.filter(function (en) {
-        return st.keys[en.id].pick === en.key;
-      }).length;
-      simpanSkorAtribut();
-      renderAtribut(container);
+      simpanSkorKlasifikasi();
+      renderKlasifikasi(container);
     });
   }
 
@@ -533,7 +441,7 @@ function renderAtribut(container) {
       st.checkedUsulan = false;
       saveState();
       focusAfter('input[value="' + id + '"]');
-      renderAtribut(container);
+      renderKlasifikasi(container);
     });
   });
 
@@ -544,19 +452,19 @@ function renderAtribut(container) {
       st.score.usulan = d.usulan.filter(function (u) {
         return u.simpan === (st.usulan.indexOf(u.id) !== -1);
       }).length;
-      simpanSkorAtribut();
-      renderAtribut(container);
+      simpanSkorKlasifikasi();
+      renderKlasifikasi(container);
     });
   }
 
-  function simpanSkorAtribut() {
+  function simpanSkorKlasifikasi() {
     setScore(
-      'atribut',
-      st.score.chips + st.score.keys + st.score.usulan,
-      d.chips.length + d.entities.length + d.usulan.length
+      'klasifikasi',
+      st.score.chips + st.score.usulan,
+      d.chips.length + d.usulan.length
     );
   }
 
-  bindNext(container, 'atribut', 'sajikan');
+  bindNext(container, 'klasifikasi', 'sajikan');
   applyPendingFocus(container);
 }

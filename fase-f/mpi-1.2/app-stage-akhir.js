@@ -13,7 +13,7 @@ function renderRefleksi(container) {
   var d = DATA.refleksi;
   var st = State.refleksi;
 
-  /* Mengingat kembali tebakan saat diuji klien. Tebakan boleh saja
+  /* Mengingat kembali tebakan saat menguji teknik. Tebakan boleh saja
      kosong (mis. progres lama), jadi jangan berasumsi ada isinya. */
   var recallItems = DATA.sajikan.cases
     .map(function (c) {
@@ -162,11 +162,11 @@ function renderSelesai(container) {
 
   var labelSkor = {
     masalah: 'Rumusan masalah',
-    bekal: 'Rambu analisis',
-    saring: 'Saringan kandidat',
-    atribut: 'Pemetaan atribut',
-    sajikan: 'Uji kartu data',
-    evaluasi: 'Evaluasi dokumen lain'
+    bekal: 'Bekal teknik',
+    saring: 'Saringan sumber',
+    klasifikasi: 'Klasifikasi kebutuhan',
+    sajikan: 'Uji rekomendasi teknik',
+    evaluasi: 'Evaluasi kasus lain'
   };
 
   var rincianSkor =
@@ -200,7 +200,7 @@ function renderSelesai(container) {
 
     '<div class="panel">' +
     '<h3>' + esc(d.kartuLabel) + '</h3>' +
-    entityCards(DATA.atribut.entities, DATA.atribut.chips, DATA.sajikan.keyBadge) +
+    entityCards(DATA.klasifikasi.entities, DATA.klasifikasi.chips, DATA.sajikan.keyBadge) +
     '</div>' +
 
     (State.evaluasi.conclusion.trim()
@@ -222,7 +222,7 @@ function renderSelesai(container) {
     '<ul class="plain-list">' +
     d.konsepKunci
       .map(function (k) {
-        return '<li>' + k + '</li>';
+        return '<li>' + esc(k) + '</li>';
       })
       .join('') +
     '</ul></div>' +

@@ -238,8 +238,8 @@ function explainList(items) {
 /* ============================================================
    Papan chip: kolam chip → beberapa kolom sasaran
    ============================================================
-   Mekanika yang sama dipakai dua kali: tahap 5 menyaring frasa ke
-   tiga keranjang, tahap 6 menempatkan atribut ke empat entitas.
+   Mekanika yang sama dipakai dua kali: tahap 5 menyaring kutipan ke
+   empat teknik, tahap 6 mengelompokkan kebutuhan ke jenisnya.
    Karena itu ia tinggal di sini, bukan di berkas tahap.
 
    Urutan kolam diacak SEKALI atas SELURUH chip lewat orderItems(),
@@ -390,14 +390,16 @@ function bindChipBoard(container, o) {
 }
 
 /* ============================================================
-   Kartu Data Entitas (hasil karya murid)
+   Kartu Kebutuhan (hasil karya murid)
    ============================================================
    Dipakai tahap 7 dan tahap 10. Hanya menampilkan — tidak ada
-   interaksi di dalamnya. */
-function entityCards(entities, chips, keyLabel) {
+   interaksi di dalamnya. columns berperan sebagai kategori/jenis
+   kebutuhan, chips berperan sebagai kebutuhan yang sudah
+   diklasifikasikan ke kategori tersebut (lewat columnProp). */
+function entityCards(columns, chips, keyLabel) {
   return (
     '<div class="entity-cards">' +
-    entities
+    columns
       .map(function (en) {
         var isi = chips.filter(function (c) {
           return c.entityId === en.id;

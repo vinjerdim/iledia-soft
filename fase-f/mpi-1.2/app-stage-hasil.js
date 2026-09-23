@@ -25,13 +25,13 @@ function renderSajikan(container) {
       '<span class="verify-side__verdict verify-side__verdict--' + data.verdict + '">' +
       (data.verdict === 'baik' ? '✓ berhasil' : '✗ gagal') +
       '</span>' +
-      '<p>' + data.text + '</p>' +
+      '<p>' + esc(data.text) + '</p>' +
       '</div>'
     );
   }
 
-  /* Urutan pertanyaan mengikuti dokumen (Pertanyaan 1-3 dinomori di
-     dalam judulnya). Yang diacak adalah pilihan tebakannya. */
+  /* Urutan kasus mengikuti dokumen. Yang diacak adalah pilihan
+     tebakan teknik pada tiap kasus. */
   var kasus = d.cases
     .map(function (c) {
       var u = st.cases[c.id];
@@ -88,17 +88,17 @@ function renderSajikan(container) {
     '<div class="panel panel--hero">' +
     '<h3>' + esc(d.kartuLabel) + '</h3>' +
     '<p>' + esc(d.kartuNote) + '</p>' +
-    entityCards(DATA.atribut.entities, DATA.atribut.chips, d.keyBadge) +
+    entityCards(DATA.klasifikasi.entities, DATA.klasifikasi.chips, d.keyBadge) +
     '</div>' +
 
     '<div class="panel panel--info">' +
     '<h3>' + esc(d.ujiLabel) + '</h3>' +
-    '<p>' + d.ujiInstruction + '</p>' +
+    '<p>' + esc(d.ujiInstruction) + '</p>' +
     '</div>' +
     kasus +
 
     (semuaDibuka
-      ? feedbackBox('success', '🎯', d.penutup) +
+      ? feedbackBox('success', '🎯', esc(d.penutup)) +
         '<div class="panel">' +
         '<h3>' + esc(d.justifLabel) + '</h3>' +
         textareaField('justifikasi', d.justifPrompt, st.justif, d.justifPlaceholder, d.justifMin) +
@@ -152,7 +152,7 @@ function renderSajikan(container) {
 }
 
 /* ============================================================
-   TAHAP 8 — Evaluasi pada dokumen lain
+   TAHAP 8 — Evaluasi pada kasus lain
    ============================================================ */
 function renderEvaluasi(container) {
   var d = DATA.evaluasi;
@@ -171,7 +171,7 @@ function renderEvaluasi(container) {
       return (
         '<div class="question-card">' +
         '<p class="question-card__prompt"><span class="question-card__num">Soal ' + (i + 1) + '</span> ' +
-        q.prompt + '</p>' +
+        esc(q.prompt) + '</p>' +
         choiceList({
           key: skey('evaluasi', q.id, 'opsi'),
           options: q.options,
@@ -190,7 +190,7 @@ function renderEvaluasi(container) {
         }) +
         (st.checked
           ? '<p class="question-feedback ' + (jawab === q.correct ? 'is-correct' : 'is-incorrect') + '">' +
-            (jawab === q.correct ? '✓ Tepat. ' : '✗ Belum tepat. ') + q.explanation +
+            (jawab === q.correct ? '✓ Tepat. ' : '✗ Belum tepat. ') + esc(q.explanation) +
             '</p>'
           : '') +
         '</div>'
@@ -200,7 +200,7 @@ function renderEvaluasi(container) {
 
   container.innerHTML =
     stageHead(d.kicker, d.title, d.goal) +
-    '<div class="panel panel--info"><p>' + d.instruction + '</p></div>' +
+    '<div class="panel panel--info"><p>' + esc(d.instruction) + '</p></div>' +
 
     '<article class="spec-doc spec-doc--compact">' +
     '<header class="spec-doc__head">' +
@@ -222,7 +222,7 @@ function renderEvaluasi(container) {
           st.correct === d.questions.length ? '🎉' : '📊',
           '<strong>Skor kamu: ' + st.correct + ' dari ' + d.questions.length + ' soal benar.</strong>' +
             (st.correct === d.questions.length
-              ? ' Cara analisismu terbukti berlaku di dokumen lain.'
+              ? ' Cara analisismu terbukti berlaku di kasus lain.'
               : ' Baca penjelasan di tiap soal, lalu boleh dikerjakan ulang.')
         )
       : '') +

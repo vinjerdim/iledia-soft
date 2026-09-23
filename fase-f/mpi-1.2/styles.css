@@ -8,7 +8,7 @@
    ========================================================================= */
 
 /* =========================================================================
-   TAHAP 2 — Hasil dua tim
+   TAHAP 2 — Yang terjadi pada proyek lama
    ========================================================================= */
 
 .team-grid {
@@ -39,7 +39,7 @@
 }
 
 /* =========================================================================
-   TAHAP 4 — Dokumen spesifikasi yang dapat ditelusuri
+   TAHAP 4 — Dokumen temuan lapangan yang dapat ditelusuri
    ========================================================================= */
 
 .spec-doc {
@@ -166,19 +166,19 @@
   font-weight: 600;
 }
 
-.spec-token.is-entitas {
+.spec-token.is-informasi {
   background: var(--color-success-soft);
   border-bottom-color: var(--color-success);
   color: var(--color-success-strong);
 }
 
-.spec-token.is-atribut {
+.spec-token.is-data {
   background: var(--color-blue-soft);
   border-bottom-color: var(--color-blue);
   color: var(--color-blue-strong);
 }
 
-.spec-token.is-nilai {
+.spec-token.is-opini {
   background: var(--color-warning-soft);
   border-bottom-color: var(--color-warning);
   color: var(--color-warning-strong);
@@ -190,13 +190,13 @@
   color: var(--color-orange-strong);
 }
 
-.spec-token.is-sinonim {
+.spec-token.is-lain {
   background: var(--color-purple-soft);
   border-bottom-color: var(--color-purple);
   color: var(--color-purple-strong);
 }
 
-/* Calon entitas yang terlewat, ditampilkan lewat tombol "saya buntu". */
+/* Kebutuhan yang terlewat, ditampilkan lewat tombol "saya buntu". */
 .spec-token.is-revealed {
   background: var(--color-success-soft);
   border-bottom-color: var(--color-success);
@@ -227,19 +227,19 @@
   padding: 2px 10px;
 }
 
-.spec-legend__item.is-entitas {
+.spec-legend__item.is-informasi {
   background: var(--color-success-soft);
   border-color: var(--color-success);
   color: var(--color-success-strong);
 }
 
-.spec-legend__item.is-atribut {
+.spec-legend__item.is-data {
   background: var(--color-blue-soft);
   border-color: var(--color-blue);
   color: var(--color-blue-strong);
 }
 
-.spec-legend__item.is-nilai {
+.spec-legend__item.is-opini {
   background: var(--color-warning-soft);
   border-color: var(--color-warning);
   color: var(--color-warning-strong);
@@ -251,7 +251,7 @@
   color: var(--color-orange-strong);
 }
 
-.spec-legend__item.is-sinonim {
+.spec-legend__item.is-lain {
   background: var(--color-purple-soft);
   border-color: var(--color-purple);
   color: var(--color-purple-strong);
@@ -275,7 +275,7 @@
 }
 
 /* =========================================================================
-   TAHAP 7 — Kartu data entitas & uji klien
+   TAHAP 7 — Kartu kebutuhan & uji rekomendasi teknik
    ========================================================================= */
 
 .entity-cards {

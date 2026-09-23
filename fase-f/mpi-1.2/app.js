@@ -8,7 +8,7 @@
      2. data.js
      3. app-core.js
      4. app-stage-awal.js    (orientasi, masalah, bekal)
-     5. app-stage-inti.js    (telusur, saring, atribut)
+     5. app-stage-inti.js    (telusur, saring, klasifikasi)
      6. app-stage-hasil.js   (sajikan, evaluasi)
      7. app-stage-akhir.js   (refleksi, selesai)
      8. app.js               ← berkas ini
@@ -20,10 +20,10 @@
 var STAGE_DEFS = [
   { id: 'orientasi', label: 'Orientasi', render: 'renderOrientasi' },
   { id: 'masalah', label: 'Masalah', render: 'renderMasalah' },
-  { id: 'bekal', label: 'Bekal Analisis', render: 'renderBekal' },
-  { id: 'telusur', label: 'Telusur Dokumen', render: 'renderTelusur' },
-  { id: 'saring', label: 'Saring Kandidat', render: 'renderSaring' },
-  { id: 'atribut', label: 'Petakan Atribut', render: 'renderAtribut' },
+  { id: 'bekal', label: 'Bekal Teknik', render: 'renderBekal' },
+  { id: 'telusur', label: 'Telusur Temuan', render: 'renderTelusur' },
+  { id: 'saring', label: 'Saring Sumber', render: 'renderSaring' },
+  { id: 'klasifikasi', label: 'Klasifikasi Kebutuhan', render: 'renderKlasifikasi' },
   { id: 'sajikan', label: 'Sajikan Hasil', render: 'renderSajikan' },
   { id: 'evaluasi', label: 'Evaluasi', render: 'renderEvaluasi' },
   { id: 'refleksi', label: 'Refleksi', render: 'renderRefleksi' },
@@ -57,7 +57,7 @@ var STAGE_DEFS = [
 })();
 
 var lesson = Engine.createLesson({
-  storageKey: 'mpi-f-1-2-v1',
+  storageKey: 'mpi-f-1-2-v2',
 
   stages: STAGE_DEFS.map(function (s) {
     return { id: s.id, label: s.label, render: window[s.render] };
@@ -84,7 +84,7 @@ var lesson = Engine.createLesson({
         correct: 0
       },
 
-      /* Tahap 3 — Bekal analisis */
+      /* Tahap 3 — Bekal teknik */
       bekal: {
         opened: mapFrom(DATA.bekal.cards, function () {
           return { seen: false };
@@ -97,14 +97,14 @@ var lesson = Engine.createLesson({
         }
       },
 
-      /* Tahap 4 — Telusur dokumen */
+      /* Tahap 4 — Telusur temuan lapangan */
       telusur: {
         marked: {},
         revealed: false,
         lastFeedback: null
       },
 
-      /* Tahap 5 — Saring kandidat */
+      /* Tahap 5 — Saring sumbernya */
       saring: {
         assignments: {},
         selectedId: null,
@@ -112,18 +112,14 @@ var lesson = Engine.createLesson({
         correct: 0
       },
 
-      /* Tahap 6 — Petakan atribut */
-      atribut: {
+      /* Tahap 6 — Klasifikasikan kebutuhan */
+      klasifikasi: {
         assignments: {},
         selectedId: null,
         checkedChips: false,
-        keys: mapFrom(DATA.atribut.entities, function () {
-          return { pick: null };
-        }),
-        checkedKeys: false,
         usulan: [],
         checkedUsulan: false,
-        score: { chips: 0, keys: 0, usulan: 0 }
+        score: { chips: 0, usulan: 0 }
       },
 
       /* Tahap 7 — Sajikan hasil karya */
@@ -158,7 +154,7 @@ var lesson = Engine.createLesson({
         masalah: { correct: 0, total: 0 },
         bekal: { correct: 0, total: 0 },
         saring: { correct: 0, total: 0 },
-        atribut: { correct: 0, total: 0 },
+        klasifikasi: { correct: 0, total: 0 },
         sajikan: { correct: 0, total: 0 },
         evaluasi: { correct: 0, total: 0 }
       }
@@ -188,9 +184,9 @@ assertUniqueIds(DATA.bekal.terms, 'bekal.terms');
 assertUniqueIds(DATA.bekal.defs, 'bekal.defs');
 assertUniqueIds(DATA.saring.chips, 'saring.chips');
 assertUniqueIds(DATA.saring.buckets, 'saring.buckets');
-assertUniqueIds(DATA.atribut.chips, 'atribut.chips');
-assertUniqueIds(DATA.atribut.entities, 'atribut.entities');
-assertUniqueIds(DATA.atribut.usulan, 'atribut.usulan');
+assertUniqueIds(DATA.klasifikasi.chips, 'klasifikasi.chips');
+assertUniqueIds(DATA.klasifikasi.entities, 'klasifikasi.entities');
+assertUniqueIds(DATA.klasifikasi.usulan, 'klasifikasi.usulan');
 assertUniqueIds(DATA.sajikan.cases, 'sajikan.cases');
 DATA.sajikan.cases.forEach(function (c) {
   assertUniqueIds(c.options, 'sajikan.' + c.id + '.options');
