@@ -1,0 +1,333 @@
+/* =========================================================================
+   fase-f/mpi-2.2/styles.css — gaya khas materi ini saja.
+   Dimuat setelah ../../shared/tokens.css dan ../../shared/base.css.
+   Komponen yang dipakai lintas materi (tombol, panel, kuis, kolam chip,
+   kolom entitas, kartu konsep, papan menjodohkan, penghitung temuan,
+   skala Likert, panel selesai, tabel ringkas) sudah ada di
+   shared/base.css — jangan ditulis ulang di sini.
+   ========================================================================= */
+
+/* Dua warna tambahan untuk laci enam jenis DBMS (tahap 5). Empat
+   warna lainnya (blue, green, purple, orange) sudah ada di tokens.css. */
+:root {
+  --color-teal: #0f7b7b;
+  --color-teal-soft: #d4ecec;
+  --color-teal-strong: #0a5656;
+  --color-rose: #a8386a;
+  --color-rose-soft: #f5dbe6;
+  --color-rose-strong: #7a2249;
+}
+
+/* =========================================================================
+   TAHAP 2 — Enam gudang data RPL Mart
+   ========================================================================= */
+
+.gudang-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  align-items: start;
+}
+
+.gudang-card {
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.gudang-card.is-open {
+  border-color: var(--color-primary);
+}
+
+.gudang-card__toggle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--space-3);
+  border: 0;
+  background: var(--color-bg-grid);
+  color: var(--color-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gudang-card__toggle:hover {
+  background: var(--color-primary-soft);
+}
+
+.gudang-card__icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.gudang-card__name {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.gudang-card__tim {
+  font-size: 0.76rem;
+  color: var(--color-ink-muted);
+}
+
+.gudang-card__state {
+  margin-left: auto;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--color-primary-strong);
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.gudang-card.is-open .gudang-card__state {
+  background: var(--color-surface);
+  color: var(--color-primary-strong);
+  border: 1px solid var(--color-primary);
+}
+
+.gudang-card__body {
+  padding: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.gudang-card__label {
+  margin: var(--space-2) 0 var(--space-1);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.gudang-card__label:first-child {
+  margin-top: 0;
+}
+
+/* Visual gudang memakai karakter garis (├── ► ▲), jadi spasinya harus
+   dipertahankan; geser mendatar di layar sempit, bukan dibungkus. */
+.gudang-visual,
+.gudang-query {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  line-height: 1.5;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.gudang-visual {
+  background: var(--color-bg-grid);
+  border: 1px solid var(--color-border);
+  color: var(--color-ink);
+}
+
+.gudang-query {
+  background: #1d2327;
+  color: #e6efe9;
+}
+
+.gudang-note {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-left: 4px solid var(--color-primary);
+  background: var(--color-primary-soft);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+}
+
+.stage-locked-note {
+  text-align: center;
+  font-style: italic;
+}
+
+/* =========================================================================
+   TAHAP 5 — Lemari arsip DBMS
+   ========================================================================= */
+
+/* Enam laci jenis terlalu sempit bila berjajar: pecah jadi 3 + 3. */
+.produk-board .entity-columns {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* Kartu karakteristik berupa kalimat: izinkan membungkus baris agar
+   tidak meluber keluar kolom. */
+.ciri-board .attr-chip {
+  max-width: 100%;
+  white-space: normal;
+  text-align: left;
+  line-height: 1.35;
+  font-family: var(--font-body);
+}
+
+.entity-column--teal {
+  border-top: 4px solid var(--color-teal);
+}
+
+.entity-column--rose {
+  border-top: 4px solid var(--color-rose);
+}
+
+.attr-chip--teal {
+  background: var(--color-teal-soft);
+  border-color: var(--color-teal);
+  color: var(--color-teal-strong);
+}
+
+.attr-chip--rose {
+  background: var(--color-rose-soft);
+  border-color: var(--color-rose);
+  color: var(--color-rose-strong);
+}
+
+/* Tanda benar/salah harus tetap terlihat di atas warna kolom. */
+.attr-chip--teal.attr-chip--correct,
+.attr-chip--rose.attr-chip--correct {
+  border-color: var(--color-success);
+}
+
+.attr-chip--teal.attr-chip--incorrect,
+.attr-chip--rose.attr-chip--incorrect {
+  border-color: var(--color-error);
+}
+
+/* =========================================================================
+   TAHAP 6 — Simulasi sebelum & sesudah DBMS
+   ========================================================================= */
+
+.verify-case.is-open {
+  border-left: 4px solid var(--color-primary);
+}
+
+.verify-case__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 1rem;
+}
+
+.verify-case__icon {
+  font-size: 1.2rem;
+}
+
+.predict-block {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-grid);
+}
+
+.predict-label {
+  margin: 0 0 var(--space-2);
+  font-weight: 700;
+  font-size: 0.86rem;
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dbms-console {
+  margin-top: var(--space-3);
+  border-radius: var(--radius-md);
+  background: #1d2327;
+  color: #e6efe9;
+  overflow: hidden;
+}
+
+.dbms-console__head {
+  display: block;
+  padding: var(--space-1) var(--space-3);
+  background: #2c353b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #b8c4bd;
+}
+
+.dbms-console__body {
+  margin: 0;
+  padding: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.verify-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.verify-side {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font-size: 0.88rem;
+}
+
+.verify-side--butuh {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+}
+
+.verify-side--cocok {
+  background: var(--color-success-soft);
+  border-color: var(--color-success);
+}
+
+.verify-side--bukan {
+  margin-top: var(--space-3);
+  background: var(--color-bg-grid);
+  border-style: dashed;
+}
+
+.verify-side__head {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  margin-bottom: var(--space-1);
+}
+
+.verify-side p:last-child {
+  margin-bottom: 0;
+}
+
+/* =========================================================================
+   Responsif
+   ========================================================================= */
+
+@media (max-width: 900px) {
+  .produk-board .entity-columns {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .verify-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .produk-board .entity-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .gudang-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
