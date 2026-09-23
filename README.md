@@ -9,6 +9,7 @@ Kumpulan media pembelajaran interaktif untuk mata pelajaran Rekayasa Perangkat L
 | 1 | 1.1 | Konsep Dasar Basis Data & Peran Analisis Kebutuhan Sistem | Discovery Learning | [`fase-f/mpi-1.1/`](fase-f/mpi-1.1/index.html) |
 | 1 | 1.2 | Menggali Kebutuhan Informasi dan Data lewat Teknik Requirement Gathering | Problem Based Learning | [`fase-f/mpi-1.2/`](fase-f/mpi-1.2/index.html) |
 | 1 | 1.3 | Mengidentifikasi Entitas dan Atribut dari Hasil Analisis Kebutuhan Sistem | Problem Based Learning | [`fase-f/mpi-1.3/`](fase-f/mpi-1.3/index.html) |
+| 1 | 1.4 | Menentukan Relasi Antar Entitas dan Jenisnya | Problem Based Learning | [`fase-f/mpi-1.4/`](fase-f/mpi-1.4/index.html) |
 
 Halaman utama ([`index.html`](index.html)) menampilkan daftar materi, dikelompokkan per fase lewat tab dan per tujuan pembelajaran lewat pills **TP**. Pills dibangun otomatis dari atribut `data-tp` pada tiap card, dan judul topiknya diambil dari `data-tp-labels` pada elemen `.tp-filter`.
 

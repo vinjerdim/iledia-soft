@@ -1,0 +1,381 @@
+/* =========================================================================
+   fase-f/mpi-1.4/styles.css — gaya khas materi ini saja.
+   Dimuat setelah ../../shared/tokens.css dan ../../shared/base.css.
+   Komponen yang dipakai lintas materi (tombol, panel, kuis, kolam chip,
+   kolom entitas, kartu konsep, papan menjodohkan, penghitung temuan,
+   skala Likert, panel selesai, tabel ringkas) sudah ada di
+   shared/base.css — jangan ditulis ulang di sini.
+   ========================================================================= */
+
+/* =========================================================================
+   TAHAP 2 — Yang terjadi pada proyek lama
+   ========================================================================= */
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+
+.team-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-grid);
+  padding: var(--space-3) var(--space-4);
+}
+
+.team-card__name {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--color-primary-strong);
+  margin-bottom: var(--space-1);
+}
+
+.team-card__desc {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* =========================================================================
+   TAHAP 4 — Dokumen temuan lapangan yang dapat ditelusuri
+   ========================================================================= */
+
+.spec-doc {
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: var(--space-5);
+  margin: var(--space-4) 0;
+  box-shadow: 0 1px 0 var(--color-border);
+}
+
+.spec-doc__head {
+  border-bottom: 2px solid var(--color-border);
+  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.spec-doc__code {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--color-primary-strong);
+  background: var(--color-primary-soft);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  margin-bottom: var(--space-2);
+}
+
+.spec-doc__title {
+  font-size: 1.05rem;
+  margin: 0 0 var(--space-2);
+}
+
+.spec-doc__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.spec-doc__meta dt {
+  display: inline;
+  font-weight: 700;
+  color: var(--color-ink-muted);
+}
+
+.spec-doc__meta dt::after {
+  content: ": ";
+}
+
+.spec-doc__meta dd {
+  display: inline;
+  margin: 0;
+  color: var(--color-ink-muted);
+}
+
+.spec-section + .spec-section {
+  margin-top: var(--space-5);
+}
+
+.spec-section__head {
+  font-size: 0.9rem;
+  margin-bottom: var(--space-2);
+  color: var(--color-ink);
+}
+
+.spec-para {
+  margin: 0 0 var(--space-3);
+  line-height: 1.9;
+}
+
+.spec-req {
+  display: flex;
+  gap: var(--space-3);
+  align-items: baseline;
+  margin: 0 0 var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px dashed var(--color-border);
+  line-height: 1.9;
+}
+
+.spec-req:last-child {
+  border-bottom: none;
+}
+
+.spec-req__text {
+  flex: 1;
+}
+
+.spec-req__code {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--color-ink-muted);
+  min-width: 3.4em;
+}
+
+/* Frasa yang dapat diketuk. Sengaja bergaris bawah putus-putus agar
+   murid tahu mana yang dapat ditandai tanpa harus mencoba satu per satu. */
+.spec-token {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  border-bottom: 2px dashed var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  padding: 1px 3px;
+  cursor: pointer;
+  transition:
+    background 0.12s,
+    border-color 0.12s;
+}
+
+.spec-token:hover {
+  background: var(--color-primary-soft);
+  border-bottom-color: var(--color-primary);
+}
+
+.spec-token.is-marked {
+  border-bottom-style: solid;
+  font-weight: 600;
+}
+
+.spec-token.is-satusatu {
+  background: var(--color-blue-soft);
+  border-bottom-color: var(--color-blue);
+  color: var(--color-blue-strong);
+}
+
+.spec-token.is-satubanyak {
+  background: var(--color-success-soft);
+  border-bottom-color: var(--color-success);
+  color: var(--color-success-strong);
+}
+
+.spec-token.is-banyakbanyak {
+  background: var(--color-purple-soft);
+  border-bottom-color: var(--color-purple);
+  color: var(--color-purple-strong);
+}
+
+.spec-token.is-bukan {
+  background: var(--color-orange-soft);
+  border-bottom-color: var(--color-orange);
+  color: var(--color-orange-strong);
+}
+
+/* Petunjuk yang terlewat, ditampilkan lewat tombol "saya buntu". */
+.spec-token.is-revealed {
+  background: var(--color-success-soft);
+  border-bottom-color: var(--color-success);
+  color: var(--color-success-strong);
+  outline: 2px dotted var(--color-success);
+  outline-offset: 1px;
+}
+
+.spec-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin: var(--space-3) 0;
+  font-size: 0.76rem;
+}
+
+.spec-legend__label {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-ink-muted);
+}
+
+.spec-legend__item {
+  border-radius: 9999px;
+  border: 1px solid var(--color-border);
+  padding: 2px 10px;
+}
+
+.spec-legend__item.is-satusatu {
+  background: var(--color-blue-soft);
+  border-color: var(--color-blue);
+  color: var(--color-blue-strong);
+}
+
+.spec-legend__item.is-satubanyak {
+  background: var(--color-success-soft);
+  border-color: var(--color-success);
+  color: var(--color-success-strong);
+}
+
+.spec-legend__item.is-banyakbanyak {
+  background: var(--color-purple-soft);
+  border-color: var(--color-purple);
+  color: var(--color-purple-strong);
+}
+
+.spec-legend__item.is-bukan {
+  background: var(--color-orange-soft);
+  border-color: var(--color-orange);
+  color: var(--color-orange-strong);
+}
+
+/* Dokumen pembanding pada tahap 8: hanya dibaca, tidak ditelusuri. */
+.spec-doc--compact {
+  padding: var(--space-4);
+}
+
+.spec-doc--compact .spec-doc__head {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: var(--space-2);
+}
+
+.spec-doc--compact p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.8;
+}
+
+/* =========================================================================
+   TAHAP 7 — Ringkasan relasi & uji identifikasi
+   ========================================================================= */
+
+.verify-case.is-open {
+  border-left: 4px solid var(--color-primary);
+}
+
+.verify-case__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 1rem;
+}
+
+.verify-case__icon {
+  font-size: 1.2rem;
+}
+
+.predict-block {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-grid);
+}
+
+.predict-label {
+  margin: 0 0 var(--space-2);
+  font-weight: 700;
+  font-size: 0.86rem;
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.verify-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.verify-side {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font-size: 0.88rem;
+}
+
+.verify-side--kamu {
+  background: var(--color-success-soft);
+  border-color: var(--color-success);
+}
+
+.verify-side--tima {
+  background: var(--color-error-soft);
+  border-color: var(--color-error);
+}
+
+.verify-side__head {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  margin-bottom: var(--space-1);
+}
+
+.verify-side__verdict {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-2);
+}
+
+.verify-side__verdict--baik {
+  color: var(--color-success-strong);
+}
+
+.verify-side__verdict--buruk {
+  color: var(--color-error-strong);
+}
+
+.verify-side p:last-child {
+  margin-bottom: 0;
+}
+
+.konsep-tag {
+  display: inline-block;
+  margin: var(--space-3) 0 0;
+  font-size: 0.76rem;
+  font-family: var(--font-mono);
+  color: var(--color-primary-strong);
+  background: var(--color-primary-soft);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+}
+
+/* =========================================================================
+   Responsif
+   ========================================================================= */
+
+@media (max-width: 760px) {
+  .verify-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .spec-doc {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .spec-req {
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+}
