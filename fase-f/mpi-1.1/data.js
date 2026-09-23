@@ -16,12 +16,12 @@
 
 const DATA = {
   meta: {
-    title: 'Konsep Dasar Basis Data Relasional',
+    title: 'Konsep Dasar Basis Data & Peran Analisis Kebutuhan Sistem',
     subject: 'Rekayasa Perangkat Lunak — Fase F (SMK)',
     model: 'Discovery Learning',
     goal:
-      'Mengidentifikasi konsep dasar basis data relasional dan pentingnya ' +
-      'perancangan struktur data dalam pengembangan perangkat lunak.'
+      'Menjelaskan konsep dasar basis data dan peran analisis kebutuhan sistem ' +
+      'dalam perancangan basis data.'
   },
 
   /* ==========================================================
@@ -33,24 +33,25 @@ const DATA = {
     goal: 'Memahami tujuan, alur, dan cara memakai media ini.',
     salam:
       'Di media ini kamu tidak akan diberi definisi lebih dulu. Kamu akan ' +
-      '<strong>menemukan sendiri</strong> konsep basis data relasional dari sebuah ' +
-      'masalah nyata di Lab RPL — lalu membuktikan sendiri mengapa perancangan ' +
-      'struktur data itu penting.',
+      '<strong>menemukan sendiri</strong> konsep dasar basis data dari sebuah masalah nyata ' +
+      'di Koperasi Siswa — lalu membuktikan sendiri mengapa <strong>menggali kebutuhan pengguna ' +
+      'lebih dulu</strong> (analisis kebutuhan sistem) menentukan baik atau buruknya rancangan basis data.',
     tujuanLabel: 'Setelah menyelesaikan media ini kamu dapat:',
     tujuan: [
       'Membedakan data yang tersimpan rapi dan data yang tersimpan berantakan.',
-      'Mengidentifikasi istilah dasar basis data relasional: entitas, tabel, record, field, primary key, dan foreign key.',
-      'Memecah satu tabel berantakan menjadi beberapa tabel yang saling berelasi.',
+      'Mengidentifikasi istilah dasar basis data: entitas, tabel, record, field, primary key, dan foreign key.',
+      'Menjelaskan apa itu analisis kebutuhan sistem dan mengapa dilakukan sebelum basis data dirancang.',
+      'Menunjukkan bagaimana temuan analisis kebutuhan (hasil wawancara/pengamatan pengguna) menentukan entitas, atribut, dan relasi pada rancangan basis data.',
       'Menjelaskan akibat buruk struktur data yang tidak dirancang terhadap perangkat lunak yang dibangun di atasnya.'
     ],
     alurLabel: 'Alur belajar (9 tahap)',
     alur: [
-      { id: 'a1', title: 'Stimulasi', desc: 'Menemukan kejanggalan pada catatan Lab RPL.' },
-      { id: 'a2', title: 'Rumusan Masalah', desc: 'Menetapkan masalah apa yang sebenarnya terjadi.' },
-      { id: 'a3', title: 'Pengumpulan Data', desc: 'Mengumpulkan konsep dan istilah yang dibutuhkan.' },
-      { id: 'a4', title: 'Pengolahan Data', desc: 'Merancang sendiri struktur tabel yang lebih baik.' },
-      { id: 'a5', title: 'Verifikasi', desc: 'Menguji rancanganmu melawan catatan lama.' },
-      { id: 'a6', title: 'Generalisasi', desc: 'Menyimpulkan konsep yang kamu temukan.' },
+      { id: 'a1', title: 'Stimulasi', desc: 'Menemukan kejanggalan dan kebutuhan yang belum tergali pada catatan Koperasi Siswa.' },
+      { id: 'a2', title: 'Rumusan Masalah', desc: 'Menetapkan masalah struktur data sekaligus masalah kebutuhan yang belum digali.' },
+      { id: 'a3', title: 'Pengumpulan Data', desc: 'Mengumpulkan konsep dasar basis data dan konsep analisis kebutuhan sistem.' },
+      { id: 'a4', title: 'Pengolahan Data', desc: 'Membaca temuan analisis kebutuhan, lalu merancang struktur tabel berdasarkan temuan itu.' },
+      { id: 'a5', title: 'Verifikasi', desc: 'Menguji rancanganmu melawan catatan lama dan kasus-kasus nyata.' },
+      { id: 'a6', title: 'Generalisasi', desc: 'Menyimpulkan konsep dasar basis data dan peran analisis kebutuhan sistem.' },
       { id: 'a7', title: 'Refleksi & Selesai', desc: 'Menilai pemahamanmu sendiri dan merangkum hasil.' }
     ],
     caraPakaiLabel: 'Cara memakai',
@@ -67,16 +68,17 @@ const DATA = {
      ========================================================== */
   stimulasi: {
     kicker: 'Tahap 2 · Stimulasi',
-    title: 'Catatan Lab yang Bikin Pusing',
-    goal: 'Menemukan kejanggalan pada cara data peminjaman dicatat.',
+    title: 'Catatan Koperasi yang Bikin Pusing',
+    goal: 'Menemukan kejanggalan pada cara data koperasi dicatat, sekaligus kebutuhan yang selama ini luput digali.',
     cerita:
-      '<p>Pak Yusuf, toolman Lab RPL, mencatat semua peminjaman alat di ' +
-      '<strong>satu file spreadsheet</strong> bernama <em>SiPinjam</em>. Satu baris = satu peminjaman. ' +
-      'Sudah berjalan dua tahun dan sekarang isinya ribuan baris.</p>' +
-      '<p>Minggu lalu Pak Yusuf mengeluh:</p>',
+      '<p>Bu Sari, pengurus Koperasi Siswa, mencatat semua penjualan barang di ' +
+      '<strong>satu file spreadsheet datar</strong> bernama <em>CatatanKoperasi</em>. Satu baris = satu transaksi. ' +
+      'Sudah berjalan satu semester dan isinya sudah ratusan baris.</p>' +
+      '<p>Minggu lalu Bu Sari mengeluh:</p>',
     keluhan:
-      '"Dewi ganti nomor HP, saya harus cari satu per satu semua barisnya. ' +
-      'Kemarin ada yang kelewat, jadi sekarang nomornya beda-beda. Saya sendiri bingung mana yang benar."',
+      '"Nomor HP Dewi beda-beda saya tulisnya, jadi saya sendiri bingung yang benar yang mana. ' +
+      'Terus kemarin stok tinta printer ternyata sudah habis dari beberapa hari lalu — saya baru tahu ' +
+      'pas ada yang mau beli. Habis, dari awal memang tidak kepikiran perlu ada catatan stok."',
     instruction:
       'Amati tabel di bawah. <strong>Ketuk sel yang menurutmu janggal</strong> — ' +
       'sel yang isinya sekadar mengulang fakta yang sudah ditulis di baris sebelumnya, ' +
@@ -84,59 +86,59 @@ const DATA = {
     minTemuan: 6,
     hintLabel: '💡 Belum ketemu? Buka petunjuk',
     hint:
-      'Bandingkan baris-baris yang <strong>siswanya sama</strong>, lalu baris-baris yang ' +
-      '<strong>alatnya sama</strong>. Fakta mana yang ditulis berulang-ulang? ' +
+      'Bandingkan baris-baris yang <strong>anggotanya sama</strong>, lalu baris-baris yang ' +
+      '<strong>barangnya sama</strong>. Fakta mana yang ditulis berulang-ulang? ' +
       'Perhatikan juga apakah fakta yang berulang itu selalu ditulis dengan cara yang sama.',
 
     columns: [
       { id: 'tanggal', label: 'tanggal' },
-      { id: 'nama_siswa', label: 'nama_siswa' },
+      { id: 'nama_anggota', label: 'nama_anggota' },
       { id: 'kelas', label: 'kelas' },
       { id: 'no_hp', label: 'no_hp' },
-      { id: 'kode_alat', label: 'kode_alat' },
-      { id: 'nama_alat', label: 'nama_alat' },
-      { id: 'spesifikasi', label: 'spesifikasi' },
-      { id: 'lama', label: 'lama_pinjam' }
+      { id: 'kode_barang', label: 'kode_barang' },
+      { id: 'nama_barang', label: 'nama_barang' },
+      { id: 'kategori', label: 'kategori' },
+      { id: 'jumlah', label: 'jumlah' }
     ],
 
     rows: [
-      { id: 'r1', cells: ['02/09/2025', 'Rani Alfiah', 'XI RPL 1', '0812-3344-5566', 'ALT-01', 'Laptop Lab', 'Core i5, RAM 8 GB', '3 hari'] },
-      { id: 'r2', cells: ['02/09/2025', 'Bima Saputra', 'XI RPL 2', '0857-1122-3344', 'ALT-04', 'Proyektor', '3200 lumen, HDMI', '1 hari'] },
-      { id: 'r3', cells: ['04/09/2025', 'Rani Alfiah', 'XI RPL 1', '0812-3344-5566', 'ALT-04', 'Proyektor', '3200 lumen, HDMI', '2 hari'] },
-      { id: 'r4', cells: ['05/09/2025', 'Dewi Lestari', 'XI RPL 1', '0895-7788-9900', 'ALT-01', 'Laptop Lab', 'Core i5, RAM 8 GB', '5 hari'] },
-      { id: 'r5', cells: ['08/09/2025', 'Bima Saputra', 'XI RPL 2', '0857-1122-3344', 'ALT-07', 'Kabel LAN 10 m', 'Cat6, abu-abu', '2 hari'] },
-      { id: 'r6', cells: ['09/09/2025', 'Aldi Pratama', 'XI RPL 2', '0813-2211-4455', 'ALT-09', 'Kamera DSLR', '18 MP, lensa kit', '1 hari'] },
-      { id: 'r7', cells: ['11/09/2025', 'Aldi Pratama', 'XI RPL 2', '0813-2211-4455', 'ALT-04', 'Proyektor', '3.200 lumen, HDMI', '3 hari'] },
-      { id: 'r8', cells: ['12/09/2025', 'Dewi Lestari', 'XI RPL 1', '0895-7788-990', 'ALT-07', 'Kabel LAN 10 m', 'Cat6, abu-abu', '4 hari'] }
+      { id: 'r1', cells: ['02/09/2025', 'Rani Alfiah', 'XI RPL 1', '0812-3344-5566', 'BRG-01', 'Buku Tulis 38 Lembar', 'Alat Tulis', '2'] },
+      { id: 'r2', cells: ['02/09/2025', 'Bima Saputra', 'XI RPL 2', '0857-1122-3344', 'BRG-04', 'Pulpen Standar', 'Alat Tulis', '3'] },
+      { id: 'r3', cells: ['04/09/2025', 'Rani Alfiah', 'XI RPL 1', '0812-3344-5566', 'BRG-04', 'Pulpen Standar', 'Alat Tulis', '1'] },
+      { id: 'r4', cells: ['05/09/2025', 'Dewi Lestari', 'XI RPL 1', '0895-7788-9900', 'BRG-01', 'Buku Tulis 38 Lembar', 'Alat Tulis', '4'] },
+      { id: 'r5', cells: ['08/09/2025', 'Bima Saputra', 'XI RPL 2', '0857-1122-3344', 'BRG-07', 'Map Plastik', 'Perlengkapan', '2'] },
+      { id: 'r6', cells: ['09/09/2025', 'Aldi Pratama', 'XI RPL 2', '0813-2211-4455', 'BRG-09', 'Snack Kemasan', 'Makanan Ringan', '5'] },
+      { id: 'r7', cells: ['11/09/2025', 'Aldi Pratama', 'XI RPL 2', '0813-2211-4455', 'BRG-04', 'Pulpen Standar', 'alat tulis', '2'] },
+      { id: 'r8', cells: ['12/09/2025', 'Dewi Lestari', 'XI RPL 1', '0895-7788-990', 'BRG-07', 'Map Plastik', 'Perlengkapan', '1'] }
     ],
 
     /* Sel bermasalah, dikunci "barisId:kolomId".
        kind: 'ulang' (fakta diulang) | 'beda' (fakta tidak konsisten) */
     problemCells: {
-      'r3:kelas': { kind: 'ulang', why: 'Kelas Rani sudah ditulis di baris 1. Ditulis ulang setiap kali Rani meminjam.' },
+      'r3:kelas': { kind: 'ulang', why: 'Kelas Rani sudah ditulis di baris 1. Ditulis ulang setiap kali Rani berbelanja.' },
       'r3:no_hp': { kind: 'ulang', why: 'Nomor HP Rani sudah ada di baris 1. Fakta yang sama ditulis dua kali.' },
-      'r3:nama_alat': { kind: 'ulang', why: 'Nama alat ALT-04 sudah ditulis di baris 2.' },
-      'r3:spesifikasi': { kind: 'ulang', why: 'Spesifikasi ALT-04 sudah ditulis di baris 2.' },
-      'r4:nama_alat': { kind: 'ulang', why: 'Nama alat ALT-01 sudah ditulis di baris 1.' },
-      'r4:spesifikasi': { kind: 'ulang', why: 'Spesifikasi ALT-01 sudah ditulis di baris 1.' },
+      'r3:nama_barang': { kind: 'ulang', why: 'Nama barang BRG-04 sudah ditulis di baris 2.' },
+      'r3:kategori': { kind: 'ulang', why: 'Kategori BRG-04 sudah ditulis di baris 2.' },
+      'r4:nama_barang': { kind: 'ulang', why: 'Nama barang BRG-01 sudah ditulis di baris 1.' },
+      'r4:kategori': { kind: 'ulang', why: 'Kategori BRG-01 sudah ditulis di baris 1.' },
       'r5:kelas': { kind: 'ulang', why: 'Kelas Bima sudah ditulis di baris 2.' },
       'r5:no_hp': { kind: 'ulang', why: 'Nomor HP Bima sudah ditulis di baris 2.' },
       'r7:kelas': { kind: 'ulang', why: 'Kelas Aldi sudah ditulis di baris 6.' },
       'r7:no_hp': { kind: 'ulang', why: 'Nomor HP Aldi sudah ditulis di baris 6.' },
-      'r7:nama_alat': { kind: 'ulang', why: 'Nama alat ALT-04 sudah ditulis dua kali sebelumnya.' },
-      'r7:spesifikasi': { kind: 'beda', why: 'Temuan penting! ALT-04 yang sama ditulis "3200 lumen" di baris 2 dan 3, tetapi "3.200 lumen" di sini. Fakta yang diulang mulai berbeda-beda.' },
+      'r7:nama_barang': { kind: 'ulang', why: 'Nama barang BRG-04 sudah ditulis dua kali sebelumnya.' },
+      'r7:kategori': { kind: 'beda', why: 'Temuan penting! Kategori BRG-04 ditulis "Alat Tulis" di baris 2 dan 3, tetapi "alat tulis" di sini. Fakta yang diulang mulai berbeda-beda.' },
       'r8:kelas': { kind: 'ulang', why: 'Kelas Dewi sudah ditulis di baris 4.' },
-      'r8:no_hp': { kind: 'beda', why: 'Inilah yang dikeluhkan Pak Yusuf. Nomor Dewi di baris 4 adalah 0895-7788-9900, di sini 0895-7788-990 — kurang satu angka. Mana yang benar?' },
-      'r8:nama_alat': { kind: 'ulang', why: 'Nama alat ALT-07 sudah ditulis di baris 5.' },
-      'r8:spesifikasi': { kind: 'ulang', why: 'Spesifikasi ALT-07 sudah ditulis di baris 5.' }
+      'r8:no_hp': { kind: 'beda', why: 'Inilah yang dikeluhkan Bu Sari. Nomor Dewi di baris 4 adalah 0895-7788-9900, di sini 0895-7788-990 — kurang satu angka. Mana yang benar?' },
+      'r8:nama_barang': { kind: 'ulang', why: 'Nama barang BRG-07 sudah ditulis di baris 5.' },
+      'r8:kategori': { kind: 'ulang', why: 'Kategori BRG-07 sudah ditulis di baris 5.' }
     },
 
     /* Umpan balik saat murid menandai sel yang sebenarnya wajar. */
     okCells: {
-      tanggal: 'Tanggal berbeda di tiap peminjaman — ini memang fakta milik transaksi itu sendiri.',
-      lama: 'Lama pinjam berbeda di tiap peminjaman — ini fakta milik transaksi itu sendiri.',
-      nama_siswa: 'Nama siswa memang berulang, tapi kolom inilah yang nanti menjadi penghubung antar tabel. Yang bermasalah adalah fakta yang MENGIKUTI siswa: kelas dan no_hp.',
-      kode_alat: 'Kode alat memang berulang, tapi kolom inilah penghubung ke data alat. Yang bermasalah adalah fakta yang MENGIKUTI alat: nama_alat dan spesifikasi.'
+      tanggal: 'Tanggal berbeda di tiap transaksi — ini memang fakta milik transaksi itu sendiri.',
+      jumlah: 'Jumlah barang yang dibeli berbeda di tiap transaksi — ini fakta milik transaksi itu sendiri.',
+      nama_anggota: 'Nama anggota memang berulang, tapi kolom inilah yang nanti menjadi penghubung antar tabel. Yang bermasalah adalah fakta yang MENGIKUTI anggota: kelas dan no_hp.',
+      kode_barang: 'Kode barang memang berulang, tapi kolom inilah penghubung ke data barang. Yang bermasalah adalah fakta yang MENGIKUTI barang: nama_barang dan kategori.'
     },
 
     temuanLabel: 'Kejanggalan ditemukan',
@@ -149,15 +151,15 @@ const DATA = {
   masalah: {
     kicker: 'Tahap 3 · Identifikasi Masalah',
     title: 'Sebenarnya Apa Masalahnya?',
-    goal: 'Merumuskan masalah yang sesungguhnya, bukan sekadar gejalanya.',
+    goal: 'Merumuskan masalah yang sesungguhnya — baik dari sisi struktur data maupun dari sisi kebutuhan yang belum digali.',
     instruction:
-      'Dari temuanmu di tahap sebelumnya, <strong>pilih semua pernyataan yang benar</strong> ' +
-      'tentang catatan <em>SiPinjam</em>. Ada lebih dari satu jawaban benar.',
+      'Dari temuanmu di tahap sebelumnya dan keluhan Bu Sari, <strong>pilih semua pernyataan yang benar</strong> ' +
+      'tentang catatan <em>CatatanKoperasi</em>. Ada lebih dari satu jawaban benar.',
 
     statements: [
       {
         id: 's1', valid: true,
-        text: 'Fakta tentang satu siswa (kelas, no HP) ditulis berulang di banyak baris.',
+        text: 'Fakta tentang satu anggota (kelas, no HP) ditulis berulang di banyak baris.',
         feedback: 'Benar. Pengulangan ini disebut <strong>redundansi data</strong>.'
       },
       {
@@ -172,40 +174,55 @@ const DATA = {
       },
       {
         id: 's4', valid: true,
-        text: 'Data alat baru tidak bisa dicatat sebelum ada yang meminjamnya.',
+        text: 'Data barang baru tidak bisa dicatat sebelum ada yang membelinya.',
         feedback: 'Benar. Ini <strong>anomali penyisipan</strong> — satu baris hanya lahir kalau ada transaksi.'
       },
       {
         id: 's5', valid: true,
-        text: 'Menghapus satu transaksi bisa ikut menghapus satu-satunya catatan tentang sebuah alat.',
+        text: 'Menghapus satu transaksi bisa ikut menghapus satu-satunya catatan tentang sebuah barang.',
         feedback: 'Benar. Ini <strong>anomali penghapusan</strong> — data ikut hilang tanpa sengaja.'
       },
       {
-        id: 's6', valid: false,
-        text: 'Masalahnya karena Pak Yusuf kurang teliti saat mengetik.',
+        id: 's6', valid: true,
+        text: 'Catatan ini tidak pernah dirancang berdasarkan kebutuhan nyata Bu Sari, sehingga hal sepenting info stok hampir habis luput sama sekali.',
+        feedback: 'Benar. Inilah akibat tidak adanya <strong>analisis kebutuhan sistem</strong> sebelum catatan ini dibuat — kebutuhan pengguna yang sebenarnya tidak pernah digali lebih dulu.'
+      },
+      {
+        id: 's7', valid: true,
+        text: 'Sebelum tabelnya dirancang, seharusnya digali dulu apa saja yang benar-benar dibutuhkan Bu Sari dan anggota dari sistem ini.',
+        feedback: 'Benar — inilah peran <strong>analisis kebutuhan sistem</strong>: menemukan kebutuhan nyata pengguna sebelum struktur datanya ditentukan.'
+      },
+      {
+        id: 's8', valid: false,
+        text: 'Masalahnya karena Bu Sari kurang teliti saat mencatat.',
         feedback: 'Belum tepat. Ketelitian membantu, tetapi ketidakkonsistenan muncul karena <strong>strukturnya</strong> memaksa fakta yang sama ditulis berulang. Siapa pun akan keliru cepat atau lambat.'
       },
       {
-        id: 's7', valid: false,
+        id: 's9', valid: false,
         text: 'Masalahnya karena jumlah barisnya sudah terlalu banyak.',
         feedback: 'Belum tepat. Jumlah baris memperbesar akibatnya, tetapi struktur yang sama tetap bermasalah walau hanya 8 baris — seperti yang kamu lihat tadi.'
       },
       {
-        id: 's8', valid: false,
+        id: 's10', valid: false,
         text: 'Masalahnya akan hilang jika filenya dipindah ke aplikasi spreadsheet yang lebih canggih.',
         feedback: 'Belum tepat. Mengganti alat bantu tidak mengubah <strong>cara data disusun</strong>. Masalahnya ada pada strukturnya, bukan pada perangkat lunaknya.'
       },
       {
-        id: 's9', valid: false,
-        text: 'Masalahnya karena setiap peminjaman ditulis pada baris yang terpisah.',
-        feedback: 'Belum tepat. Satu baris per peminjaman justru sudah benar. Yang keliru adalah ikut menempelkan fakta siswa dan fakta alat pada baris transaksi itu.'
+        id: 's11', valid: false,
+        text: 'Masalahnya karena setiap transaksi ditulis pada baris yang terpisah.',
+        feedback: 'Belum tepat. Satu baris per transaksi justru sudah benar. Yang keliru adalah ikut menempelkan fakta anggota dan fakta barang pada baris transaksi itu.'
+      },
+      {
+        id: 's12', valid: false,
+        text: 'Analisis kebutuhan hanya perlu dilakukan kalau sistemnya sudah lama dipakai dan mulai bermasalah.',
+        feedback: 'Belum tepat. Analisis kebutuhan sebaiknya dilakukan <strong>sebelum</strong> sistem dibangun, supaya rancangannya sudah sesuai kebutuhan sejak awal — bukan tambal sulam setelah masalah muncul.'
       }
     ],
 
     cekLabel: 'Periksa pilihanku',
     ownLabel: 'Sekarang tulis dengan kalimatmu sendiri',
     ownPrompt:
-      'Menurutmu, apa masalah utama cara Pak Yusuf menyimpan data? Tulis satu sampai dua kalimat.',
+      'Menurutmu, apa masalah utama sistem pencatatan Koperasi Siswa ini — dari sisi struktur data maupun dari sisi kebutuhan yang belum digali?',
     ownPlaceholder: 'Masalah utamanya adalah…',
     ownMin: 25,
     ownKurang: 'Tulis sedikit lebih panjang ya, minimal satu kalimat utuh.',
@@ -218,7 +235,7 @@ const DATA = {
   konsep: {
     kicker: 'Tahap 4 · Pengumpulan Data',
     title: 'Kosakata untuk Memperbaikinya',
-    goal: 'Mengumpulkan konsep dasar basis data relasional yang dibutuhkan untuk merancang ulang.',
+    goal: 'Mengumpulkan konsep dasar basis data dan konsep analisis kebutuhan sistem yang dibutuhkan untuk merancang ulang.',
     instruction:
       'Masalahnya sudah jelas. Sebelum memperbaiki, kamu butuh kosakatanya. ' +
       '<strong>Ketuk setiap kartu</strong> untuk membukanya.',
@@ -227,32 +244,37 @@ const DATA = {
       {
         id: 'k_entitas', term: 'Entitas', icon: '🧩',
         def: 'Sesuatu yang nyata dan berdiri sendiri, yang kita ingin simpan datanya.',
-        example: 'Pada SiPinjam ada tiga: <strong>Siswa</strong>, <strong>Alat</strong>, dan <strong>Peminjaman</strong>.'
+        example: 'Pada CatatanKoperasi ada tiga: <strong>Anggota</strong>, <strong>Barang</strong>, dan <strong>Transaksi</strong>.'
       },
       {
         id: 'k_tabel', term: 'Tabel (Relasi)', icon: '🗂️',
         def: 'Tempat menyimpan data satu entitas. Satu entitas → satu tabel.',
-        example: 'Entitas Siswa disimpan di tabel <code>siswa</code>, bukan dicampur ke baris peminjaman.'
+        example: 'Entitas Anggota disimpan di tabel <code>anggota</code>, bukan dicampur ke baris transaksi.'
       },
       {
         id: 'k_record', term: 'Record (Baris)', icon: '➡️',
         def: 'Satu baris pada tabel, berisi data lengkap tentang <em>satu</em> wujud entitas.',
-        example: 'Satu baris di tabel <code>siswa</code> = satu orang siswa, ditulis <strong>sekali saja</strong>.'
+        example: 'Satu baris di tabel <code>anggota</code> = satu orang anggota, ditulis <strong>sekali saja</strong>.'
       },
       {
         id: 'k_field', term: 'Field (Kolom / Atribut)', icon: '⬇️',
         def: 'Satu kolom pada tabel, yaitu satu jenis fakta yang dimiliki entitas itu.',
-        example: '<code>nama_siswa</code>, <code>kelas</code>, dan <code>no_hp</code> adalah field milik entitas Siswa.'
+        example: '<code>nama_anggota</code>, <code>kelas</code>, dan <code>no_hp</code> adalah field milik entitas Anggota.'
       },
       {
         id: 'k_pk', term: 'Primary Key', icon: '🔑',
         def: 'Satu field yang nilainya <strong>unik</strong> untuk setiap baris, dipakai sebagai penanda resmi baris itu.',
-        example: '<code>nis</code> pada tabel <code>siswa</code>. Dua siswa boleh sama nama, tetapi NIS-nya tidak pernah sama.'
+        example: '<code>nomor_anggota</code> pada tabel <code>anggota</code>. Dua anggota boleh sama nama, tetapi nomor anggotanya tidak pernah sama.'
       },
       {
         id: 'k_fk', term: 'Foreign Key', icon: '🔗',
         def: 'Field yang menyimpan primary key milik tabel lain, sehingga kedua tabel terhubung.',
-        example: '<code>nis</code> di tabel <code>peminjaman</code> menunjuk ke <code>nis</code> di tabel <code>siswa</code> — cukup NIS-nya, bukan seluruh datanya.'
+        example: '<code>nomor_anggota</code> di tabel <code>transaksi</code> menunjuk ke <code>nomor_anggota</code> di tabel <code>anggota</code> — cukup nomornya, bukan seluruh datanya.'
+      },
+      {
+        id: 'k_analisis', term: 'Analisis Kebutuhan Sistem', icon: '🔍',
+        def: 'Proses menggali apa saja yang benar-benar dibutuhkan pengguna dari sebuah sistem — misalnya lewat wawancara atau pengamatan — <strong>sebelum</strong> struktur basis datanya dirancang.',
+        example: 'Dari mengobrol dengan Bu Sari, tergali kebutuhan "harus tahu barang yang stoknya hampir habis" — temuan inilah yang nanti menentukan atribut apa saja yang harus ada di tabel barang.'
       }
     ],
 
@@ -267,7 +289,8 @@ const DATA = {
       { id: 'm_record', label: 'Record' },
       { id: 'm_field', label: 'Field' },
       { id: 'm_pk', label: 'Primary Key' },
-      { id: 'm_fk', label: 'Foreign Key' }
+      { id: 'm_fk', label: 'Foreign Key' },
+      { id: 'm_analisis', label: 'Analisis Kebutuhan Sistem' }
     ],
     matchDefs: [
       { id: 'd_entitas', label: 'Sesuatu yang datanya ingin kita simpan' },
@@ -275,7 +298,8 @@ const DATA = {
       { id: 'd_record', label: 'Satu baris data tentang satu wujud entitas' },
       { id: 'd_field', label: 'Satu jenis fakta yang dimiliki entitas' },
       { id: 'd_pk', label: 'Penanda unik sebuah baris di tabelnya sendiri' },
-      { id: 'd_fk', label: 'Penunjuk ke baris milik tabel lain' }
+      { id: 'd_fk', label: 'Penunjuk ke baris milik tabel lain' },
+      { id: 'd_analisis', label: 'Proses menggali kebutuhan nyata pengguna sebelum basis data dirancang' }
     ],
     matchKey: {
       m_entitas: 'd_entitas',
@@ -283,7 +307,8 @@ const DATA = {
       m_record: 'd_record',
       m_field: 'd_field',
       m_pk: 'd_pk',
-      m_fk: 'd_fk'
+      m_fk: 'd_fk',
+      m_analisis: 'd_analisis'
     },
     cekLabel: 'Periksa pasangan',
     ulangLabel: 'Ulangi pasangan',
@@ -291,50 +316,63 @@ const DATA = {
   },
 
   /* ==========================================================
-     TAHAP 5 — Pengolahan Data (rancang struktur)
+     TAHAP 5 — Pengolahan Data (temuan analisis kebutuhan → rancang struktur)
      ========================================================== */
   rancang: {
     kicker: 'Tahap 5 · Pengolahan Data',
-    title: 'Pecah Jadi Tabel yang Rapi',
-    goal: 'Memecah satu tabel datar menjadi beberapa tabel yang saling berelasi.',
+    title: 'Dari Temuan Kebutuhan, Menjadi Tabel yang Rapi',
+    goal: 'Membaca hasil analisis kebutuhan, lalu memakainya untuk memecah satu tabel datar menjadi beberapa tabel yang saling berelasi.',
+
+    temuanTitle: 'Temuan analisis kebutuhan',
+    temuanInstruction:
+      'Sebelum menempatkan kolom, baca dulu hasil wawancara singkat dan pengamatan terhadap Bu Sari ' +
+      'dan anggota koperasi. Temuan inilah yang akan jadi dasar rancanganmu di bawah.',
+    temuan: [
+      '"Saya sering harus buka-buka catatan lama satu per satu cuma buat tahu barang mana yang stoknya mau habis. Enaknya kalau ada catatan stoknya langsung." — Bu Sari, pengurus koperasi',
+      '"Saya ingin bisa lihat riwayat belanja saya sendiri di koperasi, biar tahu sudah beli apa saja." — anggota koperasi',
+      '"Setiap barang itu ada kategorinya, biar gampang dicari pas mau bikin laporan bulanan." — Bu Sari',
+      '"Nomor HP saya sempat salah dicatat. Untung ketahuan sebelum saya ditelepon soal pesanan yang salah." — Dewi, anggota koperasi'
+    ],
 
     step1Title: 'Langkah 1 — Tempatkan setiap kolom',
     step1Instruction:
-      'Setiap kolom harus disimpan di tabel <strong>pemilik faktanya</strong>. ' +
+      'Berdasarkan temuan di atas, setiap kolom harus disimpan di tabel <strong>pemilik faktanya</strong>. ' +
       'Ketuk satu kolom untuk memilih, lalu ketuk tabel tujuannya. ' +
       'Ketuk kolom yang sudah ditempatkan untuk mengembalikannya.',
     step1Hint:
       'Tanya pada dirimu: fakta ini <strong>milik siapa</strong>? ' +
-      '"Kelas" itu fakta milik siswa, bukan milik peminjaman — kelas Rani tetap sama ' +
-      'walau ia tidak meminjam apa pun. Sebaliknya "lama_pinjam" hanya ada ketika ada peminjaman.',
+      '"Kelas" itu fakta milik anggota, bukan milik transaksi — kelas Rani tetap sama ' +
+      'walau ia tidak berbelanja apa pun. Perhatikan juga: ada satu kolom yang <strong>tidak pernah ada</strong> ' +
+      'di catatan lama, dan baru muncul karena kamu membaca temuan analisis kebutuhan di atas.',
     keyboardHint:
       'Dengan keyboard: Tab untuk berpindah, Enter atau Spasi untuk memilih. ' +
       'Saat sebuah kolom terpilih, tekan angka 1, 2, atau 3 untuk langsung menempatkannya.',
 
     tables: [
-      { id: 't_siswa', name: 'siswa', colorKey: 'blue', desc: 'Data orang yang meminjam', pk: 'c_nis' },
-      { id: 't_alat', name: 'alat', colorKey: 'green', desc: 'Data barang yang dipinjam', pk: 'c_kode' },
-      { id: 't_pinjam', name: 'peminjaman', colorKey: 'orange', desc: 'Data kejadian peminjaman', pk: 'c_idpinjam' }
+      { id: 't_anggota', name: 'anggota', colorKey: 'blue', desc: 'Data siswa yang menjadi anggota koperasi', pk: 'c_nomoranggota' },
+      { id: 't_barang', name: 'barang', colorKey: 'green', desc: 'Data barang yang dijual koperasi', pk: 'c_kodebarang' },
+      { id: 't_transaksi', name: 'transaksi', colorKey: 'orange', desc: 'Data kejadian pembelian barang oleh anggota', pk: 'c_idtransaksi' }
     ],
 
     columns: [
-      { id: 'c_nis', label: 'nis', tableId: 't_siswa', why: 'Nomor induk siswa — fakta milik siswa, dan unik untuk tiap orang.' },
-      { id: 'c_nama', label: 'nama_siswa', tableId: 't_siswa', why: 'Nama menempel pada orangnya, bukan pada transaksinya.' },
-      { id: 'c_kelas', label: 'kelas', tableId: 't_siswa', why: 'Kelas adalah fakta milik siswa. Inilah yang tadi ditulis berulang-ulang.' },
-      { id: 'c_hp', label: 'no_hp', tableId: 't_siswa', why: 'Nomor HP milik siswa. Disimpan sekali di sini, tidak akan pernah beda-beda lagi.' },
-      { id: 'c_kode', label: 'kode_alat', tableId: 't_alat', why: 'Kode alat — fakta milik alat, dan unik untuk tiap barang.' },
-      { id: 'c_namaalat', label: 'nama_alat', tableId: 't_alat', why: 'Nama alat menempel pada barangnya.' },
-      { id: 'c_spek', label: 'spesifikasi', tableId: 't_alat', why: 'Spesifikasi adalah fakta milik alat. Cukup ditulis sekali.' },
-      { id: 'c_idpinjam', label: 'id_pinjam', tableId: 't_pinjam', why: 'Penanda unik tiap kejadian peminjaman — sesuatu yang belum ada di tabel lama.' },
-      { id: 'c_tanggal', label: 'tanggal', tableId: 't_pinjam', why: 'Tanggal hanya bermakna jika ada peminjaman. Ini fakta milik transaksi.' },
-      { id: 'c_lama', label: 'lama_pinjam', tableId: 't_pinjam', why: 'Lama pinjam berbeda tiap transaksi, jadi ia milik transaksi.' }
+      { id: 'c_nomoranggota', label: 'nomor_anggota', tableId: 't_anggota', why: 'Penanda unik tiap anggota, menggantikan nama sebagai identitas resmi — nama bisa kembar, nomor anggota tidak.' },
+      { id: 'c_namaanggota', label: 'nama_anggota', tableId: 't_anggota', why: 'Nama menempel pada orangnya, bukan pada transaksinya.' },
+      { id: 'c_kelas', label: 'kelas', tableId: 't_anggota', why: 'Kelas adalah fakta milik anggota. Inilah yang tadi ditulis berulang-ulang.' },
+      { id: 'c_hp', label: 'no_hp', tableId: 't_anggota', why: 'Nomor HP milik anggota. Disimpan sekali di sini, tidak akan pernah beda-beda lagi seperti punya Dewi.' },
+      { id: 'c_kodebarang', label: 'kode_barang', tableId: 't_barang', why: 'Kode barang — fakta milik barang, dan unik untuk tiap jenis barang.' },
+      { id: 'c_namabarang', label: 'nama_barang', tableId: 't_barang', why: 'Nama barang menempel pada barangnya.' },
+      { id: 'c_kategori', label: 'kategori', tableId: 't_barang', why: 'Kategori adalah fakta milik barang. Ditulis sekali saja, jadi tidak akan beda-beda ("Alat Tulis" vs "alat tulis") seperti tadi.' },
+      { id: 'c_stok', label: 'stok_saat_ini', tableId: 't_barang', why: 'Kolom ini TIDAK ADA di catatan lama. Ia baru muncul setelah kamu membaca temuan analisis kebutuhan Bu Sari — itulah peran analisis kebutuhan sistem: menemukan data yang harus disimpan, bukan sekadar mencatat apa yang kebetulan sudah ditulis.' },
+      { id: 'c_idtransaksi', label: 'id_transaksi', tableId: 't_transaksi', why: 'Penanda unik tiap kejadian pembelian — sesuatu yang belum ada di catatan lama.' },
+      { id: 'c_tanggal', label: 'tanggal', tableId: 't_transaksi', why: 'Tanggal hanya bermakna jika ada transaksi. Ini fakta milik transaksi itu sendiri.' },
+      { id: 'c_jumlah', label: 'jumlah', tableId: 't_transaksi', why: 'Jumlah barang yang dibeli berbeda tiap transaksi, jadi ia milik transaksi.' }
     ],
 
     poolLabel: 'Kolom yang belum ditempatkan',
     poolEmpty: 'Semua kolom sudah ditempatkan ✓',
     cekKolomLabel: 'Periksa penempatan',
     salahKolom: 'Masih ada kolom yang belum tepat. Kolom bertanda ✗ perlu kamu pindahkan.',
-    benarKolom: 'Tepat! Satu fakta kini hanya disimpan di satu tempat.',
+    benarKolom: 'Tepat! Satu fakta kini hanya disimpan di satu tempat — termasuk kebutuhan baru yang tadi kamu gali dari temuan analisis kebutuhan.',
 
     step2Title: 'Langkah 2 — Tentukan primary key',
     step2Instruction:
@@ -343,19 +381,19 @@ const DATA = {
 
     step3Title: 'Langkah 3 — Hubungkan dengan foreign key',
     step3Instruction:
-      'Tabel <code>peminjaman</code> perlu tahu <em>siapa</em> meminjam <em>apa</em>. ' +
-      'Pilih field yang harus ditambahkan ke <code>peminjaman</code> sebagai foreign key.',
+      'Tabel <code>transaksi</code> perlu tahu <em>siapa</em> membeli <em>apa</em>. ' +
+      'Pilih field yang harus ditambahkan ke <code>transaksi</code> sebagai foreign key.',
     fkOptions: [
-      { id: 'fk_nis', label: 'nis', correct: true, why: 'Benar. Cukup NIS-nya, bukan nama dan kelasnya. Dari NIS, data siswa selengkapnya bisa ditelusuri.' },
-      { id: 'fk_kode', label: 'kode_alat', correct: true, why: 'Benar. Cukup kode alatnya. Nama dan spesifikasi tidak perlu ikut disalin lagi.' },
-      { id: 'fk_nama', label: 'nama_siswa', correct: false, why: 'Tidak perlu. Menyalin nama ke tabel peminjaman berarti mengulang fakta lagi — persis masalah yang tadi kita buang. Lagi pula nama bisa kembar.' },
-      { id: 'fk_kelas', label: 'kelas', correct: false, why: 'Tidak perlu. Kelas sudah tersimpan di tabel siswa dan bisa ditelusuri lewat nis.' },
-      { id: 'fk_spek', label: 'spesifikasi', correct: false, why: 'Tidak perlu. Spesifikasi sudah tersimpan di tabel alat dan bisa ditelusuri lewat kode_alat.' },
-      { id: 'fk_hp', label: 'no_hp', correct: false, why: 'Tidak perlu — dan justru inilah yang membuat nomor Dewi jadi beda-beda. Cukup simpan di tabel siswa.' }
+      { id: 'fk_nomoranggota', label: 'nomor_anggota', correct: true, why: 'Benar. Cukup nomor anggotanya, bukan nama dan kelasnya. Dari nomor anggota, data anggota selengkapnya bisa ditelusuri.' },
+      { id: 'fk_kodebarang', label: 'kode_barang', correct: true, why: 'Benar. Cukup kode barangnya. Nama dan kategori tidak perlu ikut disalin lagi.' },
+      { id: 'fk_namaanggota', label: 'nama_anggota', correct: false, why: 'Tidak perlu. Menyalin nama ke tabel transaksi berarti mengulang fakta lagi — persis masalah yang tadi kita buang. Lagi pula nama bisa kembar.' },
+      { id: 'fk_kelas', label: 'kelas', correct: false, why: 'Tidak perlu. Kelas sudah tersimpan di tabel anggota dan bisa ditelusuri lewat nomor_anggota.' },
+      { id: 'fk_kategori', label: 'kategori', correct: false, why: 'Tidak perlu. Kategori sudah tersimpan di tabel barang dan bisa ditelusuri lewat kode_barang.' },
+      { id: 'fk_hp', label: 'no_hp', correct: false, why: 'Tidak perlu — dan justru inilah yang membuat nomor Dewi jadi beda-beda. Cukup simpan di tabel anggota.' }
     ],
     cekKunciLabel: 'Periksa kunci',
     salahKunci: 'Belum tepat. Periksa lagi penjelasan di bawah tiap pilihan.',
-    benarKunci: 'Rancanganmu sudah utuh — tiga tabel yang saling terhubung.',
+    benarKunci: 'Rancanganmu sudah utuh — tiga tabel yang saling terhubung, hasil dari temuan analisis kebutuhan tadi.',
     lanjutLabel: 'Lanjut: uji rancanganmu →'
   },
 
@@ -365,14 +403,14 @@ const DATA = {
   uji: {
     kicker: 'Tahap 6 · Verifikasi',
     title: 'Uji: Rancanganmu vs Catatan Lama',
-    goal: 'Membuktikan sendiri akibat struktur data terhadap perangkat lunak yang dibangun di atasnya.',
+    goal: 'Membuktikan sendiri akibat struktur data dan akibat analisis kebutuhan yang terlewat terhadap perangkat lunak yang dibangun di atasnya.',
     instruction:
-      'Tiga permintaan nyata datang ke Pak Yusuf. Untuk setiap permintaan, ' +
+      'Empat permintaan nyata datang ke Bu Sari. Untuk setiap permintaan, ' +
       '<strong>tebak dulu</strong> apa yang terjadi, baru hasilnya dibuka. Menebak dulu membuat temuannya menempel.',
     prediksiLabel: 'Tebakanmu:',
     bukaLabel: 'Buka hasilnya',
-    flatLabel: 'Catatan lama (1 tabel datar)',
-    rancanganLabel: 'Rancanganmu (3 tabel berelasi)',
+    flatLabel: 'Tanpa rancangan yang matang',
+    rancanganLabel: 'Dengan rancangan hasil analisis kebutuhan',
 
     cases: [
       {
@@ -388,46 +426,42 @@ const DATA = {
         ],
         correct: 'o_u2',
         flat: {
-          verdict: 'buruk',
           text:
             'Harus menyisir <strong>seluruh baris</strong> yang memuat Dewi — di tabel contoh ada 2 baris, ' +
             'di file asli bisa ratusan. Satu baris terlewat, datanya langsung tidak konsisten. ' +
             'Persis itulah yang sudah terjadi: <code>0895-7788-9900</code> di baris 4, <code>0895-7788-990</code> di baris 8.'
         },
         rancangan: {
-          verdict: 'baik',
           text:
-            'Ubah <strong>satu baris</strong> di tabel <code>siswa</code>, selesai. ' +
-            'Tabel <code>peminjaman</code> hanya menyimpan <code>nis</code>, jadi seluruh riwayat ' +
-            'peminjaman Dewi otomatis menunjuk ke nomor yang baru.'
+            'Ubah <strong>satu baris</strong> di tabel <code>anggota</code>, selesai. ' +
+            'Tabel <code>transaksi</code> hanya menyimpan <code>nomor_anggota</code>, jadi seluruh riwayat ' +
+            'transaksi Dewi otomatis menunjuk ke nomor yang baru.'
         },
         konsep: 'Anomali pembaruan (update anomaly)'
       },
       {
         id: 'u_insert', icon: '📦',
-        title: 'Permintaan 2 — Lab membeli alat baru',
+        title: 'Permintaan 2 — Koperasi menerima barang baru',
         scenario:
-          'Lab baru saja membeli 5 unit Arduino Uno (kode ALT-12). Barangnya sudah datang, tetapi belum ada satu pun siswa yang meminjamnya. Data alat ini harus tercatat sekarang.',
+          'Koperasi baru saja menerima 20 pak amplop coklat (kode BRG-12). Barangnya sudah datang, tetapi belum ada satu pun anggota yang membelinya. Data barang ini harus tercatat sekarang.',
         options: [
-          { id: 'o_i1', label: 'Bisa dicatat langsung sebagai data alat.' },
-          { id: 'o_i2', label: 'Tidak bisa dicatat sampai ada yang meminjamnya.' },
-          { id: 'o_i3', label: 'Harus menghapus alat lain dulu.' },
-          { id: 'o_i4', label: 'Cukup ditulis di kolom spesifikasi alat lain.' }
+          { id: 'o_i1', label: 'Bisa dicatat langsung sebagai data barang.' },
+          { id: 'o_i2', label: 'Tidak bisa dicatat sampai ada yang membelinya.' },
+          { id: 'o_i3', label: 'Harus menghapus barang lain dulu.' },
+          { id: 'o_i4', label: 'Cukup ditulis di kolom kategori barang lain.' }
         ],
         correct: 'o_i2',
         flat: {
-          verdict: 'buruk',
           text:
-            'Satu baris hanya lahir kalau ada peminjaman. Alat yang belum pernah dipinjam ' +
-            '<strong>tidak punya tempat</strong>. Pak Yusuf terpaksa membuat baris transaksi palsu ' +
-            '(peminjam kosong, tanggal karangan) — dan data palsu itu akan ikut terhitung di laporan.'
+            'Satu baris hanya lahir kalau ada transaksi. Barang yang belum pernah dibeli ' +
+            '<strong>tidak punya tempat</strong>. Bu Sari terpaksa membuat baris transaksi palsu ' +
+            '(pembeli kosong, tanggal karangan) — dan data palsu itu akan ikut terhitung di laporan.'
         },
         rancangan: {
-          verdict: 'baik',
           text:
-            'Tambah <strong>satu baris</strong> di tabel <code>alat</code>. ' +
-            'Tabel <code>alat</code> berdiri sendiri, jadi keberadaan alat tidak bergantung ' +
-            'pada ada atau tidaknya peminjaman.'
+            'Tambah <strong>satu baris</strong> di tabel <code>barang</code>. ' +
+            'Tabel <code>barang</code> berdiri sendiri, jadi keberadaan barang tidak bergantung ' +
+            'pada ada atau tidaknya transaksi.'
         },
         konsep: 'Anomali penyisipan (insert anomaly)'
       },
@@ -435,38 +469,63 @@ const DATA = {
         id: 'u_delete', icon: '🗑️',
         title: 'Permintaan 3 — Satu transaksi dibatalkan',
         scenario:
-          'Peminjaman Kamera DSLR (ALT-09) oleh Aldi pada 09/09/2025 ternyata batal dan harus dihapus dari catatan. Perhatikan: itu satu-satunya baris yang memuat ALT-09.',
+          'Pembelian Snack Kemasan (BRG-09) oleh Aldi pada 09/09/2025 ternyata batal dan harus dihapus dari catatan. Perhatikan: itu satu-satunya baris yang memuat BRG-09.',
         options: [
-          { id: 'o_d1', label: 'Hanya transaksinya yang hilang, data kamera tetap ada.' },
-          { id: 'o_d2', label: 'Data Kamera DSLR ikut hilang dari catatan.' },
+          { id: 'o_d1', label: 'Hanya transaksinya yang hilang, data barangnya tetap ada.' },
+          { id: 'o_d2', label: 'Data Snack Kemasan ikut hilang dari catatan.' },
           { id: 'o_d3', label: 'Seluruh data Aldi ikut terhapus.' },
           { id: 'o_d4', label: 'Barisnya tidak bisa dihapus.' }
         ],
         correct: 'o_d2',
         flat: {
-          verdict: 'buruk',
           text:
             'Menghapus baris itu berarti menghapus <strong>satu-satunya</strong> tempat ' +
-            'nama dan spesifikasi Kamera DSLR pernah ditulis. Lab masih memiliki kameranya, ' +
-            'tetapi sistem sudah lupa bahwa kamera itu ada.'
+            'nama dan kategori Snack Kemasan pernah ditulis. Koperasi masih memiliki barangnya, ' +
+            'tetapi sistem sudah lupa bahwa barang itu ada.'
         },
         rancangan: {
-          verdict: 'baik',
           text:
-            'Hapus satu baris di tabel <code>peminjaman</code> saja. ' +
-            'Data Kamera DSLR tetap aman di tabel <code>alat</code>, karena ia tidak pernah ' +
+            'Hapus satu baris di tabel <code>transaksi</code> saja. ' +
+            'Data Snack Kemasan tetap aman di tabel <code>barang</code>, karena ia tidak pernah ' +
             'bergantung pada transaksi mana pun.'
         },
         konsep: 'Anomali penghapusan (delete anomaly)'
+      },
+      {
+        id: 'u_analisis', icon: '📉',
+        title: 'Permintaan 4 — Sistem baru yang dibangun terburu-buru',
+        scenario:
+          'Sekolah lain pernah membangun sistem koperasi serupa tanpa sempat mewawancarai penggunanya lebih dulu — langsung membuat tabel dari data yang kebetulan sudah ada. Setelah dipakai, pengurus koperasinya mengeluh sistemnya tidak bisa menjawab pertanyaan "barang apa saja yang stoknya hampir habis?".',
+        options: [
+          { id: 'o_a1', label: 'Wajar terjadi — kebutuhan seperti ini memang mustahil diketahui sebelum sistem dibangun.' },
+          { id: 'o_a2', label: 'Terjadi karena kebutuhan itu tidak pernah digali lebih dulu lewat analisis kebutuhan sistem.' },
+          { id: 'o_a3', label: 'Terjadi karena database-nya kurang canggih secara teknis.' },
+          { id: 'o_a4', label: 'Terjadi karena jumlah tabelnya terlalu sedikit.' }
+        ],
+        correct: 'o_a2',
+        flat: {
+          text:
+            'Sistem itu dirancang langsung dari data yang kebetulan sudah tersedia, tanpa lebih dulu bertanya ' +
+            '"apa yang sebenarnya dibutuhkan penggunanya?". Akibatnya kolom sepenting <code>stok_saat_ini</code> ' +
+            'tidak pernah terpikirkan sampai penggunanya sendiri yang mengeluh — sama seperti Bu Sari di awal cerita ini.'
+        },
+        rancangan: {
+          text:
+            'Rancanganmu punya kolom <code>stok_saat_ini</code> justru karena kamu lebih dulu membaca ' +
+            '<strong>temuan analisis kebutuhan</strong> — bukan sekadar mencatat apa yang sudah ada. ' +
+            'Itulah gunanya menggali kebutuhan pengguna sebelum satu tabel pun dirancang.'
+        },
+        konsep: 'Analisis kebutuhan sistem yang terlewat'
       }
     ],
 
     benarPrediksi: 'Tebakanmu tepat!',
     salahPrediksi: 'Tebakanmu belum tepat — dan itu wajar. Baca perbandingannya.',
     penutup:
-      'Ketiga permintaan tadi <strong>tidak bisa diperbaiki dengan menulis kode yang lebih baik</strong>. ' +
-      'Aplikasi secanggih apa pun yang dibangun di atas tabel datar itu akan mewarisi masalah yang sama. ' +
-      'Yang menentukan adalah <strong>struktur datanya</strong> — dan itu dirancang sebelum satu baris kode ditulis.',
+      'Baik kesalahan struktur data maupun analisis kebutuhan yang terlewat <strong>tidak bisa diperbaiki dengan ' +
+      'menulis kode yang lebih baik</strong>. Aplikasi secanggih apa pun yang dibangun di atas rancangan yang ' +
+      'keliru akan mewarisi masalah yang sama. Yang menentukan adalah <strong>struktur datanya dan seberapa ' +
+      'dalam kebutuhan penggunanya digali</strong> — dan keduanya terjadi sebelum satu baris kode ditulis.',
     lanjutLabel: 'Lanjut: simpulkan →'
   },
 
@@ -476,13 +535,13 @@ const DATA = {
   simpulan: {
     kicker: 'Tahap 7 · Generalisasi',
     title: 'Tarik Kesimpulannya',
-    goal: 'Merumuskan konsep yang kamu temukan agar berlaku untuk kasus lain, bukan hanya SiPinjam.',
+    goal: 'Merumuskan konsep yang kamu temukan agar berlaku untuk kasus lain, bukan hanya Koperasi Siswa.',
     instruction: 'Jawab soal-soal berikut untuk menguji konsep yang sudah kamu temukan.',
 
     questions: [
       {
         id: 'q1',
-        prompt: 'Sebuah baris pada tabel <code>alat</code> berisi data lengkap tentang satu buah alat. Baris itu disebut…',
+        prompt: 'Sebuah baris pada tabel <code>barang</code> berisi data lengkap tentang satu jenis barang. Baris itu disebut…',
         options: [
           { id: 'q1a', label: 'Record' },
           { id: 'q1b', label: 'Field' },
@@ -494,7 +553,7 @@ const DATA = {
       },
       {
         id: 'q2',
-        prompt: 'Field <code>nis</code> pada tabel <code>peminjaman</code> menunjuk ke tabel <code>siswa</code>. Field seperti itu disebut…',
+        prompt: 'Field <code>nomor_anggota</code> pada tabel <code>transaksi</code> menunjuk ke tabel <code>anggota</code>. Field seperti itu disebut…',
         options: [
           { id: 'q2a', label: 'Foreign key' },
           { id: 'q2b', label: 'Primary key' },
@@ -506,7 +565,7 @@ const DATA = {
       },
       {
         id: 'q3',
-        prompt: 'Mengapa <code>nama_siswa</code> tidak cocok dijadikan primary key tabel <code>siswa</code>?',
+        prompt: 'Mengapa <code>nama_anggota</code> tidak cocok dijadikan primary key tabel <code>anggota</code>?',
         options: [
           { id: 'q3a', label: 'Karena nama bisa kembar, sehingga tidak menjamin keunikan baris.' },
           { id: 'q3b', label: 'Karena nama terlalu panjang untuk disimpan.' },
@@ -514,51 +573,63 @@ const DATA = {
           { id: 'q3d', label: 'Karena nama tidak boleh disimpan di basis data.' }
         ],
         correct: 'q3a',
-        explanation: 'Syarat primary key adalah unik dan tidak berubah-ubah. Dua siswa bisa bernama sama, jadi nama gagal memenuhi syarat itu. NIS memenuhinya.'
+        explanation: 'Syarat primary key adalah unik dan tidak berubah-ubah. Dua anggota bisa bernama sama, jadi nama gagal memenuhi syarat itu. Nomor anggota memenuhinya.'
       },
       {
         id: 'q4',
-        prompt: 'Sebuah tim membangun aplikasi kasir. Semua data (pembeli, barang, transaksi) dijadikan satu tabel datar. Apa akibat yang paling mungkin terjadi?',
+        prompt: 'Apa yang dimaksud dengan analisis kebutuhan sistem dalam perancangan basis data?',
         options: [
-          { id: 'q4a', label: 'Data yang sama ditulis berulang, lalu mulai berbeda-beda isinya.' },
-          { id: 'q4b', label: 'Aplikasi menjadi lebih cepat karena hanya satu tabel.' },
-          { id: 'q4c', label: 'Aplikasi tidak bisa dijalankan sama sekali.' },
-          { id: 'q4d', label: 'Basis datanya otomatis memperbaiki dirinya sendiri.' }
+          { id: 'q4a', label: 'Proses menggali kebutuhan nyata pengguna — misalnya lewat wawancara atau pengamatan — sebelum struktur basis data dirancang.' },
+          { id: 'q4b', label: 'Proses memperbaiki basis data setelah sistemnya selesai dibangun dan bermasalah.' },
+          { id: 'q4c', label: 'Proses menulis kode program untuk mengelola basis data.' },
+          { id: 'q4d', label: 'Proses mencatat semua data yang kebetulan sudah tersedia, apa adanya.' }
         ],
         correct: 'q4a',
-        explanation: 'Masalahnya berulang di kasus mana pun: redundansi menimbulkan anomali pembaruan, penyisipan, dan penghapusan — persis seperti di SiPinjam.'
+        explanation: 'Analisis kebutuhan sistem dilakukan di awal, sebelum tabel dirancang, supaya rancangannya benar-benar menjawab kebutuhan penggunanya — bukan sekadar meniru data yang kebetulan sudah ada.'
       },
       {
         id: 'q5',
-        prompt: 'Kapan sebaiknya struktur tabel dirancang dalam sebuah proyek perangkat lunak?',
+        prompt: 'Mengapa kolom <code>stok_saat_ini</code> baru muncul di rancanganmu, padahal tidak ada sama sekali di catatan lama Bu Sari?',
         options: [
-          { id: 'q5a', label: 'Sejak awal, sebelum kode aplikasinya dibangun di atasnya.' },
-          { id: 'q5b', label: 'Setelah aplikasinya selesai dan dipakai pengguna.' },
-          { id: 'q5c', label: 'Hanya jika datanya sudah melebihi seribu baris.' },
-          { id: 'q5d', label: 'Tidak perlu dirancang, cukup mengikuti kebutuhan sambil jalan.' }
+          { id: 'q5a', label: 'Karena kebutuhan itu ditemukan lewat temuan analisis kebutuhan, bukan sekadar meniru data lama.' },
+          { id: 'q5b', label: 'Karena setiap tabel barang wajib punya kolom stok, tanpa kecuali.' },
+          { id: 'q5c', label: 'Karena kolom itu ditambahkan supaya jumlah kolomnya genap.' },
+          { id: 'q5d', label: 'Karena kolom lama dianggap tidak penting lagi.' }
         ],
         correct: 'q5a',
-        explanation: 'Struktur data adalah fondasi. Mengubahnya setelah aplikasi berjalan berarti membongkar kode, memindahkan data lama, dan menanggung risiko kehilangan data.'
+        explanation: 'Analisis kebutuhan sistem menggali apa yang benar-benar dibutuhkan pengguna. Kebutuhan "tahu stok hampir habis" itulah yang mengarahkan penambahan kolom baru — bukan aturan baku atau kebetulan.'
       },
       {
         id: 'q6',
-        prompt: 'Apa inti manfaat memecah satu tabel datar menjadi beberapa tabel yang berelasi?',
+        prompt: 'Sebuah tim membangun aplikasi kasir. Semua data (pembeli, barang, transaksi) dijadikan satu tabel datar, tanpa lebih dulu menggali kebutuhan penggunanya. Apa akibat yang paling mungkin terjadi?',
         options: [
-          { id: 'q6a', label: 'Setiap fakta cukup disimpan di satu tempat, sehingga tetap konsisten.' },
-          { id: 'q6b', label: 'Jumlah seluruh baris data menjadi lebih sedikit.' },
-          { id: 'q6c', label: 'Nama kolomnya menjadi lebih pendek.' },
-          { id: 'q6d', label: 'Data tidak perlu lagi disimpan di penyimpanan apa pun.' }
+          { id: 'q6a', label: 'Data yang sama ditulis berulang, dan kebutuhan penting bisa terlewat karena tidak pernah digali sejak awal.' },
+          { id: 'q6b', label: 'Aplikasi menjadi lebih cepat karena hanya satu tabel.' },
+          { id: 'q6c', label: 'Aplikasi tidak bisa dijalankan sama sekali.' },
+          { id: 'q6d', label: 'Basis datanya otomatis memperbaiki dirinya sendiri.' }
         ],
         correct: 'q6a',
-        explanation: 'Satu fakta, satu tempat. Dari situlah konsistensi, kemudahan perubahan, dan kemudahan pengembangan datang.'
+        explanation: 'Masalahnya berulang di kasus mana pun: redundansi menimbulkan anomali, dan tanpa analisis kebutuhan, hal-hal penting bagi pengguna (seperti info stok) bisa luput sama sekali — persis seperti Koperasi Siswa.'
+      },
+      {
+        id: 'q7',
+        prompt: 'Kapan sebaiknya analisis kebutuhan dan perancangan struktur tabel dilakukan dalam sebuah proyek perangkat lunak?',
+        options: [
+          { id: 'q7a', label: 'Sejak awal, sebelum kode aplikasinya dibangun di atasnya.' },
+          { id: 'q7b', label: 'Setelah aplikasinya selesai dan dipakai pengguna.' },
+          { id: 'q7c', label: 'Hanya jika datanya sudah melebihi seribu baris.' },
+          { id: 'q7d', label: 'Tidak perlu, cukup mengikuti kebutuhan sambil jalan.' }
+        ],
+        correct: 'q7a',
+        explanation: 'Analisis kebutuhan dan struktur data adalah fondasi. Melakukannya belakangan berarti membongkar kode, memindahkan data lama, dan menanggung risiko kehilangan data.'
       }
     ],
 
     cekLabel: 'Periksa jawaban',
     kesimpulanLabel: 'Kesimpulanmu',
     kesimpulanPrompt:
-      'Tulis satu kalimat: mengapa perancangan struktur data penting dalam pengembangan perangkat lunak?',
-    kesimpulanPlaceholder: 'Perancangan struktur data penting karena…',
+      'Tulis satu sampai dua kalimat: mengapa konsep dasar basis data dan analisis kebutuhan sistem sama-sama penting dalam pengembangan perangkat lunak?',
+    kesimpulanPlaceholder: 'Keduanya penting karena…',
     kesimpulanMin: 30,
     kesimpulanKurang: 'Lengkapi dulu kesimpulanmu menjadi satu kalimat utuh.',
     lanjutLabel: 'Lanjut: refleksi →'
@@ -592,14 +663,15 @@ const DATA = {
     skalaItems: [
       { id: 'li_istilah', text: 'Saya dapat membedakan entitas, tabel, record, dan field.' },
       { id: 'li_kunci', text: 'Saya dapat menjelaskan beda primary key dan foreign key.' },
-      { id: 'li_pecah', text: 'Saya dapat memecah satu tabel datar menjadi tabel-tabel yang berelasi.' },
-      { id: 'li_penting', text: 'Saya dapat menjelaskan mengapa perancangan struktur data itu penting.' }
+      { id: 'li_analisis', text: 'Saya dapat menjelaskan apa itu analisis kebutuhan sistem dan mengapa itu penting.' },
+      { id: 'li_pecah', text: 'Saya dapat merancang tabel berdasarkan temuan analisis kebutuhan pengguna.' },
+      { id: 'li_penting', text: 'Saya dapat menjelaskan mengapa konsep dasar basis data dan analisis kebutuhan sistem sama-sama penting.' }
     ],
 
     prompts: [
       {
         id: 'rf1',
-        question: 'Bagian mana yang paling mengubah caramu memandang data? Mengapa?',
+        question: 'Bagian mana yang paling mengubah caramu memandang data dan kebutuhan pengguna? Mengapa?',
         placeholder: 'Yang paling mengubah cara pandang saya adalah…'
       },
       {
@@ -632,15 +704,16 @@ const DATA = {
     konsepKunci: [
       'Satu <strong>entitas</strong> disimpan di satu <strong>tabel</strong>. Satu <strong>record</strong> adalah satu barisnya, satu <strong>field</strong> adalah satu kolomnya.',
       '<strong>Primary key</strong> membuat setiap baris dapat dibedakan; <strong>foreign key</strong> menghubungkan sebuah baris ke baris di tabel lain.',
-      'Prinsip utamanya: <strong>satu fakta cukup disimpan di satu tempat</strong>.',
-      'Menyimpan fakta berulang memunculkan tiga anomali: <strong>pembaruan</strong>, <strong>penyisipan</strong>, dan <strong>penghapusan</strong>.',
-      'Struktur data adalah <strong>fondasi</strong> perangkat lunak. Kode yang baik tidak dapat menyelamatkan struktur data yang keliru.'
+      '<strong>Analisis kebutuhan sistem</strong> menggali apa yang benar-benar dibutuhkan pengguna — lewat wawancara atau pengamatan — sebelum satu tabel pun dirancang.',
+      'Hasil analisis kebutuhan itulah yang menentukan entitas, atribut (termasuk atribut yang sama sekali baru seperti <code>stok_saat_ini</code>), dan relasi pada basis data.',
+      'Menyimpan fakta berulang tanpa rancangan yang matang memunculkan tiga anomali: <strong>pembaruan</strong>, <strong>penyisipan</strong>, dan <strong>penghapusan</strong>.',
+      'Struktur data dan analisis kebutuhan adalah <strong>fondasi</strong> perangkat lunak. Kode yang baik tidak dapat menyelamatkan rancangan yang keliru sejak awal.'
     ],
 
     lanjutLabel: 'Langkah berikutnya',
     lanjut: [
-      'Materi 1.2 — menganalisis entitas dan atribut dari kebutuhan pengguna.',
-      'Coba terapkan: ambil satu aplikasi yang kamu pakai sehari-hari, tebak entitas apa saja yang ada di baliknya.'
+      'Materi 1.2 — mendalami cara menganalisis entitas dan atribut langsung dari dokumen spesifikasi kebutuhan nyata.',
+      'Coba terapkan: ambil satu aplikasi yang kamu pakai sehari-hari, tebak kebutuhan pengguna apa yang mungkin menentukan rancangan data di baliknya.'
     ],
 
     ulangLabel: '↩ Ulangi dari awal',

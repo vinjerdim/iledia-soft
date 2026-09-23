@@ -55,9 +55,11 @@ var STAGE_DEFS = [
 })();
 
 var lesson = Engine.createLesson({
-  /* Kunci baru: materi lama memakai 'mpi-1-1-v1'. Pada origin yang sama,
-     sisa data lama akan ikut ter-merge dan merusak state ini. */
-  storageKey: 'mpi-f-1-1-v1',
+  /* Kunci baru: materi lama (konsep dasar saja, tanpa analisis kebutuhan)
+     memakai 'mpi-f-1-1-v1'. Bentuk state berubah total di versi ini, jadi
+     kuncinya dibump supaya progres lama tidak ikut ter-merge dan merusak
+     state yang baru. */
+  storageKey: 'mpi-f-1-1-v2',
 
   stages: STAGE_DEFS.map(function (s) {
     return { id: s.id, label: s.label, render: window[s.render] };

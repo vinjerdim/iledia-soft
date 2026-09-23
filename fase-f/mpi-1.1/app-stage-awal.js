@@ -56,7 +56,7 @@ function renderOrientasi(container) {
     '</ul>' +
     '</div>' +
 
-    nextButton('Mulai: lihat catatan Pak Yusuf →');
+    nextButton('Mulai: lihat catatan Bu Sari →');
 
   bindNext(container, 'orientasi', 'stimulasi');
 }
@@ -100,9 +100,9 @@ function renderStimulasi(container) {
 
   var tabel =
     '<div class="mini-table-wrap" role="region" tabindex="0"' +
-    ' aria-label="Tabel catatan SiPinjam, geser mendatar untuk melihat semua kolom">' +
+    ' aria-label="Tabel catatan CatatanKoperasi, geser mendatar untuk melihat semua kolom">' +
     '<table class="mini-table flat-table">' +
-    '<caption class="sr-only">Catatan peminjaman SiPinjam, 8 baris, 8 kolom. Ketuk sel untuk menandainya sebagai janggal.</caption>' +
+    '<caption class="sr-only">Catatan transaksi CatatanKoperasi, 8 baris, 8 kolom. Ketuk sel untuk menandainya sebagai janggal.</caption>' +
     '<thead><tr><th scope="col">#</th>' +
     d.columns
       .map(function (c) {
@@ -291,7 +291,7 @@ function renderMasalah(container) {
           benarSemua ? 'success' : 'warning',
           benarSemua ? '✓' : '!',
           benarSemua
-            ? '<strong>Tepat semua.</strong> Kamu berhasil memisahkan masalah struktural dari gejalanya.'
+            ? '<strong>Tepat semua.</strong> Kamu berhasil memisahkan masalah struktural dari masalah kebutuhan yang belum tergali.'
             : '<strong>' + st.correct + ' dari ' + d.statements.length + ' tepat.</strong> ' +
               'Baca penjelasan di bawah, perbaiki pilihanmu, lalu periksa lagi.'
         ) + rincian
