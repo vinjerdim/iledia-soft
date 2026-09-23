@@ -1,927 +1,671 @@
 'use strict';
 
 /* ============================================================
-   data.js — seluruh isi materi 1.2
+   data.js — seluruh konten materi 1.2
    ============================================================
-   Berkas ini hanya berisi KONTEN. Logika tampilan ada di app.js
-   dan berkas app-stage-*.js. Guru dapat menyunting teks dokumen,
-   soal, dan umpan balik di sini tanpa menyentuh kode.
-
-   ATURAN PENTING: setiap pilihan yang ditampilkan ke murid wajib
-   punya `id` yang unik dan stabil. Urutan tampilnya diacak oleh
-   engine, dan jawaban murid disimpan berdasarkan id — bukan
-   berdasarkan nomor urut. Mengganti id sama dengan menghapus
-   jawaban murid yang sudah tersimpan.
+   Studi kasus: Sistem Informasi Perpustakaan "Wira Pustaka",
+   SMK Cendekia Bangsa. Versi pertama aplikasi dibangun tanpa
+   penggalian kebutuhan yang benar, sehingga meleset dari
+   kebutuhan nyata petugas dan siswa. Murid berperan sebagai tim
+   analis baru yang menggali kebutuhan informasi dan data lewat
+   empat teknik: wawancara, observasi, studi dokumen, kuesioner.
    ============================================================ */
 
-const DATA = {
-  meta: {
-    title: 'Analisis Entitas dan Atribut dari Dokumen Spesifikasi',
-    subject: 'Rekayasa Perangkat Lunak — Fase F (SMK)',
-    model: 'Problem Based Learning',
-    goal:
-      'Menganalisis dokumen spesifikasi sistem untuk menentukan calon entitas ' +
-      'dan atribut utama.'
-  },
+var DATA = {
 
-  /* ==========================================================
+  /* ============================================================
      TAHAP 1 — Orientasi
-     ========================================================== */
+     ============================================================ */
   orientasi: {
-    kicker: 'Tahap 1 · Orientasi',
-    title: 'Sebelum Mulai',
-    goal: 'Memahami masalah yang akan kamu selesaikan, alur kerjanya, dan cara memakai media ini.',
+    kicker: 'Prolog',
+    title: 'Selamat Datang, Tim Analis Baru',
+    goal: 'Memahami alur belajar dan peranmu sebagai analis yang menggali kebutuhan sistem.',
     salam:
-      'Di materi sebelumnya kamu sudah mengenal entitas, atribut, dan kunci. ' +
-      'Sekarang kamu mendapat pekerjaan yang sesungguhnya: <strong>sebuah dokumen ' +
-      'spesifikasi dari klien</strong> — ditulis dengan bahasa manusia, bukan berupa daftar ' +
-      'tabel yang siap pakai. Tugasmu sebagai analis adalah memutuskan sendiri: ' +
-      'mana yang menjadi entitas, mana yang hanya atribut, dan mana yang bukan keduanya.',
-    tujuanLabel: 'Setelah menyelesaikan media ini kamu dapat:',
+      'Perpustakaan "Wira Pustaka" di SMK Cendekia Bangsa baru saja menghentikan sementara ' +
+      'aplikasi peminjaman buku yang dibangun tahun lalu — fiturnya meleset jauh dari yang ' +
+      'dibutuhkan petugas dan siswa. Kepala sekolah menugaskanmu, tim analis baru, untuk ' +
+      'mengulang prosesnya dari awal: menggali kebutuhan informasi dan data yang sebenarnya ' +
+      'sebelum sistem dirancang ulang.',
+    tujuanLabel: 'Tujuan Pembelajaran',
     tujuan: [
-      'Menelusuri dokumen spesifikasi sistem dan menandai frasa yang berpotensi menjadi data.',
-      'Membedakan calon entitas, atribut, nilai data, proses, dan sinonim pada dokumen yang sama.',
-      'Menentukan atribut utama beserta atribut kunci untuk setiap calon entitas.',
-      'Mempertanggungjawabkan keputusan analisismu dengan alasan, bukan dengan tebakan.'
+      'Mengidentifikasi kebutuhan informasi dan data dari studi kasus sistem.',
+      'Membedakan teknik penggalian kebutuhan (wawancara, observasi, kuesioner, studi dokumen) beserta kapan tepat dipakai.',
+      'Memilah kebutuhan fungsional, kebutuhan data, dan kebutuhan non-fungsional dari temuan lapangan.',
+      'Menilai teknik penggalian kebutuhan yang paling sesuai untuk situasi studi kasus baru.'
     ],
-    alurLabel: 'Alur kerja (5 fase Problem Based Learning, 10 tahap)',
+    alurLabel: 'Alur Belajar (Problem Based Learning)',
     alur: [
-      { id: 'a1', title: 'Fase 1 · Orientasi pada masalah', desc: 'Menerima pekerjaan dari klien dan menemukan masalah yang sesungguhnya.' },
-      { id: 'a2', title: 'Fase 2 · Menyiapkan bekal', desc: 'Menyepakati rambu pembeda entitas, atribut, nilai, proses, dan sinonim.' },
-      { id: 'a3', title: 'Fase 3 · Penyelidikan', desc: 'Menelusuri dokumen, menyaring kandidat, lalu memetakan atributnya.' },
-      { id: 'a4', title: 'Fase 4 · Menyajikan hasil karya', desc: 'Menyusun Kartu Data Entitas dan mengujinya dengan pertanyaan klien.' },
-      { id: 'a5', title: 'Fase 5 · Evaluasi & refleksi', desc: 'Menguji keberlakuan caramu pada dokumen lain, lalu menilai diri sendiri.' }
+      { title: 'Pahami Masalah', desc: 'Menelaah kegagalan sistem lama akibat penggalian kebutuhan yang asal-asalan.' },
+      { title: 'Bekal Teknik', desc: 'Mengenal lima teknik penggalian kebutuhan lewat kartu konsep dan latihan menjodohkan.' },
+      { title: 'Telusuri Temuan Lapangan', desc: 'Menandai kebutuhan informasi dan data pada kutipan wawancara, observasi, dokumen, dan kuesioner.' },
+      { title: 'Saring Sumbernya', desc: 'Mengenali teknik apa yang menghasilkan tiap temuan.' },
+      { title: 'Klasifikasikan Kebutuhan', desc: 'Memilah kebutuhan fungsional, data, dan non-fungsional, lalu menyaring usulan tambahan.' },
+      { title: 'Sajikan dan Uji', desc: 'Menyusun Kartu Kebutuhan, lalu menguji pilihan teknik pada kasus baru.' },
+      { title: 'Evaluasi', desc: 'Menjawab soal pada kasus lain untuk membuktikan pemahaman berlaku umum.' }
     ],
-    caraPakaiLabel: 'Cara memakai',
+    caraPakaiLabel: 'Cara Memakai Media Ini',
     caraPakai: [
-      'Tahap terbuka berurutan — selesaikan satu tahap untuk membuka tahap berikutnya.',
-      'Progresmu tersimpan otomatis di perangkat ini. Boleh ditutup lalu dilanjutkan nanti.',
-      'Tidak apa-apa salah. Setiap jawaban salah diberi penjelasan, bukan hukuman.',
-      'Tombol <strong>Reset</strong> di kanan atas menghapus seluruh progres dan mengacak ulang pilihan jawaban.'
+      'Progresmu tersimpan otomatis di perangkat ini — boleh ditutup dan dilanjutkan nanti.',
+      'Setiap tahap baru terbuka setelah tahap sebelumnya selesai.',
+      'Pilihan jawaban selalu diacak setiap kali materi dimulai — kerjakan dengan cermat, bukan menghafal urutan.'
     ]
   },
 
-  /* ==========================================================
+  /* ============================================================
      TAHAP 2 — Orientasi pada masalah (PBL fase 1)
-     ========================================================== */
+     ============================================================ */
   masalah: {
-    kicker: 'Tahap 2 · Fase 1 PBL',
-    title: 'Satu Dokumen, Dua Hasil yang Berbeda',
-    goal: 'Menemukan masalah yang sesungguhnya di balik kegagalan aplikasi Tim A.',
-
-    briefLabel: 'Surat dari klien',
+    kicker: 'Fase 1 · Orientasi pada Masalah',
+    title: 'Sistem yang Meleset dari Kebutuhan',
+    goal: 'Membedakan akar masalah (penggalian kebutuhan yang buruk) dari gejala-gejala yang tampak.',
+    briefLabel: 'Latar Belakang',
     brief:
-      '<p><strong>Bu Rahma</strong>, Wakil Kepala Sekolah bidang Hubungan Industri di SMK Bina Karya ' +
-      'Nusantara, meminta dibuatkan aplikasi <strong>SI-PKL</strong> untuk mendata Praktik Kerja ' +
-      'Lapangan. Ia mengirim satu dokumen spesifikasi kebutuhan, lalu menyerahkannya kepada ' +
-      'dua tim kelas XII sekaligus sebagai proyek uji coba.</p>',
+      '<p>Tahun lalu, seorang programmer junior ditugaskan membangun aplikasi peminjaman buku ' +
+      'untuk perpustakaan "Wira Pustaka". Ia bekerja sendiri, memakai template aplikasi yang ' +
+      'ditemukannya di internet, dan langsung mulai menulis kode tanpa lebih dulu berbicara ' +
+      'dengan petugas perpustakaan atau siswa.</p>' +
+      '<p>Tiga bulan setelah aplikasi diluncurkan, Bu Rahma — kepala perpustakaan — tetap ' +
+      'mencatat peminjaman secara manual di buku besar.</p>',
     kutipan:
-      '"Saya bukan orang IT. Saya tuliskan saja apa yang kami butuhkan, apa adanya. ' +
-      'Silakan kalian yang menerjemahkannya menjadi rancangan datanya."',
-
-    kejadianLabel: 'Yang terjadi saat demo',
+      'Programnya jadi, tapi bukan yang kami butuhkan. Laporan buku terpopuler saja tidak ada, ' +
+      'padahal itu yang paling sering saya cari manual tiap bulan.',
+    kejadianLabel: 'Yang Terjadi',
     kejadian: [
-      { id: 'kj_a', tim: 'Tim A', hasil: 'Membuat <strong>satu tabel besar</strong> bernama <code>pkl</code>. Setiap frasa penting di dokumen dijadikan satu kolom: nama siswa, kelas, nama perusahaan, alamat perusahaan, nama pembimbing, nomor HP pembimbing, tanggal mulai, tanggal selesai.' },
-      { id: 'kj_b', tim: 'Tim B', hasil: 'Membuat <strong>empat tabel</strong>: <code>siswa</code>, <code>mitra</code>, <code>pembimbing</code>, dan <code>penempatan</code> yang menghubungkan ketiganya.' }
+      {
+        tim: 'Programmer Junior (tahun lalu)',
+        hasil: 'Membangun aplikasi hanya berdasar template internet, tanpa wawancara atau observasi ke petugas perpustakaan.'
+      },
+      {
+        tim: 'Hasil di Lapangan',
+        hasil: 'Tiga bulan berjalan, petugas tetap mencatat manual di buku besar karena fitur laporan tidak sesuai kebutuhan nyata.'
+      }
     ],
     insiden:
-      'Saat demo, Bu Rahma meminta satu hal sederhana: <em>"Ada mitra baru, PT Cahaya Data. ' +
-      'Belum ada siswa yang ditempatkan di sana. Tolong dicatat dulu."</em> Aplikasi Tim B mencatatnya ' +
-      'dalam hitungan detik. Aplikasi Tim A tidak bisa — barisnya menuntut nama siswa, kelas, dan ' +
-      'tanggal mulai diisi lebih dulu.',
-
+      'Kepala sekolah akhirnya menghentikan sementara pemakaian aplikasi dan menugaskan tim ' +
+      'analis baru — kamu — untuk mengulang prosesnya dari awal, dimulai dari menggali ' +
+      'kebutuhan yang sebenarnya.',
     instruction:
-      'Kedua tim membaca <strong>dokumen yang sama</strong>. Dari cerita di atas, ' +
-      '<strong>pilih semua pernyataan yang benar</strong> tentang masalah yang sedang terjadi. ' +
-      'Ada lebih dari satu jawaban benar.',
-
+      'Dari laporan evaluasi proyek berikut, pilih pernyataan yang merupakan <strong>akar masalah</strong> ' +
+      '(penyebab), bukan sekadar gejala yang tampak di permukaan.',
     statements: [
-      {
-        id: 's1', valid: true,
-        text: 'Dokumen spesifikasi ditulis dengan bahasa manusia, sehingga entitas dan atributnya tidak tersedia sebagai daftar siap pakai.',
-        feedback: 'Benar. Dokumen kebutuhan hampir selalu berupa kalimat biasa. Menerjemahkannya menjadi data adalah pekerjaan <strong>analisis</strong>, bukan pekerjaan menyalin.'
-      },
-      {
-        id: 's2', valid: true,
-        text: 'Tim A memperlakukan setiap frasa penting sebagai kolom, tanpa memilah mana yang sebenarnya berdiri sendiri.',
-        feedback: 'Benar. Semua frasa dianggap setara. Padahal "perusahaan mitra" berdiri sendiri, sedangkan "tanggal mulai" hanya menempel pada peristiwa penempatan.'
-      },
-      {
-        id: 's3', valid: true,
-        text: 'Perbedaan hasil kedua tim berasal dari cara membaca dokumen, bukan dari kemampuan menulis kode.',
-        feedback: 'Benar. Kedua tim sama-sama bisa membuat aplikasinya. Yang berbeda adalah <strong>keputusan analisis</strong> sebelum kode ditulis.'
-      },
-      {
-        id: 's4', valid: true,
-        text: 'Dibutuhkan kriteria yang sistematis untuk memutuskan sebuah frasa menjadi entitas, atribut, atau bukan keduanya.',
-        feedback: 'Benar. Inilah yang akan kamu susun dan pakai di tahap-tahap berikutnya.'
-      },
-      {
-        id: 's5', valid: false,
-        text: 'Masalahnya karena dokumen dari Bu Rahma terlalu panjang dan bertele-tele.',
-        feedback: 'Belum tepat. Dokumennya hanya beberapa halaman, dan Tim B berhasil memakainya. Panjang dokumen bukan penyebabnya.'
-      },
-      {
-        id: 's6', valid: false,
-        text: 'Masalahnya akan selesai jika Tim A memakai bahasa pemrograman atau framework yang lebih modern.',
-        feedback: 'Belum tepat. Aplikasi secanggih apa pun yang berdiri di atas satu tabel besar akan mewarisi masalah yang sama — kamu sudah membuktikannya di materi 1.1.'
-      },
-      {
-        id: 's7', valid: false,
-        text: 'Masalahnya karena Tim A tidak membaca dokumennya sampai selesai.',
-        feedback: 'Belum tepat. Tanpa kriteria pembeda, membaca dokumen sampai sepuluh kali pun hasilnya tetap sama: semua frasa terlihat sama pentingnya.'
-      },
-      {
-        id: 's8', valid: false,
-        text: 'Entitas dan atribut seharusnya ditentukan oleh klien, bukan oleh tim pengembang.',
-        feedback: 'Belum tepat. Klien menyampaikan <em>kebutuhan</em>; menerjemahkannya menjadi entitas dan atribut adalah tanggung jawab analis. Bu Rahma sendiri sudah menegaskan hal itu.'
-      }
+      { id: 'm1', text: 'Tidak pernah ada sesi wawancara dengan petugas perpustakaan sebelum aplikasi dirancang.', valid: true,
+        feedback: 'Benar — ini akar masalah: tanpa wawancara, kebutuhan nyata pengguna tidak pernah tergali.' },
+      { id: 'm2', text: 'Laporan buku terpopuler bulanan tidak tersedia di aplikasi.', valid: false,
+        feedback: 'Ini gejala (akibat), bukan akar masalah — hilangnya fitur ini adalah dampak dari kebutuhan yang tidak digali, bukan penyebabnya.' },
+      { id: 'm3', text: 'Programmer tidak pernah mengamati langsung alur peminjaman buku di perpustakaan.', valid: true,
+        feedback: 'Benar — observasi langsung akan mengungkap detail proses yang sulit dijelaskan lewat kata-kata saja.' },
+      { id: 'm4', text: 'Aplikasi terasa lambat saat dibuka dari HP siswa.', valid: false,
+        feedback: 'Ini gejala teknis, bukan soal penggalian kebutuhan — bisa jadi soal performa, bukan akar masalah di studi kasus ini.' },
+      { id: 'm5', text: 'Kebutuhan sistem hanya ditentukan sepihak oleh programmer tanpa melibatkan calon pengguna.', valid: true,
+        feedback: 'Benar — keterlibatan calon pengguna adalah inti dari penggalian kebutuhan yang baik.' },
+      { id: 'm6', text: 'Siswa mengeluh tidak bisa mengecek ketersediaan buku dari rumah.', valid: false,
+        feedback: 'Ini gejala/keluhan pengguna, akibat dari kebutuhan yang tidak pernah digali lewat kuesioner atau wawancara ke siswa.' },
+      { id: 'm7', text: 'Tidak ada dokumen atau catatan lama (buku peminjaman manual) yang dipelajari sebelum merancang aplikasi.', valid: true,
+        feedback: 'Benar — studi dokumen terhadap catatan yang sudah ada adalah salah satu teknik penggalian kebutuhan yang terlewat.' }
     ],
-
-    cekLabel: 'Periksa pilihanku',
-    ownLabel: 'Rumuskan pertanyaan penyelidikanmu',
-    ownPrompt:
-      'Tulis satu pertanyaan yang akan kamu jawab lewat media ini. Mulailah dengan kata "Bagaimana…".',
-    ownPlaceholder: 'Bagaimana cara…',
+    cekLabel: 'Periksa Pilihanku',
+    ownLabel: 'Rumusan Masalahmu',
+    ownPrompt: "Tulis satu kalimat rumusan masalah untuk proyek ini (format: 'Bagaimana ... agar ...').",
+    ownPlaceholder: 'Contoh: Bagaimana tim analis dapat menggali kebutuhan informasi dan data perpustakaan secara tepat sebelum sistem dirancang ulang?',
     ownMin: 30,
-    ownKurang: 'Tulis sedikit lebih panjang ya, minimal satu pertanyaan utuh.',
-    lanjutLabel: 'Lanjut: siapkan bekal analisis →'
+    lanjutLabel: 'Lanjut: Bekal Teknik Penggalian Kebutuhan →'
   },
 
-  /* ==========================================================
-     TAHAP 3 — Mengorganisasi belajar (PBL fase 2)
-     ========================================================== */
+  /* ============================================================
+     TAHAP 3 — Mengorganisasikan belajar (PBL fase 2)
+     ============================================================ */
   bekal: {
-    kicker: 'Tahap 3 · Fase 2 PBL',
-    title: 'Bekal Sebelum Menelusuri',
-    goal: 'Menyepakati rambu pembeda dan rencana penyelidikan sebelum membuka dokumen klien.',
-    instruction:
-      'Sebuah dokumen spesifikasi penuh dengan kata benda, dan tidak semuanya menjadi entitas. ' +
-      '<strong>Ketuk setiap kartu</strong> untuk membuka rambunya.',
-
+    kicker: 'Fase 2 · Mengorganisasikan Belajar',
+    title: 'Bekal: Teknik Penggalian Kebutuhan',
+    goal: 'Mengenal lima teknik penggalian kebutuhan beserta ciri dan kapan tepat digunakan.',
+    instruction: 'Ketuk tiap kartu untuk membuka penjelasannya.',
     cards: [
-      {
-        id: 'b_entitas', term: 'Calon Entitas', icon: '🧩',
-        def: 'Sesuatu yang dapat berdiri sendiri, punya banyak wujud, dan menyimpan beberapa fakta sekaligus.',
-        example: 'Pada dokumen PKL: <strong>siswa</strong>, <strong>perusahaan mitra</strong>, <strong>guru pembimbing</strong>.'
-      },
-      {
-        id: 'b_atribut', term: 'Atribut', icon: '⬇️',
-        def: 'Satu fakta tunggal yang melekat pada sebuah entitas dan tidak berarti apa-apa bila dipisahkan darinya.',
-        example: '<code>alamat</code> hanya bermakna sebagai alamat <em>milik</em> perusahaan mitra.'
-      },
-      {
-        id: 'b_nilai', term: 'Nilai Data', icon: '🏷️',
-        def: 'Contoh isi datanya, bukan jenis datanya. Nilai menjadi baris, bukan tabel.',
-        example: '"PT Nusa Kode Digital" adalah satu nilai; jenis datanya tetap perusahaan mitra.'
-      },
-      {
-        id: 'b_proses', term: 'Proses', icon: '⚙️',
-        def: 'Aktivitas atau fungsi yang dikerjakan sistem. Biasanya berawalan kata kerja: me-, men-, meng-.',
-        example: '"mencetak rekapitulasi" adalah yang <em>dilakukan</em> sistem, bukan yang <em>disimpan</em> sistem.'
-      },
-      {
-        id: 'b_sinonim', term: 'Sinonim', icon: '🔁',
-        def: 'Dua istilah berbeda untuk hal yang sama. Cukup menjadi satu entitas dengan satu nama baku.',
-        example: '"peserta didik" dan "siswa" pada dokumen yang sama menunjuk hal yang sama.'
-      },
-      {
-        id: 'b_kunci', term: 'Atribut Kunci', icon: '🔑',
-        def: 'Atribut yang nilainya unik untuk setiap wujud entitas, dipakai sebagai penanda resmi.',
-        example: '<code>nis</code> menandai satu siswa; dua siswa boleh sama nama, NIS-nya tidak.'
-      }
+      { id: 'wawancara', icon: '🗣️', term: 'Wawancara',
+        def: 'Tanya jawab langsung dan terarah dengan narasumber (pengguna, pemilik proses, atau pemangku kepentingan) untuk menggali kebutuhan, alasan, dan harapan mereka.',
+        example: 'Contoh: menanyakan langsung ke petugas perpustakaan, laporan apa saja yang paling sering ia butuhkan.' },
+      { id: 'observasi', icon: '👁️', term: 'Observasi',
+        def: 'Mengamati langsung bagaimana proses berjalan di lapangan, tanpa mengandalkan penjelasan lisan saja.',
+        example: 'Contoh: mengamati petugas mencatat peminjaman buku secara manual selama satu hari kerja.' },
+      { id: 'kuesioner', icon: '📋', term: 'Kuesioner/Angket',
+        def: 'Daftar pertanyaan tertulis yang dibagikan ke banyak responden sekaligus, cocok untuk menjangkau pendapat pengguna dalam jumlah besar.',
+        example: 'Contoh: menyebar angket ke seluruh siswa untuk mengetahui fitur apa yang paling mereka inginkan.' },
+      { id: 'dokumen', icon: '📄', term: 'Studi Dokumen',
+        def: 'Mempelajari dokumen, catatan, atau laporan yang sudah ada untuk memahami proses dan data yang selama ini dipakai.',
+        example: 'Contoh: mempelajari buku catatan peminjaman manual untuk mengetahui data apa saja yang selama ini dicatat.' },
+      { id: 'fgd', icon: '👥', term: 'FGD (Diskusi Kelompok Terarah)',
+        def: 'Diskusi terarah bersama sekelompok kecil pemangku kepentingan untuk menggali kebutuhan lewat perbincangan dan pertukaran ide.',
+        example: 'Contoh: mengumpulkan pengurus OSIS, guru, dan petugas perpustakaan dalam satu sesi diskusi untuk menyepakati prioritas fitur.' }
     ],
-
-    ujiTitle: 'Uji rambumu',
-    ujiInstruction:
-      'Pasangkan setiap rambu dengan ciri pengenalnya di dokumen. ' +
-      '<strong>Ketuk satu rambu</strong>, lalu ketuk cirinya.',
-    /* Rambu dan ciri diacak terpisah — itulah inti latihannya. */
     terms: [
-      { id: 'mt_entitas', label: 'Calon Entitas' },
-      { id: 'mt_atribut', label: 'Atribut' },
-      { id: 'mt_nilai', label: 'Nilai Data' },
-      { id: 'mt_proses', label: 'Proses' },
-      { id: 'mt_sinonim', label: 'Sinonim' },
-      { id: 'mt_kunci', label: 'Atribut Kunci' }
+      { id: 't1', label: 'Wawancara' },
+      { id: 't2', label: 'Observasi' },
+      { id: 't3', label: 'Kuesioner/Angket' },
+      { id: 't4', label: 'Studi Dokumen' },
+      { id: 't5', label: 'FGD (Diskusi Kelompok Terarah)' }
     ],
     defs: [
-      { id: 'df_entitas', label: 'Berdiri sendiri, banyak wujudnya, membawa beberapa fakta' },
-      { id: 'df_atribut', label: 'Satu fakta yang menempel pada sesuatu yang lain' },
-      { id: 'df_nilai', label: 'Contoh isi data yang layak menjadi satu baris' },
-      { id: 'df_proses', label: 'Berupa kata kerja: yang dikerjakan, bukan yang disimpan' },
-      { id: 'df_sinonim', label: 'Istilah berbeda yang menunjuk hal yang sama' },
-      { id: 'df_kunci', label: 'Atribut yang nilainya tidak pernah kembar' }
+      { id: 'd1', label: "Bisa langsung menggali alasan 'mengapa' di balik jawaban narasumber" },
+      { id: 'd2', label: 'Paling akurat melihat proses nyata yang sulit dijelaskan dengan kata-kata' },
+      { id: 'd3', label: 'Paling efisien menjangkau pendapat banyak responden dalam waktu singkat' },
+      { id: 'd4', label: 'Memanfaatkan catatan yang sudah ada tanpa perlu mengganggu aktivitas siapa pun' },
+      { id: 'd5', label: 'Cocok menyepakati prioritas kebutuhan lewat diskusi banyak pihak sekaligus' }
     ],
-    key: {
-      mt_entitas: 'df_entitas',
-      mt_atribut: 'df_atribut',
-      mt_nilai: 'df_nilai',
-      mt_proses: 'df_proses',
-      mt_sinonim: 'df_sinonim',
-      mt_kunci: 'df_kunci'
-    },
-    cekLabel: 'Periksa pasangan',
-    ulangLabel: 'Ulangi pasangan',
-
-    rencanaLabel: 'Rencana penyelidikan',
+    key: { t1: 'd1', t2: 'd2', t3: 'd3', t4: 'd4', t5: 'd5' },
+    ujiTitle: 'Uji Pemahaman: Jodohkan Teknik dengan Cirinya',
+    ujiInstruction: 'Ketuk satu teknik, lalu ketuk ciri yang paling tepat untuknya.',
+    cekLabel: 'Periksa Jodohnya',
+    ulangLabel: 'Ulang Jodohkan',
+    rencanaLabel: 'Rencana Penggalian Kebutuhan Timmu',
     rencana: [
-      { id: 'r1', title: 'Langkah 1 — Telusur', desc: 'Baca dokumen, tandai setiap frasa kata benda yang berpotensi menjadi data.' },
-      { id: 'r2', title: 'Langkah 2 — Saring', desc: 'Uji tiap frasa yang ditandai dengan tiga pertanyaan penyaring di bawah.' },
-      { id: 'r3', title: 'Langkah 3 — Petakan', desc: 'Kembalikan setiap atribut kepada entitas pemiliknya, lalu pilih atribut kuncinya.' }
+      { title: 'Wawancara Bu Rahma', desc: 'Menggali alasan di balik kebutuhan laporan dan notifikasi yang selama ini ia inginkan.' },
+      { title: 'Observasi alur peminjaman', desc: 'Mengamati langsung bagaimana petugas dan siswa berinteraksi saat jam sibuk.' },
+      { title: 'Pelajari buku catatan manual', desc: 'Menelusuri data apa saja yang selama ini sudah dicatat bertahun-tahun.' },
+      { title: 'Sebar kuesioner ke siswa', desc: 'Menjangkau pendapat siswa dalam jumlah besar tentang fitur yang mereka harapkan.' }
     ],
-    ujiSaringLabel: '💡 Tiga pertanyaan penyaring',
+    ujiSaringLabel: '💡 Ingat sebelum lanjut',
     ujiSaring:
-      '<ol class="plain-list">' +
-      '<li><strong>Apakah ia punya lebih dari satu fakta yang perlu disimpan?</strong> Kalau hanya satu fakta, ia atribut.</li>' +
-      '<li><strong>Apakah ia tetap bermakna tanpa yang lain?</strong> "Alamat" tanpa perusahaan tidak bermakna — berarti atribut.</li>' +
-      '<li><strong>Apakah wujudnya banyak dan dapat didaftar satu per satu?</strong> Kalau hanya satu contoh tertentu, ia nilai data.</li>' +
-      '</ol>',
-    lanjutLabel: 'Lanjut: buka dokumen klien →'
+      '<p>Pada tahap berikutnya kamu akan membaca kompilasi temuan dari keempat sumber ini ' +
+      'sekaligus. Perhatikan baik-baik: tidak semua kalimat di sana adalah kebutuhan — ada ' +
+      'opini pribadi, penjelasan proses lama, dan obrolan yang tidak relevan yang harus kamu ' +
+      'kenali dan hindari.</p>',
+    lanjutLabel: 'Lanjut: Telusuri Temuan Lapangan →'
   },
 
-  /* ==========================================================
-     TAHAP 4 — Penyelidikan: telusur dokumen (PBL fase 3)
-     ========================================================== */
+  /* ============================================================
+     TAHAP 4 — Telusur temuan lapangan (PBL fase 3)
+     ============================================================ */
   telusur: {
-    kicker: 'Tahap 4 · Fase 3 PBL',
-    title: 'Telusuri Dokumen Klien',
-    goal: 'Menandai frasa pada dokumen spesifikasi yang berpotensi menjadi calon entitas.',
+    kicker: 'Fase 3 · Penyelidikan',
+    title: 'Telusuri Temuan Lapangan',
+    goal: 'Menandai kebutuhan informasi dan kebutuhan data dari empat sumber, sambil menghindari pengecoh.',
     instruction:
-      'Inilah dokumen dari Bu Rahma. Frasa <strong>bergaris putus-putus</strong> dapat diketuk. ' +
-      '<strong>Ketuk frasa yang menurutmu layak menjadi calon entitas</strong> — setiap ketukan ' +
-      'akan dijelaskan, termasuk ketika tebakanmu meleset.',
-    minTemuan: 4,
-    revealMin: 2,
-    temuanLabel: 'Calon entitas ditemukan',
-    revealLabel: 'Saya buntu — tampilkan calon entitasnya',
-    revealNotice: 'Seluruh calon entitas kini bertanda ✓.',
-    hintLabel: '💡 Buntu? Buka petunjuk',
+      'Ketuk frasa yang menurutmu merupakan <strong>kebutuhan informasi</strong> atau ' +
+      '<strong>kebutuhan data</strong>. Hati-hati dengan opini pribadi, penjelasan proses lama, ' +
+      'dan obrolan yang tidak relevan.',
+    temuanLabel: 'Kebutuhan ditemukan',
+    minTemuan: 8,
+    revealMin: 5,
+    revealLabel: 'Saya sudah buntu, tunjukkan yang terlewat',
+    revealNotice: 'Kebutuhan yang terlewat sudah ditandai. Pelajari kenapa itu penting.',
+    hintLabel: '💡 Masih bingung?',
     hint:
-      'Pakai pertanyaan penyaring dari tahap sebelumnya. Cari frasa yang <strong>punya beberapa ' +
-      'fakta sekaligus</strong>: bagian "Kebutuhan Fungsional" menyebutkan apa saja yang harus diisi ' +
-      'untuk tiap frasa — frasa yang diikuti daftar isian panjang hampir pasti sebuah entitas. ' +
-      'Waspadai kata kerja (me-, men-, meng-) dan nama diri seperti "PT ...".',
-
-    legendLabel: 'Arti tanda',
+      '<p>Kebutuhan <strong>informasi</strong> biasanya berupa laporan, ringkasan, atau status ' +
+      'olahan yang ingin dilihat pengguna. Kebutuhan <strong>data</strong> biasanya berupa daftar ' +
+      'data mentah yang harus disimpan sistem. Keduanya berbeda dari opini pribadi, cerita ' +
+      'proses lama, atau obrolan yang tidak berkaitan dengan sistem.</p>',
+    legendLabel: 'Legenda:',
     kinds: {
-      entitas: { label: 'Calon entitas', icon: '✓', tone: 'success' },
-      atribut: { label: 'Atribut, bukan entitas', icon: '⬇', tone: 'info' },
-      nilai: { label: 'Nilai data', icon: '🏷', tone: 'warning' },
-      proses: { label: 'Proses / fungsi', icon: '⚙', tone: 'warning' },
-      sinonim: { label: 'Sinonim entitas lain', icon: '🔁', tone: 'info' }
+      informasi: { label: 'Kebutuhan Informasi', icon: '📊', tone: 'success' },
+      data: { label: 'Kebutuhan Data', icon: '🗂️', tone: 'success' },
+      opini: { label: 'Opini/Pendapat Pribadi', icon: '💬', tone: 'warning' },
+      proses: { label: 'Penjelasan Proses Lama', icon: '🔄', tone: 'info' },
+      lain: { label: 'Obrolan/Tidak Relevan', icon: '🙈', tone: 'warning' }
     },
-
     doc: {
-      code: 'SKPL-SIPKL-01',
-      title: 'Spesifikasi Kebutuhan Perangkat Lunak — SI-PKL',
+      code: 'TEMUAN-01',
+      title: 'Kompilasi Temuan Lapangan — Perpustakaan Wira Pustaka',
       meta: [
-        { id: 'mt_klien', label: 'Klien', value: 'SMK Bina Karya Nusantara (Bu Rahma, Wakasek Hubin)' },
-        { id: 'mt_versi', label: 'Versi', value: '1.0 — halaman 1 dari 1 (ringkasan)' }
+        { label: 'Disusun oleh', value: 'Tim Analis (kamu)' },
+        { label: 'Sumber', value: 'Wawancara, observasi, studi dokumen, kuesioner' }
       ],
-
-      /* Urutan bagian dan kalimat TIDAK diacak: urutan dokumen adalah
-         maknanya. Yang diacak pada materi ini adalah pilihan jawaban
-         (tahap 2, 3, 5, 6, 7, 8) — lihat lesson.order() di engine. */
       sections: [
         {
-          id: 'sec_latar',
-          heading: '1. Latar Belakang',
+          heading: 'A. Kutipan Wawancara dengan Bu Rahma (Petugas Perpustakaan)',
           paras: [
             [
-              { t: 'Setiap semester genap, sekolah memberangkatkan lebih dari 200 ' },
-              {
-                id: 'tk_siswa', label: 'siswa', kind: 'entitas',
-                why: 'Tepat. Siswa berdiri sendiri, wujudnya banyak (200 lebih), dan membawa beberapa fakta sekaligus: NIS, nama, kelas, nomor HP.'
-              },
-              { t: ' kelas XI ke dunia kerja. Selama ini data pemberangkatan dicatat panitia pada satu berkas spreadsheet.' }
+              { t: 'Bu Rahma bercerita, ' },
+              { id: 'w1', kind: 'informasi', label: '"saya butuh laporan otomatis buku yang paling sering dipinjam setiap bulan"',
+                why: 'Ini kebutuhan informasi: sebuah laporan/ringkasan yang harus dihasilkan sistem, bukan sekadar data mentah.' },
+              { t: ', karena selama ini ia ' },
+              { id: 'w2', kind: 'proses', label: 'merekapnya manual dari buku besar setiap akhir bulan',
+                why: 'Ini menjelaskan proses lama yang berjalan sekarang — berguna sebagai konteks, tapi bukan kebutuhan itu sendiri.' },
+              { t: '. Ia juga menambahkan ' },
+              { id: 'w3', kind: 'opini', label: '"menurut saya aplikasi zaman sekarang harusnya secantik aplikasi belanja online"',
+                why: 'Ini opini/selera pribadi, bukan kebutuhan informasi atau data yang bisa langsung dirancang.' },
+              { t: ', lalu menjelaskan bahwa sistem perlu ' },
+              { id: 'w4', kind: 'data', label: 'mencatat NIS peminjam, judul buku, tanggal pinjam, dan tanggal jatuh tempo',
+                why: 'Ini kebutuhan data: daftar data mentah yang harus disimpan sistem.' },
+              { t: '.' }
             ],
             [
-              { t: 'Panitia kerepotan ketika harus ' },
-              {
-                id: 'tk_cetak', label: 'mencetak rekapitulasi', kind: 'proses',
-                why: 'Ini <strong>proses</strong>, bukan data. Perhatikan awalannya: <em>men-cetak</em>. Yang dikerjakan sistem tidak perlu disimpan sebagai tabel.'
-              },
-              { t: ' di akhir periode. Pernah pula orang tua salah dihubungi karena nomor ' },
-              {
-                id: 'tk_nomor_nilai', label: '0812-9000-1122', kind: 'nilai',
-                why: 'Ini <strong>nilai data</strong> — satu contoh isi, bukan jenis datanya. Nilai seperti ini menjadi isi satu baris, bukan sebuah tabel baru.'
-              },
-              { t: ' tertulis pada baris yang keliru.' }
+              { t: 'Di sela wawancara, ' },
+              { id: 'w5', kind: 'lain', label: 'Bu Rahma sempat bercerita tentang rencana renovasi ruang baca tahun depan',
+                why: 'Menarik, tapi tidak relevan dengan kebutuhan sistem informasi perpustakaan yang sedang digali.' },
+              { t: '. Ia menutup dengan menegaskan ' },
+              { id: 'w6', kind: 'informasi', label: '"saya juga ingin tahu buku apa saja yang sudah lewat jatuh tempo tapi belum dikembalikan, tanpa harus mengecek satu per satu"',
+                why: 'Ini kebutuhan informasi: sebuah daftar/ringkasan hasil olahan data, bukan data mentah semata.' },
+              { t: '.' }
             ]
           ]
         },
         {
-          id: 'sec_lingkup',
-          heading: '2. Ruang Lingkup',
+          heading: 'B. Catatan Observasi Alur Peminjaman',
           paras: [
             [
-              { t: 'Aplikasi SI-PKL menyimpan data ' },
-              {
-                id: 'tk_peserta', label: 'peserta didik', kind: 'sinonim', canon: 'siswa',
-                why: 'Hati-hati: ini <strong>sinonim</strong> dari "siswa" yang sudah disebut di bagian 1. Istilah berbeda, hal yang sama — cukup satu entitas dengan satu nama baku.'
-              },
-              { t: ' yang mengikuti PKL, data ' },
-              {
-                id: 'tk_mitra', label: 'perusahaan mitra', kind: 'entitas',
-                why: 'Tepat. Perusahaan mitra berdiri sendiri — ia tetap ada walau belum menerima seorang siswa pun. Justru di sinilah aplikasi Tim A gagal.'
-              },
-              { t: ' tempat mereka bekerja, data ' },
-              {
-                id: 'tk_pembimbing', label: 'guru pembimbing', kind: 'entitas',
-                why: 'Tepat. Seorang guru membimbing banyak siswa, dan datanya (NIP, nama, nomor HP) perlu disimpan sekali saja.'
-              },
-              { t: ' yang memantau, serta data ' },
-              {
-                id: 'tk_penempatan', label: 'penempatan', kind: 'entitas',
-                why: 'Tepat, dan ini yang paling sering terlewat. Penempatan adalah <strong>peristiwa</strong> yang menghubungkan siswa, mitra, dan pembimbing — ia punya faktanya sendiri: tanggal mulai dan tanggal selesai.'
-              },
-              { t: ' yang menghubungkan ketiganya.' }
-            ],
-            [
-              { t: 'Di luar lingkup versi ini: penilaian akhir PKL dan jurnal kegiatan harian.' }
+              { t: 'Saat diamati langsung selama satu hari, ' },
+              { id: 'o1', kind: 'proses', label: 'petugas mencatat setiap peminjaman di buku besar dengan menulis tangan, memakan waktu sekitar 3-5 menit per siswa',
+                why: 'Ini penjelasan proses manual yang berjalan sekarang, membantu memahami masalah tapi bukan kebutuhan sistem baru itu sendiri.' },
+              { t: '. Rata-rata ' },
+              { id: 'o2', kind: 'informasi', label: '40 siswa meminjam buku pada jam istirahat, sehingga antrean sering mengular',
+                why: 'Ini kebutuhan informasi tersirat: sistem perlu mempercepat proses agar antrean tidak menumpuk.' },
+              { t: '. Peneliti juga mencatat bahwa ' },
+              { id: 'o3', kind: 'data', label: 'setiap buku memiliki kode rak dan status (tersedia/dipinjam) yang ditempel manual di sampulnya',
+                why: 'Ini kebutuhan data: kode rak dan status ketersediaan buku perlu disimpan sistem.' },
+              { t: ', walau ' },
+              { id: 'o4', kind: 'lain', label: 'beberapa siswa terlihat mengobrol sambil menunggu giliran',
+                why: 'Detail suasana, tidak relevan dengan kebutuhan sistem.' },
+              { t: '.' }
             ]
           ]
         },
         {
-          id: 'sec_fungsional',
-          heading: '3. Kebutuhan Fungsional',
-          reqs: [
-            {
-              id: 'f01', code: 'F-01',
-              parts: [
-                { t: 'Panitia dapat mendaftarkan peserta PKL baru dengan mengisi ' },
-                {
-                  id: 'tk_nis', label: 'NIS', kind: 'atribut', owner: 'siswa',
-                  why: 'Ini <strong>atribut</strong> milik siswa — dan nanti menjadi atribut kuncinya, karena nilainya tidak pernah kembar.'
-                },
-                { t: ', ' },
-                {
-                  id: 'tk_nama', label: 'nama lengkap', kind: 'atribut', owner: 'siswa',
-                  why: 'Ini <strong>atribut</strong> milik siswa. Satu fakta saja, dan tidak bermakna tanpa orangnya.'
-                },
-                { t: ', ' },
-                {
-                  id: 'tk_kelas', label: 'kelas', kind: 'atribut', owner: 'siswa',
-                  why: 'Ini <strong>atribut</strong> milik siswa. Kelas Rani tetap sama walaupun ia belum ditempatkan di mana pun.'
-                },
-                { t: ', dan ' },
-                {
-                  id: 'tk_hp', label: 'nomor HP', kind: 'atribut', owner: 'siswa',
-                  why: 'Ini <strong>atribut</strong> milik siswa. Di materi 1.1 justru inilah fakta yang berulang-ulang dan akhirnya berbeda-beda.'
-                },
-                { t: '.' }
-              ]
-            },
-            {
-              id: 'f02', code: 'F-02',
-              parts: [
-                { t: 'Panitia dapat mendaftarkan perusahaan baru dengan mengisi ' },
-                {
-                  id: 'tk_namamitra', label: 'nama perusahaan', kind: 'atribut', owner: 'perusahaan mitra',
-                  why: 'Ini <strong>atribut</strong> milik perusahaan mitra. Perusahaannya entitas, namanya atribut — dua hal yang berbeda.'
-                },
-                { t: ', ' },
-                {
-                  id: 'tk_alamat', label: 'alamat', kind: 'atribut', owner: 'perusahaan mitra',
-                  why: 'Ini <strong>atribut</strong>. "Alamat" tanpa pemiliknya tidak bermakna — ciri khas sebuah atribut.'
-                },
-                { t: ', dan bidang usaha. Perusahaan harus dapat didaftarkan meskipun belum ada siswa yang ditempatkan di sana.' }
-              ]
-            },
-            {
-              id: 'f03', code: 'F-03',
-              parts: [
-                { t: 'Panitia dapat menetapkan seorang pembimbing untuk setiap penempatan. Satu guru dapat membimbing banyak siswa sekaligus.' }
-              ]
-            },
-            {
-              id: 'f04', code: 'F-04',
-              parts: [
-                { t: 'Setiap penempatan mencatat ' },
-                {
-                  id: 'tk_mulai', label: 'tanggal mulai', kind: 'atribut', owner: 'penempatan',
-                  why: 'Ini <strong>atribut</strong> milik penempatan — bukan milik siswa dan bukan milik perusahaan, karena ia baru ada ketika peristiwa penempatan terjadi.'
-                },
-                { t: ' dan ' },
-                {
-                  id: 'tk_selesai', label: 'tanggal selesai', kind: 'atribut', owner: 'penempatan',
-                  why: 'Ini <strong>atribut</strong> milik penempatan, sama seperti tanggal mulai.'
-                },
-                { t: '.' }
-              ]
-            },
-            {
-              id: 'f05', code: 'F-05',
-              parts: [
-                { t: 'Sistem dapat ' },
-                {
-                  id: 'tk_tampil', label: 'menampilkan daftar', kind: 'proses',
-                  why: 'Ini <strong>proses</strong>. Menampilkan adalah pekerjaan aplikasi; yang disimpan adalah datanya, bukan kegiatan menampilkannya.'
-                },
-                { t: ' siswa yang sedang PKL di ' },
-                {
-                  id: 'tk_ptnusa', label: 'PT Nusa Kode Digital', kind: 'nilai',
-                  why: 'Ini <strong>nilai data</strong> — satu contoh perusahaan mitra, jadi ia menjadi satu baris di tabel mitra, bukan tabel tersendiri.'
-                },
-                { t: ' beserta pembimbingnya.' }
-              ]
-            },
-            {
-              id: 'f06', code: 'F-06',
-              parts: [
-                { t: 'Sistem dapat ' },
-                {
-                  id: 'tk_hitung', label: 'menghitung lama PKL', kind: 'proses',
-                  why: 'Ini <strong>proses</strong>, sekaligus petunjuk penting: lama PKL dapat dihitung dari tanggal mulai dan tanggal selesai, jadi ia tidak perlu disimpan sebagai atribut.'
-                },
-                { t: ' setiap siswa dalam satuan hari.' }
-              ]
-            },
-            {
-              id: 'f07', code: 'F-07',
-              parts: [
-                { t: 'Panitia dapat memperbarui data perusahaan cukup di satu tempat, dan perubahannya berlaku untuk seluruh penempatan yang merujuk perusahaan tersebut.' }
-              ]
-            }
+          heading: 'C. Cuplikan Buku Catatan Peminjaman Manual (Studi Dokumen)',
+          paras: [
+            [
+              { t: 'Dari buku catatan lima tahun terakhir, terlihat ' },
+              { id: 'c1', kind: 'data', label: 'setiap baris berisi nomor urut, nama siswa, kelas, judul buku, tanggal pinjam, dan tanggal kembali',
+                why: 'Ini kebutuhan data: kolom-kolom yang selama ini sudah dicatat manual dan wajib ada di sistem baru.' },
+              { t: '. Halaman ringkasan di akhir buku menunjukkan ' },
+              { id: 'c2', kind: 'informasi', label: 'jumlah total peminjaman per bulan dan lima buku dengan peminjaman terbanyak, yang selalu dihitung ulang manual',
+                why: 'Ini kebutuhan informasi: laporan ringkasan yang sistem baru harus bisa hasilkan otomatis.' },
+              { t: '. Sayangnya, ' },
+              { id: 'c3', kind: 'lain', label: 'beberapa halaman sudah lusuh dan tulisannya sulit dibaca',
+                why: 'Kondisi fisik dokumen, tidak relevan dengan kebutuhan sistem.' },
+              { t: '.' }
+            ]
           ]
         },
         {
-          id: 'sec_aturan',
-          heading: '4. Aturan Bisnis',
-          reqs: [
-            {
-              id: 'ab01', code: 'AB-01',
-              parts: [
-                { t: 'Istilah ' },
-                {
-                  id: 'tk_dudi', label: 'DUDI', kind: 'sinonim', canon: 'perusahaan mitra',
-                  why: 'Ini <strong>sinonim</strong>. DUDI (dunia usaha dan dunia industri) adalah sebutan lain untuk perusahaan mitra — bukan entitas baru.'
-                },
-                { t: ' pada dokumen ini berarti perusahaan mitra sekolah.' }
-              ]
-            },
-            {
-              id: 'ab02', code: 'AB-02',
-              parts: [
-                { t: 'Satu siswa hanya boleh memiliki satu penempatan aktif pada satu periode. Pada periode berikutnya, siswa yang sama boleh ditempatkan lagi.' }
-              ]
-            },
-            {
-              id: 'ab03', code: 'AB-03',
-              parts: [
-                { t: 'Periode yang berjalan saat dokumen ini ditulis adalah ' },
-                {
-                  id: 'tk_periode', label: 'Semester Genap 2025/2026', kind: 'nilai',
-                  why: 'Ini <strong>nilai data</strong>. Ia contoh isi dari "periode", bukan sesuatu yang perlu dijadikan tabel tersendiri.'
-                },
-                { t: '.' }
-              ]
-            }
+          heading: 'D. Ringkasan Hasil Kuesioner ke 120 Siswa',
+          paras: [
+            [
+              { id: 'k1', kind: 'informasi', label: '68% responden ingin bisa mengecek ketersediaan buku dari HP sebelum datang ke perpustakaan',
+                why: 'Ini kebutuhan informasi: fitur pengecekan ketersediaan yang harus ditampilkan sistem.' },
+              { t: '. Selain itu, ' },
+              { id: 'k2', kind: 'data', label: 'responden diminta mencantumkan judul buku favorit yang paling ingin didigitalkan lebih dulu',
+                why: 'Ini kebutuhan data: daftar judul buku prioritas yang perlu dicatat sistem.' },
+              { t: '. Ada pula yang ' },
+              { id: 'k3', kind: 'opini', label: 'menuliskan bahwa warna dinding perpustakaan sekarang terlihat membosankan',
+                why: 'Opini tentang tampilan fisik ruangan, bukan kebutuhan sistem informasi.' },
+              { t: ', sementara ' },
+              { id: 'k4', kind: 'informasi', label: '45% siswa mengaku pernah kesulitan mengetahui apakah buku yang dicari sedang dipinjam orang lain atau tidak',
+                why: 'Ini menegaskan kebutuhan informasi status ketersediaan buku secara langsung.' },
+              { t: '.' }
+            ]
           ]
         }
       ]
     },
-
-    lanjutLabel: 'Lanjut: saring kandidatnya →'
+    lanjutLabel: 'Lanjut: Saring Sumbernya →'
   },
 
-  /* ==========================================================
-     TAHAP 5 — Penyelidikan: saring kandidat (PBL fase 3)
-     ========================================================== */
+  /* ============================================================
+     TAHAP 5 — Saring sumbernya (PBL fase 3)
+     ============================================================ */
   saring: {
-    kicker: 'Tahap 5 · Fase 3 PBL',
-    title: 'Saring Kandidat dari Dokumen',
-    goal: 'Memilah seluruh frasa hasil telusur menjadi entitas, atribut, atau bukan keduanya.',
+    kicker: 'Fase 3 · Penyelidikan',
+    title: 'Saring Sumbernya',
+    goal: 'Mengenali teknik penggalian kebutuhan yang menghasilkan tiap temuan.',
     instruction:
-      'Semua frasa yang tadi dapat diketuk sudah dikumpulkan di sini. ' +
-      'Ketuk satu chip untuk memilih, lalu ketuk keranjang tujuannya. ' +
-      'Ketuk chip yang sudah masuk keranjang untuk mengeluarkannya kembali.',
-    keyboardHint:
-      'Dengan keyboard: Tab untuk berpindah, Enter atau Spasi untuk memilih. ' +
-      'Saat sebuah chip terpilih, tekan angka 1, 2, atau 3 untuk langsung menempatkannya.',
-    hintLabel: '💡 Ragu menentukan keranjangnya?',
+      'Setiap kutipan berikut berasal dari salah satu sumber temuan. Tempatkan ke kolom ' +
+      'teknik yang menghasilkannya.',
+    poolLabel: 'Kutipan Temuan',
+    poolEmpty: 'Semua kutipan sudah ditempatkan.',
+    emptyColumn: 'Belum ada kutipan di sini.',
+    hintLabel: '💡 Bingung menentukan sumbernya?',
     hint:
-      'Ulangi tiga pertanyaan penyaring: punya beberapa fakta? tetap bermakna sendirian? ' +
-      'wujudnya banyak? Tiga-tiganya "ya" → entitas. Hanya satu fakta dan menempel pada sesuatu → ' +
-      'atribut. Sisanya — kata kerja, nama diri, dan istilah kembar — masuk keranjang ketiga.',
-
+      '<p>Perhatikan cara temuan itu didapat: tanya jawab langsung ke satu narasumber adalah ' +
+      'wawancara, pengamatan langsung di lapangan adalah observasi, mempelajari catatan lama ' +
+      'adalah studi dokumen, dan angka persentase dari banyak responden biasanya berasal dari ' +
+      'kuesioner.</p>',
+    keyboardHint: 'Pintasan: pilih kutipan lalu tekan angka 1-4 untuk menempatkannya.',
+    cekLabel: 'Periksa Saringan',
+    benar: 'Tepat semua! Kamu bisa mengenali sumber tiap temuan.',
+    salah: 'Beberapa kutipan masih di kolom yang salah. Ketuk kutipan itu untuk memindahkannya.',
+    lanjutLabel: 'Lanjut: Klasifikasikan Kebutuhan →',
     buckets: [
-      { id: 'bk_entitas', name: 'Calon Entitas', colorKey: 'blue', desc: 'Berdiri sendiri, banyak wujud' },
-      { id: 'bk_atribut', name: 'Atribut', colorKey: 'green', desc: 'Satu fakta milik entitas' },
-      { id: 'bk_bukan', name: 'Bukan Data', colorKey: 'orange', desc: 'Nilai, proses, atau sinonim' }
+      { id: 'wawancara', name: 'Wawancara', desc: 'Tanya jawab langsung', colorKey: 'blue' },
+      { id: 'observasi', name: 'Observasi', desc: 'Pengamatan langsung', colorKey: 'green' },
+      { id: 'dokumen', name: 'Studi Dokumen', desc: 'Catatan/berkas lama', colorKey: 'orange' },
+      { id: 'kuesioner', name: 'Kuesioner', desc: 'Angket ke banyak responden', colorKey: 'purple' }
     ],
-
     chips: [
-      { id: 'ch_siswa', label: 'siswa', bucketId: 'bk_entitas', why: 'Berdiri sendiri, wujudnya ratusan, dan membawa banyak fakta.' },
-      { id: 'ch_mitra', label: 'perusahaan mitra', bucketId: 'bk_entitas', why: 'Tetap ada walau belum menerima siswa — F-02 menegaskannya.' },
-      { id: 'ch_pembimbing', label: 'guru pembimbing', bucketId: 'bk_entitas', why: 'Satu guru membimbing banyak siswa; datanya cukup disimpan sekali.' },
-      { id: 'ch_penempatan', label: 'penempatan', bucketId: 'bk_entitas', why: 'Peristiwa yang menghubungkan ketiganya, dan punya fakta sendiri (tanggal mulai, tanggal selesai).' },
-      { id: 'ch_nis', label: 'NIS', bucketId: 'bk_atribut', why: 'Satu fakta milik siswa. Meski nanti menjadi atribut kunci, ia tetap atribut — bukan entitas.' },
-      { id: 'ch_nama', label: 'nama lengkap', bucketId: 'bk_atribut', why: 'Satu fakta milik siswa, tidak bermakna tanpa orangnya.' },
-      { id: 'ch_hp', label: 'nomor HP', bucketId: 'bk_atribut', why: 'Satu fakta yang menempel pada pemiliknya.' },
-      { id: 'ch_alamat', label: 'alamat', bucketId: 'bk_atribut', why: '"Alamat" sendirian tidak bermakna: ia selalu alamat milik seseorang atau sesuatu.' },
-      { id: 'ch_mulai', label: 'tanggal mulai', bucketId: 'bk_atribut', why: 'Satu fakta milik peristiwa penempatan.' },
-      { id: 'ch_ptnusa', label: 'PT Nusa Kode Digital', bucketId: 'bk_bukan', why: 'Nilai data — satu contoh perusahaan mitra, jadi ia satu baris, bukan satu tabel.' },
-      { id: 'ch_periode', label: 'Semester Genap 2025/2026', bucketId: 'bk_bukan', why: 'Nilai data — contoh isi dari periode yang sedang berjalan.' },
-      { id: 'ch_cetak', label: 'mencetak rekapitulasi', bucketId: 'bk_bukan', why: 'Proses. Kata kerja menandakan yang dikerjakan sistem, bukan yang disimpan.' },
-      { id: 'ch_hitung', label: 'menghitung lama PKL', bucketId: 'bk_bukan', why: 'Proses, sekaligus hasil hitungan yang tidak perlu disimpan.' },
-      { id: 'ch_peserta', label: 'peserta didik', bucketId: 'bk_bukan', why: 'Sinonim dari "siswa". Menjadikannya entitas kedua berarti menyimpan orang yang sama dua kali.' },
-      { id: 'ch_dudi', label: 'DUDI', bucketId: 'bk_bukan', why: 'Sinonim dari "perusahaan mitra", sebagaimana ditegaskan AB-01.' }
-    ],
-
-    poolLabel: 'Frasa yang belum disaring',
-    poolEmpty: 'Semua frasa sudah masuk keranjang ✓',
-    emptyColumn: 'Belum ada frasa',
-    cekLabel: 'Periksa hasil saringan',
-    salah: 'Masih ada yang belum tepat. Chip bertanda ✗ perlu kamu pindahkan.',
-    benar: 'Tepat! Dari 15 frasa, hanya empat yang layak menjadi entitas.',
-    lanjutLabel: 'Lanjut: petakan atributnya →'
+      { id: 'sg1', label: '"Saya butuh laporan otomatis buku terpopuler tiap bulan" — dikatakan langsung oleh Bu Rahma saat ditanya', bucketId: 'wawancara',
+        why: 'Diperoleh lewat tanya jawab langsung dengan narasumber — wawancara.' },
+      { id: 'sg2', label: 'Petugas tercatat menulis peminjaman manual selama 3-5 menit per siswa, diamati langsung di lokasi', bucketId: 'observasi',
+        why: 'Diketahui dari pengamatan langsung di lapangan — observasi.' },
+      { id: 'sg3', label: 'Setiap baris di buku catatan lima tahun terakhir berisi nama, kelas, dan judul buku', bucketId: 'dokumen',
+        why: 'Diperoleh dari mempelajari dokumen/catatan yang sudah ada — studi dokumen.' },
+      { id: 'sg4', label: '68% dari 120 responden ingin mengecek ketersediaan buku dari HP', bucketId: 'kuesioner',
+        why: 'Angka persentase dari banyak responden menandakan hasil angket — kuesioner.' },
+      { id: 'sg5', label: 'Bu Rahma menjelaskan alasannya butuh notifikasi jatuh tempo saat ditanya langsung', bucketId: 'wawancara',
+        why: 'Digali lewat tanya jawab langsung — wawancara.' },
+      { id: 'sg6', label: 'Rata-rata 40 siswa terlihat mengantre meminjam buku saat jam istirahat', bucketId: 'observasi',
+        why: 'Hasil pengamatan langsung terhadap kondisi nyata — observasi.' },
+      { id: 'sg7', label: 'Halaman ringkasan buku besar menunjukkan lima buku terlaris tiap bulan', bucketId: 'dokumen',
+        why: 'Ditemukan dari mempelajari dokumen lama — studi dokumen.' },
+      { id: 'sg8', label: '45% siswa pada angket mengaku kesulitan mengetahui status ketersediaan buku', bucketId: 'kuesioner',
+        why: 'Persentase dari hasil sebaran angket — kuesioner.' },
+      { id: 'sg9', label: 'Setiap buku ternyata memiliki kode rak yang ditempel manual, terlihat saat pengamatan', bucketId: 'observasi',
+        why: 'Ditemukan lewat pengamatan langsung di rak buku — observasi.' },
+      { id: 'sg10', label: 'Kolom judul buku favorit yang diisi responden pada lembar angket', bucketId: 'kuesioner',
+        why: 'Data yang dikumpulkan lewat lembar angket — kuesioner.' }
+    ]
   },
 
-  /* ==========================================================
-     TAHAP 6 — Penyelidikan: petakan atribut (PBL fase 3)
-     ========================================================== */
-  atribut: {
-    kicker: 'Tahap 6 · Fase 3 PBL',
-    title: 'Petakan Atribut Utama',
-    goal: 'Menentukan atribut utama dan atribut kunci untuk setiap calon entitas.',
-
-    step1Title: 'Langkah 1 — Kembalikan atribut kepada pemiliknya',
-    step1Instruction:
-      'Empat calon entitasmu sudah berdiri. Sekarang tempatkan setiap atribut pada entitas ' +
-      '<strong>pemilik faktanya</strong>. Ketuk satu chip, lalu ketuk entitas tujuannya.',
+  /* ============================================================
+     TAHAP 6 — Klasifikasikan kebutuhan (PBL fase 3)
+     ============================================================ */
+  klasifikasi: {
+    kicker: 'Fase 3 · Penyelidikan',
+    title: 'Klasifikasikan Kebutuhan',
+    goal: 'Memilah kebutuhan fungsional, kebutuhan data, dan kebutuhan non-fungsional dari seluruh temuan.',
+    step1Title: 'Langkah 1 — Kelompokkan Jenis Kebutuhannya',
+    step1Instruction: 'Tempatkan tiap kebutuhan berikut ke jenisnya.',
     step1Hint:
-      'Tanyakan: fakta ini <strong>milik siapa</strong>? Nomor HP guru tetap melekat pada gurunya ' +
-      'walau ia sedang tidak membimbing siapa pun. Sebaliknya, tanggal mulai hanya ada ketika ' +
-      'sebuah penempatan terjadi — jadi ia milik penempatan.',
-    keyboardHint:
-      'Dengan keyboard: Tab untuk berpindah, Enter atau Spasi untuk memilih. ' +
-      'Saat sebuah chip terpilih, tekan angka 1 sampai 4 untuk langsung menempatkannya.',
-
+      '<p><strong>Kebutuhan fungsional</strong> adalah fungsi/fitur yang harus dikerjakan sistem. ' +
+      '<strong>Kebutuhan data</strong> adalah data mentah yang harus disimpan sistem. ' +
+      '<strong>Kebutuhan non-fungsional</strong> adalah soal mutu layanan: kecepatan, kemudahan, ' +
+      'atau keandalan.</p>',
+    keyboardHint: 'Pintasan: pilih kebutuhan lalu tekan angka 1-3 untuk menempatkannya.',
+    cekLabel: 'Periksa Kelompok',
+    benar: 'Tepat semua! Kamu bisa membedakan ketiga jenis kebutuhan ini.',
+    salah: 'Beberapa kebutuhan masih di kelompok yang salah. Ketuk kebutuhan itu untuk memindahkannya.',
+    poolLabel: 'Kebutuhan Ditemukan',
+    poolEmpty: 'Semua kebutuhan sudah dikelompokkan.',
+    emptyColumn: 'Belum ada kebutuhan di sini.',
     entities: [
-      { id: 'en_siswa', name: 'siswa', colorKey: 'blue', desc: 'Orang yang mengikuti PKL', key: 'at_nis' },
-      { id: 'en_mitra', name: 'mitra', colorKey: 'green', desc: 'Perusahaan tempat PKL', key: 'at_kodemitra' },
-      { id: 'en_pembimbing', name: 'pembimbing', colorKey: 'orange', desc: 'Guru pemantau PKL', key: 'at_nip' },
-      { id: 'en_penempatan', name: 'penempatan', colorKey: 'purple', desc: 'Peristiwa penempatan siswa', key: 'at_idpenempatan' }
+      { id: 'fungsional', name: 'Kebutuhan Fungsional', desc: 'Fitur/fungsi yang harus dikerjakan sistem', colorKey: 'blue', key: 'kl1' },
+      { id: 'data', name: 'Kebutuhan Data', desc: 'Data mentah yang harus disimpan sistem', colorKey: 'green', key: 'kl2' },
+      { id: 'nonfungsional', name: 'Kebutuhan Non-Fungsional', desc: 'Mutu layanan: kecepatan, kemudahan, keamanan', colorKey: 'purple', key: 'kl5' }
     ],
-
     chips: [
-      { id: 'at_nis', label: 'nis', entityId: 'en_siswa', why: 'Nomor induk siswa — fakta milik siswa, dan unik untuk tiap orang.' },
-      { id: 'at_namasiswa', label: 'nama_siswa', entityId: 'en_siswa', why: 'Nama menempel pada orangnya, bukan pada penempatannya.' },
-      { id: 'at_kelas', label: 'kelas', entityId: 'en_siswa', why: 'Kelas adalah fakta milik siswa; ia tetap sama walau siswa belum ditempatkan.' },
-      { id: 'at_kodemitra', label: 'kode_mitra', entityId: 'en_mitra', why: 'Penanda resmi tiap perusahaan mitra, dan nilainya tidak pernah kembar.' },
-      { id: 'at_namamitra', label: 'nama_perusahaan', entityId: 'en_mitra', why: 'Nama perusahaan menempel pada perusahaannya. Cukup ditulis sekali di sini.' },
-      { id: 'at_alamat', label: 'alamat', entityId: 'en_mitra', why: 'Alamat adalah fakta milik perusahaan mitra (F-02).' },
-      { id: 'at_nip', label: 'nip', entityId: 'en_pembimbing', why: 'Nomor induk pegawai — penanda unik setiap guru pembimbing.' },
-      { id: 'at_namaguru', label: 'nama_guru', entityId: 'en_pembimbing', why: 'Nama guru menempel pada gurunya, bukan pada siswa yang dibimbingnya.' },
-      { id: 'at_hpguru', label: 'no_hp_guru', entityId: 'en_pembimbing', why: 'Nomor HP guru adalah fakta milik guru. Disimpan sekali, berlaku untuk semua bimbingannya.' },
-      { id: 'at_idpenempatan', label: 'id_penempatan', entityId: 'en_penempatan', why: 'Penanda unik tiap peristiwa penempatan — sesuatu yang tidak ada di tabel besar Tim A.' },
-      { id: 'at_mulai', label: 'tanggal_mulai', entityId: 'en_penempatan', why: 'Tanggal mulai baru ada ketika penempatan terjadi, jadi ia milik penempatan (F-04).' },
-      { id: 'at_selesai', label: 'tanggal_selesai', entityId: 'en_penempatan', why: 'Tanggal selesai juga hanya bermakna pada peristiwa penempatan (F-04).' }
+      { id: 'kl1', label: 'Menampilkan laporan buku terpopuler tiap bulan secara otomatis', entityId: 'fungsional',
+        why: 'Ini fungsi yang harus dikerjakan sistem (menghasilkan laporan), bukan sekadar data mentah.' },
+      { id: 'kl2', label: 'Menyimpan NIS peminjam, judul buku, tanggal pinjam, dan tanggal kembali', entityId: 'data',
+        why: 'Ini data mentah yang perlu disimpan, belum berupa fungsi.' },
+      { id: 'kl3', label: 'Menampilkan daftar buku yang sudah lewat jatuh tempo tanpa harus dicek satu per satu', entityId: 'fungsional',
+        why: 'Ini fungsi mengolah data menjadi informasi siap pakai.' },
+      { id: 'kl4', label: 'Menyimpan kode rak dan status ketersediaan tiap buku', entityId: 'data',
+        why: 'Ini data mentah tentang buku.' },
+      { id: 'kl5', label: 'Bisa diakses siswa dari HP kapan saja, dengan tampilan yang mudah dipahami', entityId: 'nonfungsional',
+        why: 'Ini soal mutu layanan (kemudahan dan aksesibilitas), bukan fungsi atau data spesifik.' },
+      { id: 'kl6', label: 'Menyimpan judul buku favorit yang diusulkan siswa lewat angket', entityId: 'data',
+        why: 'Ini data mentah hasil angket.' },
+      { id: 'kl7', label: 'Menampilkan status ketersediaan buku secara langsung', entityId: 'fungsional',
+        why: 'Ini fungsi menampilkan informasi olahan dari data status buku.' },
+      { id: 'kl8', label: 'Proses pencarian dan pengecekan status harus terasa cepat walau diakses banyak siswa sekaligus', entityId: 'nonfungsional',
+        why: 'Ini soal performa/kecepatan (non-fungsional), bukan fitur atau data spesifik.' },
+      { id: 'kl9', label: 'Menghitung dan menampilkan lima buku dengan peminjaman terbanyak per bulan', entityId: 'fungsional',
+        why: 'Ini fungsi mengolah data peminjaman menjadi laporan ringkasan.' }
     ],
-
-    poolLabel: 'Atribut yang belum ditempatkan',
-    poolEmpty: 'Semua atribut sudah ditempatkan ✓',
-    emptyColumn: 'Belum ada atribut',
-    cekLabel: 'Periksa penempatan',
-    salah: 'Masih ada atribut yang belum tepat. Chip bertanda ✗ perlu kamu pindahkan.',
-    benar: 'Tepat! Setiap fakta kini tinggal di satu tempat saja.',
-
-    step2Title: 'Langkah 2 — Pilih atribut kunci',
+    step2Title: 'Langkah 2 — Saring Usulan Tambahan',
     step2Instruction:
-      'Setiap entitas butuh satu atribut penanda yang <strong>nilainya tidak pernah kembar</strong>. ' +
-      'Pilih satu untuk tiap entitas.',
-    keyPlaceholder: '— pilih atribut kunci —',
-    cekKunciLabel: 'Periksa kunci',
-    salahKunci: 'Belum tepat. Ingat syaratnya: unik untuk setiap wujud, dan tidak berubah-ubah.',
-    benarKunci: 'Tepat. Setiap entitas kini punya penanda resminya.',
-
-    step3Title: 'Langkah 3 — Saring atribut tabel penempatan',
-    step3Instruction:
-      'Panitia mengusulkan beberapa atribut tambahan untuk <code>penempatan</code>. ' +
-      '<strong>Pilih yang memang perlu disimpan</strong> — sisanya biarkan kosong.',
+      'Klienmu (Bu Rahma) mengajukan beberapa usulan tambahan. Pilih usulan yang layak masuk ' +
+      'dokumen kebutuhan final — yakni yang benar-benar berasal dari temuan lapangan.',
+    cekUsulanLabel: 'Periksa Usulan',
+    benarUsulan: 'Tepat — kamu bisa memilah usulan yang relevan dari yang di luar cakupan.',
+    salahUsulan: 'Belum semua tepat. Perhatikan mana usulan yang benar-benar berasal dari temuan lapangan.',
     usulan: [
-      { id: 'us_nis', label: 'nis', simpan: true, why: 'Perlu. Inilah penghubung ke entitas siswa — cukup NIS-nya, bukan nama dan kelasnya.' },
-      { id: 'us_kodemitra', label: 'kode_mitra', simpan: true, why: 'Perlu. Penghubung ke entitas mitra, sehingga data perusahaan tidak perlu disalin ulang (F-07).' },
-      { id: 'us_nip', label: 'nip', simpan: true, why: 'Perlu. Penghubung ke guru pembimbing yang ditetapkan untuk penempatan itu (F-03).' },
-      { id: 'us_lama', label: 'lama_pkl', simpan: false, why: 'Tidak perlu. Lama PKL dapat dihitung dari tanggal mulai dan tanggal selesai (F-06). Menyimpan hasil hitungan berarti menyimpan fakta yang sama dua kali.' },
-      { id: 'us_namamitra', label: 'nama_perusahaan', simpan: false, why: 'Tidak perlu. Namanya sudah tersimpan di entitas mitra dan dapat ditelusuri lewat kode_mitra — persis kesalahan Tim A bila disalin ke sini.' },
-      { id: 'us_kelas', label: 'kelas_siswa', simpan: false, why: 'Tidak perlu. Kelas adalah fakta milik siswa dan dapat ditelusuri lewat nis.' }
+      { id: 'us1', label: 'Menyimpan riwayat siapa saja yang pernah meminjam satu judul buku tertentu', simpan: true,
+        why: 'Relevan — ini kebutuhan data yang mendukung laporan buku terpopuler dan pelacakan buku.' },
+      { id: 'us2', label: 'Mengganti seluruh warna cat dinding perpustakaan agar lebih ceria', simpan: false,
+        why: 'Ini urusan fasilitas fisik, sama sekali di luar cakupan sistem informasi.' },
+      { id: 'us3', label: 'Mengirim notifikasi otomatis ke siswa H-1 sebelum jatuh tempo pengembalian', simpan: true,
+        why: 'Relevan — langsung menjawab kebutuhan informasi yang digali dari wawancara dan kuesioner.' },
+      { id: 'us4', label: 'Menambahkan fitur permainan di dalam aplikasi perpustakaan', simpan: false,
+        why: 'Tidak relevan dengan kebutuhan yang tergali dari studi kasus ini, berpotensi memperbesar cakupan tanpa dasar temuan.' },
+      { id: 'us5', label: 'Menyimpan status ketersediaan tiap buku agar bisa dicek tanpa datang langsung', simpan: true,
+        why: 'Relevan — langsung menjawab kebutuhan informasi dari observasi dan kuesioner.' },
+      { id: 'us6', label: 'Mengganti seluruh koleksi buku fisik menjadi e-book dalam satu tahun', simpan: false,
+        why: 'Ini keputusan strategis besar di luar cakupan penggalian kebutuhan sistem peminjaman saat ini.' }
     ],
-    cekUsulanLabel: 'Periksa usulan',
-    salahUsulan: 'Belum tepat. Baca lagi penjelasan di bawah tiap pilihan.',
-    benarUsulan: 'Tepat. Penempatan hanya menyimpan faktanya sendiri, ditambah penghubung ke entitas lain.',
-    lanjutLabel: 'Lanjut: sajikan hasilmu →'
+    lanjutLabel: 'Lanjut: Sajikan Hasil Karya →'
   },
 
-  /* ==========================================================
-     TAHAP 7 — Menyajikan hasil karya (PBL fase 4)
-     ========================================================== */
+  /* ============================================================
+     TAHAP 7 — Sajikan hasil karya (PBL fase 4)
+     ============================================================ */
   sajikan: {
-    kicker: 'Tahap 7 · Fase 4 PBL',
-    title: 'Sajikan Kartu Data Entitas',
-    goal: 'Menyajikan hasil analisis dan mengujinya dengan pertanyaan klien.',
-    kartuLabel: 'Kartu Data Entitas — hasil analisismu',
-    kartuNote:
-      'Inilah hasil kerjamu: empat entitas dari satu dokumen, lengkap dengan atribut utama ' +
-      'dan atribut kuncinya (bertanda 🔑). Kartu inilah yang akan kamu serahkan kepada Bu Rahma.',
-    keyBadge: '🔑 kunci',
-
-    ujiLabel: 'Uji kartumu dengan pertanyaan klien',
+    kicker: 'Fase 4 · Menyajikan Hasil Karya',
+    title: 'Sajikan dan Uji Rekomendasi Teknik',
+    goal: 'Menyusun Kartu Kebutuhan final, lalu menguji ketepatan pemilihan teknik pada kasus baru.',
+    kartuLabel: 'Kartu Kebutuhan — Perpustakaan Wira Pustaka',
+    kartuNote: 'Rangkuman kebutuhan yang berhasil kamu gali dan klasifikasikan.',
+    keyBadge: 'Prioritas Utama',
+    ujiLabel: 'Uji Pemilihan Teknik',
     ujiInstruction:
-      'Bu Rahma menguji hasilmu dengan tiga pertanyaan. Untuk tiap pertanyaan, ' +
-      '<strong>tebak dulu</strong> jawabannya, baru hasilnya dibuka. Menebak dulu membuat temuannya menempel.',
-    prediksiLabel: 'Tebakanmu:',
-    bukaLabel: 'Buka hasilnya',
-    kamuLabel: 'Kartu data entitasmu',
-    timALabel: 'Satu tabel besar (Tim A)',
-
+      'Empat tim lain di sekolah sedang merancang sistem serupa. Untuk tiap kasus, tebak ' +
+      'teknik penggalian kebutuhan yang paling tepat dipakai, lalu buka jawabannya.',
+    prediksiLabel: 'Tebakanmu',
+    bukaLabel: 'Buka Jawaban',
+    benarPrediksi: 'Tepat! Pilihanmu sejalan dengan tim ahli.',
+    salahPrediksi: 'Pahami dulu pertimbangannya sebelum lanjut ke kasus berikutnya.',
+    kamuLabel: 'Tim yang Tepat',
+    timALabel: 'Tim yang Meleset',
+    penutup: 'Kamu sudah menguji rekomendasi teknik pada empat situasi berbeda.',
+    justifLabel: 'Justifikasi Akhir',
+    justifPrompt: 'Jelaskan mengapa penggalian kebutuhan yang tepat penting sebelum sebuah sistem dirancang.',
+    justifPlaceholder: 'Tulis alasanmu, minimal beberapa kalimat...',
+    justifMin: 40,
+    lanjutLabel: 'Lanjut: Evaluasi →',
     cases: [
       {
-        id: 'uj_mitra', icon: '🏢',
-        title: 'Pertanyaan 1 — Mitra baru, belum ada siswa',
-        scenario:
-          '"PT Cahaya Data baru saja menyetujui kerja sama. Belum ada satu pun siswa ditempatkan di sana. Bisakah datanya dicatat sekarang?"',
+        id: 'kantin', icon: '🍱', title: 'Sistem Pemesanan Kantin Sekolah',
+        scenario: 'Tim kantin ingin tahu menu apa yang paling laris tiap minggu, tapi hanya punya waktu dua hari sebelum rapat dengan kepala sekolah, dan datanya sudah tercatat rapi di nota-nota penjualan lama.',
         options: [
-          { id: 'om1', label: 'Bisa langsung dicatat sebagai data mitra.' },
-          { id: 'om2', label: 'Tidak bisa sampai ada siswa yang ditempatkan.' },
-          { id: 'om3', label: 'Harus menghapus data mitra lain terlebih dahulu.' },
-          { id: 'om4', label: 'Cukup dititipkan pada kolom catatan siswa.' }
+          { id: 'wawancara', label: 'Wawancara' },
+          { id: 'observasi', label: 'Observasi' },
+          { id: 'dokumen', label: 'Studi Dokumen' },
+          { id: 'kuesioner', label: 'Kuesioner' }
         ],
-        correct: 'om1',
-        kamu: {
-          verdict: 'baik',
-          text:
-            'Tambah <strong>satu baris</strong> di entitas <code>mitra</code>, selesai. ' +
-            'Mitra berdiri sendiri, jadi keberadaannya tidak bergantung pada ada atau tidaknya penempatan.'
-        },
-        timA: {
-          verdict: 'buruk',
-          text:
-            'Gagal. Satu baris di tabel <code>pkl</code> hanya lahir kalau ada penempatan, sehingga ' +
-            'mitra tanpa siswa tidak punya tempat. Inilah yang terjadi saat demo.'
-        },
-        konsep: 'Entitas harus berdiri sendiri (F-02)'
+        correct: 'dokumen',
+        kamu: { verdict: 'baik', text: 'Tim yang mempelajari nota-nota penjualan lama berhasil menyusun daftar menu terlaris hanya dalam satu hari, karena datanya sudah tercatat rapi dan tidak perlu menunggu jadwal siapa pun.' },
+        timA: { verdict: 'buruk', text: 'Tim lain memilih menyebar kuesioner ke seluruh siswa, tapi waktu dua hari tidak cukup untuk mengumpulkan dan mengolah jawaban sebelum rapat.' },
+        konsep: 'Studi dokumen paling efisien ketika data historis sudah tersedia rapi dan waktu terbatas.'
       },
       {
-        id: 'uj_hp', icon: '✏️',
-        title: 'Pertanyaan 2 — Nomor HP pembimbing berganti',
-        scenario:
-          '"Pak Andri membimbing 18 siswa. Nomor HP-nya berganti. Berapa tempat yang harus disunting?"',
+        id: 'uks', icon: '🩺', title: 'Sistem Rekam Kunjungan UKS',
+        scenario: 'Petugas UKS ingin memahami alasan sebenarnya di balik keluhan siswa yang sering bolak-balik berobat, sesuatu yang tidak akan terlihat hanya dari data kunjungan.',
         options: [
-          { id: 'oh1', label: 'Satu tempat saja, di data pembimbing.' },
-          { id: 'oh2', label: 'Delapan belas tempat, satu per siswa bimbingannya.' },
-          { id: 'oh3', label: 'Dua tempat: data siswa dan data penempatan.' },
-          { id: 'oh4', label: 'Tidak dapat diubah, harus dibuat data guru baru.' }
+          { id: 'wawancara', label: 'Wawancara' },
+          { id: 'observasi', label: 'Observasi' },
+          { id: 'dokumen', label: 'Studi Dokumen' },
+          { id: 'kuesioner', label: 'Kuesioner' }
         ],
-        correct: 'oh1',
-        kamu: {
-          verdict: 'baik',
-          text:
-            'Ubah <strong>satu baris</strong> di entitas <code>pembimbing</code>. Seluruh penempatan ' +
-            'hanya menyimpan <code>nip</code>, jadi semuanya langsung menunjuk nomor yang baru.'
-        },
-        timA: {
-          verdict: 'buruk',
-          text:
-            'Harus menyisir <strong>18 baris</strong>. Satu baris terlewat, sekolah punya dua nomor ' +
-            'Pak Andri yang berbeda dan tidak ada yang tahu mana yang benar.'
-        },
-        konsep: 'Satu fakta cukup disimpan di satu tempat (F-07)'
+        correct: 'wawancara',
+        kamu: { verdict: 'baik', text: 'Tim yang mewawancarai petugas UKS berhasil menggali cerita di balik pola kunjungan berulang — ternyata banyak siswa datang karena kelelahan akibat jadwal ekstrakurikuler yang padat, bukan sekadar sakit.' },
+        timA: { verdict: 'buruk', text: 'Tim lain hanya menganalisis angka kunjungan dari dokumen lama, sehingga tidak menemukan alasan di balik pola tersebut.' },
+        konsep: 'Wawancara unggul menggali alasan dan konteks di balik sebuah kejadian, yang tidak tertangkap dari data saja.'
       },
       {
-        id: 'uj_ulang', icon: '🔁',
-        title: 'Pertanyaan 3 — Siswa yang sama, periode berikutnya',
-        scenario:
-          '"Rani sudah selesai PKL semester ini. Semester depan ia ditempatkan lagi di perusahaan yang berbeda. Bagaimana pencatatannya?"',
+        id: 'ekskul', icon: '🎭', title: 'Sistem Pendaftaran Ekstrakurikuler',
+        scenario: 'Panitia ingin tahu pendapat seluruh siswa baru (300 orang) tentang ekstrakurikuler favorit mereka, dalam waktu satu minggu sebelum masa orientasi berakhir.',
         options: [
-          { id: 'ou1', label: 'Tambah satu baris penempatan baru; data siswanya tetap satu.' },
-          { id: 'ou2', label: 'Buat data siswa kedua atas nama Rani.' },
-          { id: 'ou3', label: 'Timpa data penempatan yang lama.' },
-          { id: 'ou4', label: 'Tidak boleh, satu siswa hanya boleh PKL sekali.' }
+          { id: 'wawancara', label: 'Wawancara' },
+          { id: 'observasi', label: 'Observasi' },
+          { id: 'dokumen', label: 'Studi Dokumen' },
+          { id: 'kuesioner', label: 'Kuesioner' }
         ],
-        correct: 'ou1',
-        kamu: {
-          verdict: 'baik',
-          text:
-            'Cukup satu baris baru di <code>penempatan</code> yang menunjuk <code>nis</code> Rani. ' +
-            'Riwayat PKL-nya utuh, dan AB-02 tetap dipenuhi karena hanya satu penempatan yang aktif per periode.'
-        },
-        timA: {
-          verdict: 'buruk',
-          text:
-            'Data Rani ditulis ulang seluruhnya di baris baru — nama, kelas, nomor HP. ' +
-            'Fakta yang sama disimpan dua kali, dan mulai dari sinilah data menjadi tidak konsisten.'
-        },
-        konsep: 'Peristiwa adalah entitas tersendiri (AB-02)'
+        correct: 'kuesioner',
+        kamu: { verdict: 'baik', text: 'Tim yang menyebar kuesioner daring berhasil mengumpulkan tanggapan dari seluruh 300 siswa baru hanya dalam tiga hari, lengkap dengan rekap otomatis.' },
+        timA: { verdict: 'buruk', text: 'Tim lain mencoba mewawancarai siswa satu per satu, tapi baru sempat mewawancarai 20 orang saat batas waktu habis.' },
+        konsep: 'Kuesioner paling efisien menjangkau responden dalam jumlah besar dengan waktu terbatas.'
+      },
+      {
+        id: 'bengkel', icon: '🔧', title: 'Sistem Peminjaman Alat Bengkel Praktik',
+        scenario: 'Tim ingin memahami detail alur nyata siswa meminjam dan mengembalikan alat praktik, termasuk kebiasaan yang mungkin tidak disadari atau tidak diceritakan oleh siswa sendiri.',
+        options: [
+          { id: 'wawancara', label: 'Wawancara' },
+          { id: 'observasi', label: 'Observasi' },
+          { id: 'dokumen', label: 'Studi Dokumen' },
+          { id: 'kuesioner', label: 'Kuesioner' }
+        ],
+        correct: 'observasi',
+        kamu: { verdict: 'baik', text: 'Tim yang mengamati langsung di bengkel menemukan bahwa banyak siswa meminjam alat tanpa mencatat di buku pinjam karena terburu-buru — kebiasaan yang tidak pernah terungkap lewat wawancara.' },
+        timA: { verdict: 'buruk', text: 'Tim lain hanya mewawancarai siswa, dan hampir semua menjawab "saya selalu mencatat", padahal kenyataannya berbeda.' },
+        konsep: 'Observasi mengungkap kebiasaan nyata yang kadang tidak disadari atau tidak diakui oleh pelaku sendiri.'
       }
-    ],
-
-    benarPrediksi: 'Tebakanmu tepat!',
-    salahPrediksi: 'Tebakanmu belum tepat — dan itu wajar. Baca perbandingannya.',
-    penutup:
-      'Ketiga pertanyaan tadi dijawab oleh <strong>keputusan analisismu</strong>, bukan oleh kode yang kamu tulis. ' +
-      'Keputusan itu diambil saat membaca dokumen — sebelum satu baris kode pun ada.',
-
-    justifLabel: 'Pertanggungjawaban analis',
-    justifPrompt:
-      'Pilih satu frasa dari dokumen yang kamu TOLAK sebagai entitas, lalu jelaskan alasan penolakanmu kepada Bu Rahma.',
-    justifPlaceholder: 'Saya tidak menjadikan … sebagai entitas karena…',
-    justifMin: 40,
-    justifKurang: 'Lengkapi dulu alasanmu menjadi satu penjelasan utuh.',
-    lanjutLabel: 'Lanjut: uji pada dokumen lain →'
+    ]
   },
 
-  /* ==========================================================
-     TAHAP 8 — Menganalisis & mengevaluasi (PBL fase 5)
-     ========================================================== */
+  /* ============================================================
+     TAHAP 8 — Evaluasi pada kasus lain (PBL fase 5)
+     ============================================================ */
   evaluasi: {
-    kicker: 'Tahap 8 · Fase 5 PBL',
-    title: 'Berlaku Juga di Dokumen Lain?',
-    goal: 'Menguji keberlakuan cara analisismu pada dokumen spesifikasi yang sama sekali baru.',
-    instruction:
-      'Cara kerja yang baik harus bisa dipakai di kasus lain. Berikut potongan dokumen dari klien berbeda. ' +
-      'Baca sekali, lalu jawab soal-soalnya.',
-
-    dokLabel: 'SKPL-BMJ-01 — Bengkel Maju Jaya',
+    kicker: 'Fase 5 · Menganalisis dan Mengevaluasi',
+    title: 'Evaluasi: Uji pada Kasus Lain',
+    goal: 'Membuktikan pemahamanmu tentang penggalian kebutuhan berlaku pada kasus baru.',
+    instruction: 'Bacalah cuplikan kasus berikut, lalu jawab soal-soal di bawahnya.',
+    dokLabel: 'CUPLIKAN-02',
     dokumen:
-      '<p>"Pelanggan membawa sepeda motornya ke bengkel. Montir memeriksa motor tersebut, lalu mencatat ' +
-      'servis yang dikerjakan. Setiap servis mencatat tanggal, keluhan, dan biaya. Kadang dokumen kami ' +
-      'menyebut pelanggan dengan istilah konsumen — maksudnya sama. Pemilik bengkel ingin mencetak laporan ' +
-      'servis bulanan dan mengetahui total biaya yang pernah dikeluarkan setiap pelanggan. ' +
-      'Contoh servis terakhir: Bapak Sulaiman, motor bernomor plat B 1234 XYZ, biaya Rp150.000."</p>',
-
+      '<p>Pembina ekstrakurikuler Futsal SMK Cendekia Bangsa mengeluhkan presensi latihan yang ' +
+      'masih dicatat di kertas dan sering hilang. Sebelum tim programmer merancang sistem ' +
+      'presensi digital, kepala sekolah meminta mereka menggali kebutuhan terlebih dahulu: ' +
+      'mewawancarai pembina, mengamati langsung sesi latihan, mempelajari kertas presensi ' +
+      'lama, dan menyebar angket singkat ke seluruh anggota ekskul.</p>',
     questions: [
       {
         id: 'e1',
-        prompt: 'Manakah frasa yang paling tepat dijadikan <strong>calon entitas</strong>?',
+        prompt: 'Teknik apa yang paling tepat dipakai untuk memahami kebiasaan siswa saat presensi (misalnya siapa yang sering datang terlambat tanpa mau mengaku)?',
         options: [
-          { id: 'e1a', label: 'Montir' },
-          { id: 'e1b', label: 'Tanggal servis' },
-          { id: 'e1c', label: 'Mencetak laporan bulanan' },
-          { id: 'e1d', label: 'Rp150.000' }
+          { id: 'a', label: 'Wawancara' }, { id: 'b', label: 'Observasi' },
+          { id: 'c', label: 'Kuesioner' }, { id: 'd', label: 'Studi Dokumen' }
         ],
-        correct: 'e1a',
-        explanation: 'Montir berdiri sendiri, wujudnya banyak, dan membawa beberapa fakta (nama, keahlian, nomor HP). Tanggal servis hanya satu fakta, "mencetak laporan" adalah proses, dan Rp150.000 adalah nilai data.'
+        correct: 'b',
+        explanation: 'Observasi mengungkap kebiasaan nyata yang mungkin tidak diakui lewat wawancara atau angket.'
       },
       {
         id: 'e2',
-        prompt: '"Nomor plat" pada dokumen itu paling tepat diperlakukan sebagai…',
+        prompt: 'Mempelajari kertas presensi lama untuk mengetahui pola kehadiran selama ini termasuk teknik...',
         options: [
-          { id: 'e2a', label: 'Atribut milik entitas sepeda motor.' },
-          { id: 'e2b', label: 'Entitas tersendiri karena nilainya unik.' },
-          { id: 'e2c', label: 'Proses, karena dipakai saat pemeriksaan.' },
-          { id: 'e2d', label: 'Nilai data, sehingga tidak perlu disimpan.' }
+          { id: 'a', label: 'Wawancara' }, { id: 'b', label: 'Observasi' },
+          { id: 'c', label: 'Kuesioner' }, { id: 'd', label: 'Studi Dokumen' }
         ],
-        correct: 'e2a',
-        explanation: 'Nomor plat adalah satu fakta yang menempel pada sepeda motor — dan karena nilainya unik, ia justru cocok menjadi atribut kuncinya. Unik tidak membuat sebuah fakta berubah menjadi entitas.'
+        correct: 'd',
+        explanation: 'Mempelajari catatan/berkas yang sudah ada adalah studi dokumen.'
       },
       {
         id: 'e3',
-        prompt: '"Total biaya yang pernah dikeluarkan setiap pelanggan" sebaiknya…',
+        prompt: "'Sistem harus menyimpan nama siswa, tanggal latihan, dan status hadir/izin/alpa' adalah contoh dari...",
         options: [
-          { id: 'e3a', label: 'Tidak disimpan, karena dapat dihitung dari data servis.' },
-          { id: 'e3b', label: 'Disimpan sebagai atribut pelanggan agar cepat tampil.' },
-          { id: 'e3c', label: 'Dijadikan entitas baru bernama total_biaya.' },
-          { id: 'e3d', label: 'Disimpan pada setiap baris servis.' }
+          { id: 'a', label: 'Kebutuhan Fungsional' }, { id: 'b', label: 'Kebutuhan Data' },
+          { id: 'c', label: 'Kebutuhan Non-Fungsional' }, { id: 'd', label: 'Bukan kebutuhan' }
         ],
-        correct: 'e3a',
-        explanation: 'Sama seperti "lama PKL" pada dokumen Bu Rahma: hasil hitungan tidak perlu disimpan. Bila disimpan, ia harus diperbarui setiap ada servis baru — dan akan segera berbeda dengan kenyataan.'
+        correct: 'b',
+        explanation: 'Ini daftar data mentah yang harus disimpan sistem — kebutuhan data.'
       },
       {
         id: 'e4',
-        prompt: 'Dokumen memakai "pelanggan" dan "konsumen" bergantian. Tindakan analis yang tepat adalah…',
+        prompt: "'Sistem harus bisa menampilkan rekap kehadiran tiap siswa secara otomatis di akhir bulan' adalah contoh dari...",
         options: [
-          { id: 'e4a', label: 'Menyatukannya menjadi satu entitas dengan satu nama baku.' },
-          { id: 'e4b', label: 'Membuat dua entitas terpisah sesuai istilah dokumen.' },
-          { id: 'e4c', label: 'Menghapus keduanya karena membingungkan.' },
-          { id: 'e4d', label: 'Menjadikan "konsumen" atribut milik "pelanggan".' }
+          { id: 'a', label: 'Kebutuhan Fungsional' }, { id: 'b', label: 'Kebutuhan Data' },
+          { id: 'c', label: 'Kebutuhan Non-Fungsional' }, { id: 'd', label: 'Bukan kebutuhan' }
         ],
-        correct: 'e4a',
-        explanation: 'Keduanya sinonim, persis seperti "peserta didik"/"siswa" dan "DUDI"/"perusahaan mitra". Dua entitas untuk satu hal berarti menyimpan orang yang sama dua kali.'
+        correct: 'a',
+        explanation: 'Ini fungsi mengolah data presensi menjadi laporan — kebutuhan fungsional.'
       },
       {
         id: 'e5',
-        prompt: 'Kata seperti "memeriksa", "mencatat", dan "mencetak" pada dokumen spesifikasi menandakan…',
+        prompt: "'Sistem harus tetap bisa diakses walau sinyal internet di lapangan lemah' adalah contoh dari...",
         options: [
-          { id: 'e5a', label: 'Proses atau fungsi sistem, bukan calon entitas.' },
-          { id: 'e5b', label: 'Entitas yang paling penting bagi klien.' },
-          { id: 'e5c', label: 'Atribut kunci dari entitas terdekatnya.' },
-          { id: 'e5d', label: 'Bagian dokumen yang boleh diabaikan seluruhnya.' }
+          { id: 'a', label: 'Kebutuhan Fungsional' }, { id: 'b', label: 'Kebutuhan Data' },
+          { id: 'c', label: 'Kebutuhan Non-Fungsional' }, { id: 'd', label: 'Bukan kebutuhan' }
         ],
-        correct: 'e5a',
-        explanation: 'Kata kerja menunjukkan yang <em>dikerjakan</em> sistem. Ia tidak diabaikan — justru dari kata kerja inilah kamu tahu data apa yang harus tersedia agar proses itu bisa berjalan.'
+        correct: 'c',
+        explanation: 'Ini soal mutu/keandalan layanan, bukan fitur atau data spesifik — kebutuhan non-fungsional.'
       },
       {
         id: 'e6',
-        prompt: 'Ciri paling kuat sebuah frasa layak diangkat menjadi entitas adalah…',
+        prompt: 'Untuk mengetahui pendapat seluruh 45 anggota ekskul dengan cepat tentang jam latihan favorit mereka, teknik paling efisien adalah...',
         options: [
-          { id: 'e6a', label: 'Dapat berdiri sendiri, banyak wujudnya, dan membawa beberapa fakta.' },
-          { id: 'e6b', label: 'Paling sering disebut di sepanjang dokumen.' },
-          { id: 'e6c', label: 'Muncul pada judul atau nama aplikasinya.' },
-          { id: 'e6d', label: 'Berupa angka atau kode sehingga mudah diurutkan.' }
+          { id: 'a', label: 'Wawancara' }, { id: 'b', label: 'Observasi' },
+          { id: 'c', label: 'Kuesioner' }, { id: 'd', label: 'Studi Dokumen' }
         ],
-        correct: 'e6a',
-        explanation: 'Itulah tiga pertanyaan penyaring yang kamu pakai sejak tahap 3. Sering disebut belum tentu entitas — "tanggal" disebut berkali-kali, tetapi ia tetap sebuah atribut.'
+        correct: 'c',
+        explanation: 'Kuesioner paling efisien menjangkau banyak responden sekaligus dalam waktu singkat.'
+      },
+      {
+        id: 'e7',
+        prompt: 'Mengapa penting menggabungkan lebih dari satu teknik penggalian kebutuhan, bukan hanya satu saja?',
+        options: [
+          { id: 'a', label: 'Karena setiap teknik punya kelebihan dan sudut pandang berbeda, sehingga saling melengkapi' },
+          { id: 'b', label: 'Karena satu teknik saja dianggap kurang profesional' },
+          { id: 'c', label: 'Karena semakin banyak teknik, proyeknya semakin terlihat serius' },
+          { id: 'd', label: 'Karena tidak ada aturan bakunya, jadi sekadar ikut kebiasaan' }
+        ],
+        correct: 'a',
+        explanation: 'Menggabungkan teknik menutupi kelemahan masing-masing — wawancara menggali alasan, observasi menangkap kebiasaan nyata, dokumen memberi data historis, kuesioner menjangkau banyak orang.'
       }
     ],
-
-    cekLabel: 'Periksa jawaban',
-    ulangLabel: 'Kerjakan ulang',
     kesimpulanLabel: 'Kesimpulanmu',
-    kesimpulanPrompt:
-      'Tulis langkah-langkah yang kamu pakai untuk menentukan calon entitas dan atribut utama dari sebuah dokumen spesifikasi.',
-    kesimpulanPlaceholder: 'Untuk menentukan entitas dan atribut dari dokumen spesifikasi, saya…',
+    kesimpulanPrompt: 'Simpulkan, apa yang membedakan kebutuhan informasi, kebutuhan data, dan kebutuhan non-fungsional?',
+    kesimpulanPlaceholder: 'Tulis kesimpulanmu di sini...',
     kesimpulanMin: 40,
-    kesimpulanKurang: 'Lengkapi dulu kesimpulanmu menjadi satu penjelasan utuh.',
-    lanjutLabel: 'Lanjut: refleksi →'
+    cekLabel: 'Periksa Jawaban',
+    ulangLabel: 'Kerjakan Ulang',
+    lanjutLabel: 'Lanjut: Refleksi →'
   },
 
-  /* ==========================================================
-     TAHAP 9 — Refleksi
-     ========================================================== */
+  /* ============================================================
+     TAHAP 9 — Refleksi (PBL fase 5)
+     ============================================================ */
   refleksi: {
-    kicker: 'Tahap 9 · Fase 5 PBL',
-    title: 'Menilai Diri Sendiri',
-    goal: 'Menyadari sejauh mana cara berpikirmu sebagai analis berubah.',
-    note:
-      'Jawabanmu hanya tersimpan di perangkat ini dan tidak dikirim ke mana pun. ' +
-      'Jawab sejujurnya — ini untukmu sendiri.',
-
-    recallLabel: 'Tebakanmu saat diuji Bu Rahma',
-    recallKosong: 'Kamu belum sempat menebak di tahap Sajikan Hasil.',
-
-    skalaLabel: 'Seberapa yakin kamu sekarang?',
-    /* Skala Likert bersifat berurutan (ordinal) — urutannya TIDAK diacak,
-       karena mengacak 1..5 merusak maknanya. Yang diacak adalah urutan
-       pernyataannya. */
+    kicker: 'Fase 5 · Menganalisis dan Mengevaluasi',
+    title: 'Refleksi',
+    goal: 'Menilai proses belajarmu dan menyiapkan diri menerapkannya pada proyek nyata.',
+    note: 'Refleksi ini tidak dinilai benar/salah — jawab sejujurnya sesuai pengalamanmu.',
+    recallLabel: 'Ingat Kembali Tebakanmu',
+    recallKosong: 'Kamu belum membuat tebakan pada tahap Sajikan.',
+    skalaLabel: 'Skala Penilaian Diri',
     skala: [
-      { id: 'sk1', value: 1, label: 'Belum paham' },
-      { id: 'sk2', value: 2, label: 'Sedikit paham' },
-      { id: 'sk3', value: 3, label: 'Cukup paham' },
-      { id: 'sk4', value: 4, label: 'Paham' },
-      { id: 'sk5', value: 5, label: 'Paham & bisa menjelaskan' }
+      { value: 1, label: 'Sangat Tidak Setuju' },
+      { value: 2, label: 'Tidak Setuju' },
+      { value: 3, label: 'Netral' },
+      { value: 4, label: 'Setuju' },
+      { value: 5, label: 'Sangat Setuju' }
     ],
     skalaItems: [
-      { id: 'li_telusur', text: 'Saya dapat menandai frasa yang berpotensi menjadi data pada dokumen spesifikasi.' },
-      { id: 'li_bedakan', text: 'Saya dapat membedakan calon entitas, atribut, nilai data, proses, dan sinonim.' },
-      { id: 'li_atribut', text: 'Saya dapat menentukan atribut utama dan atribut kunci tiap entitas.' },
-      { id: 'li_alasan', text: 'Saya dapat menjelaskan alasan di balik setiap keputusan analisis saya.' }
+      { id: 'r1', text: 'Saya bisa membedakan wawancara, observasi, kuesioner, dan studi dokumen.' },
+      { id: 'r2', text: 'Saya bisa membedakan kebutuhan fungsional, kebutuhan data, dan kebutuhan non-fungsional.' },
+      { id: 'r3', text: 'Saya merasa yakin memilih teknik penggalian kebutuhan yang tepat untuk situasi baru.' },
+      { id: 'r4', text: 'Saya memahami mengapa menggali kebutuhan langsung ke pengguna lebih baik daripada menebak-nebak.' },
+      { id: 'r5', text: 'Saya siap menerapkan teknik penggalian kebutuhan ini pada proyek nyata.' }
     ],
-
     prompts: [
-      {
-        id: 'rf1',
-        question: 'Keputusan analisis mana yang paling sulit kamu ambil? Mengapa?',
-        placeholder: 'Yang paling sulit bagi saya adalah…'
-      },
-      {
-        id: 'rf2',
-        question: 'Adakah yang masih membingungkan? Tulis pertanyaan yang ingin kamu tanyakan kepada gurumu.',
-        placeholder: 'Saya masih bingung tentang…'
-      },
-      {
-        id: 'rf3',
-        question: 'Dokumen atau aplikasi apa di sekitarmu yang ingin kamu analisis dengan cara ini?',
-        placeholder: 'Saya ingin mencobanya pada…'
-      }
+      { id: 'p1', question: 'Teknik penggalian kebutuhan mana yang paling ingin kamu coba praktikkan langsung? Mengapa?', placeholder: 'Tulis jawabanmu...' },
+      { id: 'p2', question: 'Ceritakan satu momen kamu (atau timmu) pernah membuat sesuatu tanpa menggali kebutuhan orang lain terlebih dahulu. Apa akibatnya?', placeholder: 'Tulis pengalamanmu...' }
     ],
-
-    simpanLabel: 'Simpan refleksi',
+    simpanLabel: 'Simpan Refleksi',
     tersimpan: 'Refleksi tersimpan.',
     lanjutLabel: 'Selesai →'
   },
 
-  /* ==========================================================
+  /* ============================================================
      TAHAP 10 — Selesai
-     ========================================================== */
+     ============================================================ */
   selesai: {
-    kicker: 'Tahap 10 · Selesai',
-    title: 'Laporan Analisis Selesai',
-    skorLabel: 'Ringkasan hasil',
-    kartuLabel: 'Kartu Data Entitas yang kamu serahkan',
-    kesimpulanLabel: 'Kesimpulan yang kamu tulis',
-    justifLabel: 'Pertanggungjawaban yang kamu tulis',
-
+    kicker: 'Penutup',
+    title: 'Selesai!',
+    skorLabel: 'Rincian Skor',
+    kartuLabel: 'Kartu Kebutuhan Final',
+    kesimpulanLabel: 'Kesimpulanmu (Tahap Evaluasi)',
+    justifLabel: 'Justifikasimu (Tahap Sajikan)',
     konsepKunci: [
-      'Dokumen spesifikasi ditulis dengan bahasa manusia; entitas dan atributnya <strong>ditentukan lewat analisis</strong>, bukan disalin.',
-      'Sebuah frasa layak menjadi <strong>entitas</strong> bila ia berdiri sendiri, banyak wujudnya, dan membawa beberapa fakta.',
-      'Sebuah frasa hanyalah <strong>atribut</strong> bila ia satu fakta yang tidak bermakna tanpa pemiliknya.',
-      'Waspadai tiga penyamar: <strong>nilai data</strong> (contoh isi), <strong>proses</strong> (kata kerja), dan <strong>sinonim</strong> (nama lain untuk hal yang sama).',
-      'Fakta yang dapat <strong>dihitung ulang</strong> tidak perlu disimpan; cukup simpan bahan hitungannya.',
-      'Setiap entitas membutuhkan <strong>atribut kunci</strong> yang nilainya tidak pernah kembar.'
+      'Penggalian kebutuhan adalah proses menggali kebutuhan informasi dan data langsung dari studi kasus sistem, bukan menebak-nebak.',
+      'Empat teknik utama: wawancara, observasi, kuesioner/angket, dan studi dokumen — masing-masing punya kekuatan berbeda.',
+      'Kebutuhan fungsional adalah fungsi yang harus dikerjakan sistem, kebutuhan data adalah data mentah yang harus disimpan, dan kebutuhan non-fungsional adalah mutu layanan.',
+      'Menggabungkan beberapa teknik sekaligus menghasilkan gambaran kebutuhan yang lebih lengkap dan akurat.',
+      'Kebutuhan yang tergali dengan baik menjadi dasar yang kuat sebelum sistem dirancang.'
     ],
-
-    lanjutLabel: 'Langkah berikutnya',
+    lanjutLabel: 'Langkah Selanjutnya',
     lanjut: [
-      'Materi berikutnya — menggambarkan relasi antarentitas dalam bentuk ERD.',
-      'Coba terapkan: ambil satu dokumen kebutuhan nyata (proposal proyek, lembar pendaftaran ekskul), lalu telusuri entitas dan atributnya dengan tiga pertanyaan penyaring tadi.'
+      'Coba praktikkan wawancara singkat dengan teman sekelas tentang kebutuhan aplikasi sederhana.',
+      'Pelajari materi berikutnya tentang merancang basis data dari hasil penggalian kebutuhan ini.',
+      'Diskusikan dengan gurumu, teknik apa yang paling relevan untuk proyek akhir kelasmu.'
     ],
-
-    ulangLabel: '↩ Ulangi dari awal',
-    berandaLabel: 'Kembali ke beranda',
-    ulangKonfirmasi:
-      'Ulangi materi dari awal? Seluruh jawaban dan progresmu akan dihapus, dan pilihan jawaban akan diacak ulang.'
+    ulangLabel: 'Ulangi dari Awal',
+    berandaLabel: 'Kembali ke Beranda',
+    ulangKonfirmasi: 'Reset seluruh progres materi ini? Semua jawaban dan urutan acak akan dihapus.'
   }
 };

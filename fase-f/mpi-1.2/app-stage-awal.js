@@ -48,7 +48,7 @@ function renderOrientasi(container) {
     '<ul class="plain-list">' +
     d.caraPakai
       .map(function (c) {
-        return '<li>' + c + '</li>';
+        return '<li>' + esc(c) + '</li>';
       })
       .join('') +
     '</ul>' +
@@ -124,13 +124,13 @@ function renderMasalah(container) {
         return (
           '<div class="team-card">' +
           '<span class="team-card__name">' + esc(k.tim) + '</span>' +
-          '<p class="team-card__desc">' + k.hasil + '</p>' +
+          '<p class="team-card__desc">' + esc(k.hasil) + '</p>' +
           '</div>'
         );
       })
       .join('') +
     '</div>' +
-    feedbackBox('warning', '⚠️', d.insiden) +
+    feedbackBox('warning', '⚠️', esc(d.insiden)) +
     '</div>' +
 
     '<div class="panel">' +
@@ -153,7 +153,7 @@ function renderMasalah(container) {
           benarSemua ? 'success' : 'warning',
           benarSemua ? '✓' : '!',
           benarSemua
-            ? '<strong>Tepat semua.</strong> Kamu berhasil memisahkan masalah analisis dari gejalanya.'
+            ? '<strong>Tepat semua.</strong> Kamu berhasil memisahkan akar masalah dari gejalanya.'
             : '<strong>' + st.correct + ' dari ' + d.statements.length + ' tepat.</strong> ' +
               'Baca penjelasan di bawah, perbaiki pilihanmu, lalu periksa lagi.'
         ) + rincian
@@ -231,9 +231,8 @@ function renderBekal(container) {
   }).length;
   var semuaTerbuka = terbuka === d.cards.length;
 
-  /* Kartu rambu TIDAK diacak: urutannya membangun pengertian
-     bertahap (entitas → atribut → penyamarnya → kunci). Yang
-     diacak adalah latihan menjodohkan di bawahnya. */
+  /* Kartu teknik TIDAK diacak: ini konten pengantar, bukan pilihan
+     jawaban. Yang diacak adalah latihan menjodohkan di bawahnya. */
   var kartu =
     '<div class="concept-cards">' +
     d.cards
@@ -245,8 +244,8 @@ function renderBekal(container) {
           '<span class="concept-card__icon" aria-hidden="true">' + c.icon + '</span>' +
           '<span class="concept-card__term">' + esc(c.term) + '</span>' +
           (seen
-            ? '<span class="concept-card__def">' + c.def + '</span>' +
-              '<span class="concept-card__example">' + c.example + '</span>'
+            ? '<span class="concept-card__def">' + esc(c.def) + '</span>' +
+              '<span class="concept-card__example">' + esc(c.example) + '</span>'
             : '<span class="concept-card__tap">Ketuk untuk membuka</span>') +
           '</button>'
         );
@@ -254,7 +253,7 @@ function renderBekal(container) {
       .join('') +
     '</div>';
 
-  /* ---- Latihan menjodohkan: rambu ↔ ciri ---- */
+  /* ---- Latihan menjodohkan: teknik ↔ ciri ---- */
   var terpakai = {};
   Object.keys(m.pairs).forEach(function (t) {
     terpakai[m.pairs[t]] = t;
@@ -265,7 +264,7 @@ function renderBekal(container) {
     return f ? f.label : '';
   }
 
-  var rambu = orderItems(skey('bekal', 'match', 'terms'), d.terms);
+  var teknik = orderItems(skey('bekal', 'match', 'terms'), d.terms);
   var ciri = orderItems(skey('bekal', 'match', 'defs'), d.defs);
   var lengkap = Object.keys(m.pairs).length === d.terms.length;
   var benarSemua = m.checked && m.correct === d.terms.length;
@@ -273,8 +272,8 @@ function renderBekal(container) {
   var latihan =
     '<div class="match-grid">' +
     '<div class="match-col">' +
-    '<h4 class="match-col__head">Rambu</h4>' +
-    rambu
+    '<h4 class="match-col__head">Teknik</h4>' +
+    teknik
       .map(function (t) {
         var pasangan = m.pairs[t.id];
         var cls = 'match-term';
@@ -294,7 +293,7 @@ function renderBekal(container) {
       .join('') +
     '</div>' +
     '<div class="match-col">' +
-    '<h4 class="match-col__head">Ciri di dokumen</h4>' +
+    '<h4 class="match-col__head">Ciri</h4>' +
     ciri
       .map(function (f) {
         return (
@@ -310,10 +309,10 @@ function renderBekal(container) {
     stageHead(d.kicker, d.title, d.goal) +
 
     '<div class="panel">' +
-    '<p>' + d.instruction + '</p>' +
+    '<p>' + esc(d.instruction) + '</p>' +
     kartu +
     '<p class="find-counter' + (semuaTerbuka ? ' is-done' : '') + '">' +
-    '<span class="find-counter__label">Rambu dibuka</span>' +
+    '<span class="find-counter__label">Kartu dibuka</span>' +
     '<span class="find-counter__value">' + terbuka + ' / ' + d.cards.length + '</span>' +
     '</p>' +
     '</div>' +
@@ -321,7 +320,7 @@ function renderBekal(container) {
     (semuaTerbuka
       ? '<div class="panel">' +
         '<h3>' + esc(d.ujiTitle) + '</h3>' +
-        '<p>' + d.ujiInstruction + '</p>' +
+        '<p>' + esc(d.ujiInstruction) + '</p>' +
         '<p class="selected-indicator' + (m.selectedTermId ? ' is-visible' : '') + '" role="status" aria-live="polite">' +
         (m.selectedTermId
           ? 'Dipilih: <strong>' + esc(findById(d.terms, m.selectedTermId).label) +
@@ -341,9 +340,9 @@ function renderBekal(container) {
               benarSemua ? 'success' : 'warning',
               benarSemua ? '✓' : '!',
               benarSemua
-                ? '<strong>Semua pasangan tepat.</strong> Rambumu siap dipakai membaca dokumen klien.'
+                ? '<strong>Semua pasangan tepat.</strong> Bekalmu siap dipakai menelusuri temuan lapangan.'
                 : '<strong>' + m.correct + ' dari ' + d.terms.length + ' pasangan tepat.</strong> ' +
-                  'Pasangan bertanda merah perlu kamu tukar. Buka lagi kartu rambu di atas bila perlu.'
+                  'Pasangan bertanda merah perlu kamu tukar. Buka lagi kartu teknik di atas bila perlu.'
             )
           : '') +
         '</div>'
@@ -386,7 +385,7 @@ function renderBekal(container) {
       if (m.selectedTermId === id) {
         m.selectedTermId = null;
       } else if (m.pairs[id]) {
-        /* Rambu yang sudah berpasangan: ketuk untuk melepasnya. */
+        /* Teknik yang sudah berpasangan: ketuk untuk melepasnya. */
         delete m.pairs[id];
         m.selectedTermId = id;
         m.checked = false;
@@ -403,10 +402,10 @@ function renderBekal(container) {
     btn.addEventListener('click', function () {
       var defId = btn.dataset.def;
       if (!m.selectedTermId) {
-        showNotice('Ketuk dulu satu rambu di kolom kiri, baru cirinya.');
+        showNotice('Ketuk dulu satu teknik di kolom kiri, baru cirinya.');
         return;
       }
-      /* Satu ciri hanya boleh dipakai satu rambu. */
+      /* Satu ciri hanya boleh dipakai satu teknik. */
       Object.keys(m.pairs).forEach(function (t) {
         if (m.pairs[t] === defId) delete m.pairs[t];
       });
