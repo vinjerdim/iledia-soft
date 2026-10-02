@@ -121,7 +121,7 @@
         color: var(--color-ink);
       }
 
-      .tab-btn[aria-selected="true"] {
+      .tab-btn[aria-selected='true'] {
         color: var(--color-primary);
         border-bottom-color: var(--color-primary);
       }
@@ -162,33 +162,48 @@
         margin: 0;
       }
 
-      /* ── Filter TP (segmented control / pills) ── */
-      .tp-filter {
+      /* ── Navigasi Kelas & Topik ── */
+      .nav-picker {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+        padding-bottom: var(--space-4);
+        border-bottom: 1px solid var(--color-border);
+        margin-bottom: var(--space-5);
+      }
+
+      .nav-picker:empty {
+        display: none;
+      }
+
+      .nav-row {
         display: flex;
         align-items: center;
         gap: var(--space-3);
         flex-wrap: wrap;
       }
 
-      .tp-filter__label {
-        font-size: 0.8rem;
+      .nav-row__label {
+        font-size: 0.75rem;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.08em;
         color: var(--color-ink-muted);
-        white-space: nowrap;
+        min-width: 3.5rem;
       }
 
-      .tp-filter__group {
+      .seg {
         display: flex;
+        flex-wrap: wrap;
         background: var(--color-surface);
         border: 1px solid var(--color-border);
-        border-radius: 9999px;
+        border-radius: 20px;
         padding: 3px;
         gap: 2px;
+        min-width: 0;
       }
 
-      .tp-filter__btn {
+      .seg__btn {
         font-family: var(--font-display);
         font-size: 0.8rem;
         font-weight: 600;
@@ -201,24 +216,48 @@
         transition:
           background 0.15s,
           color 0.15s;
-        white-space: nowrap;
+        text-align: left;
       }
 
-      .tp-filter__btn:hover {
+      .seg__btn:hover {
         color: var(--color-ink);
       }
 
-      .tp-filter__btn[aria-pressed="true"] {
+      .seg__btn:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 1px;
+      }
+
+      .seg__btn[aria-pressed='true'] {
         background: var(--color-primary);
         color: #ffffff;
       }
 
-      .tp-topic {
+      .seg__soon {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-left: 6px;
+        opacity: 0.75;
+      }
+
+      .topik-heading {
         font-family: var(--font-display);
         font-size: 1.25rem;
         line-height: 1.3;
         color: var(--color-ink);
         margin: 0 0 var(--space-4);
+      }
+
+      .placeholder {
+        border: 2px dashed var(--color-border-strong);
+        border-radius: var(--radius-lg);
+        background: var(--color-surface);
+        color: var(--color-ink-muted);
+        text-align: center;
+        padding: var(--space-7) var(--space-5);
+        margin: 0 0 var(--space-7);
       }
 
       .card-grid {
@@ -306,7 +345,7 @@
       }
 
       .card__cta::after {
-        content: "→";
+        content: '→';
       }
 
       .site-footer {
@@ -340,11 +379,12 @@
           grid-template-columns: 1fr;
         }
 
-        .section-head {
-          align-items: flex-start;
+        .nav-row__label {
+          min-width: 0;
+          width: 100%;
         }
 
-        .tp-topic {
+        .topik-heading {
           font-size: 1.1rem;
         }
       }
@@ -357,11 +397,11 @@
         <span class="site-header__kicker">Media Pembelajaran Interaktif</span>
         <h1 class="site-header__title">Rekayasa Perangkat Lunak</h1>
         <p class="site-header__desc">
-          Kumpulan media pembelajaran interaktif untuk mendukung proses belajar
-          Rekayasa Perangkat Lunak di SMK.
+          Kumpulan media pembelajaran interaktif untuk mendukung proses belajar Rekayasa Perangkat
+          Lunak di SMK.
         </p>
         <p class="site-header__desc">
-          Pilih fase dan media sesuai materi yang sedang dipelajari
+          Pilih fase, kelas, dan topik sesuai materi yang sedang dipelajari.
         </p>
       </div>
     </header>
@@ -380,38 +420,30 @@
       </div>
     </nav>
 
-    <div
-      class="tab-panel is-active"
-      id="panel-fase-f"
-      role="tabpanel"
-      aria-labelledby="tab-fase-f"
-    >
+    <div class="tab-panel is-active" id="panel-fase-f" role="tabpanel" aria-labelledby="tab-fase-f">
       <main class="main">
-        <div class="section-head">
-          <p class="section-label">Daftar Materi</p>
-          <div
-            class="tp-filter"
-            data-panel="panel-fase-f"
-            data-tp-labels='{"1":"Basis Data Relasional","2":"Sistem Manajemen Basis Data (DBMS)"}'
-            aria-label="Filter Tujuan Pembelajaran"
-          ></div>
-        </div>
+        <div class="nav-picker" data-fase="fase-f"></div>
+        <p class="placeholder" hidden></p>
         <div class="card-grid" role="list">
           <a
             href="fase-f/mpi-1.1/index.html"
             class="card"
-            data-tp="1"
-            aria-label="MPI 1.1 Konsep Dasar Basis Data & Peran Analisis Kebutuhan Sistem — Rekayasa Perangkat Lunak SMK Fase F"
+            role="listitem"
+            data-kelas="XI"
+            data-topik="1"
+            aria-label="MPI 1.1 Menganalisis Kebutuhan Data: Mengidentifikasi Entitas dan Atribut (Discovery Learning) — Rekayasa Perangkat Lunak SMK Fase F"
           >
             <span class="card__stripe"></span>
             <div class="card__body">
               <span class="card__badge">Materi 1.1</span>
-              <h2 class="card__title">Konsep Dasar Basis Data & Peran Analisis Kebutuhan Sistem</h2>
+              <h2 class="card__title">
+                Menganalisis Kebutuhan Data: Mengidentifikasi Entitas &amp; Atribut
+              </h2>
               <p class="card__desc">
-                Menemukan sendiri konsep entitas, tabel, record, field, primary
-                key, dan foreign key lewat alur Discovery Learning — lalu membuktikan
-                bagaimana temuan analisis kebutuhan sistem menentukan rancangan
-                basis data pada studi kasus Koperasi Siswa SMK.
+                Discovery Learning: menelusuri catatan Koperasi Siswa yang bikin pusing, memilah
+                frasa dokumen kebutuhan, menemukan sendiri konsep entitas, atribut, dan atribut
+                kunci, lalu menguji rancangan terhadap kebutuhan pengguna dan menerapkannya pada
+                kasus servis laptop teaching factory.
               </p>
               <span class="card__cta">Buka materi</span>
             </div>
@@ -419,7 +451,9 @@
           <a
             href="fase-f/mpi-1.2/index.html"
             class="card"
-            data-tp="1"
+            role="listitem"
+            data-kelas="XI"
+            data-topik="1"
             aria-label="MPI 1.2 Menggali Kebutuhan Informasi dan Data lewat Teknik Requirement Gathering — Rekayasa Perangkat Lunak SMK Fase F"
           >
             <span class="card__stripe"></span>
@@ -429,10 +463,9 @@
                 Menggali Kebutuhan Informasi dan Data lewat Teknik Requirement Gathering
               </h2>
               <p class="card__desc">
-                Berperan sebagai tim analis lewat alur Problem Based Learning:
-                menelusuri temuan wawancara, observasi, studi dokumen, dan
-                kuesioner dari studi kasus perpustakaan sekolah, lalu memilah
-                kebutuhan informasi, data, fungsional, dan non-fungsionalnya.
+                Berperan sebagai tim analis lewat alur Problem Based Learning: menelusuri temuan
+                wawancara, observasi, studi dokumen, dan kuesioner dari studi kasus perpustakaan
+                sekolah, lalu memilah kebutuhan informasi, data, fungsional, dan non-fungsionalnya.
               </p>
               <span class="card__cta">Buka materi</span>
             </div>
@@ -440,7 +473,9 @@
           <a
             href="fase-f/mpi-1.3/index.html"
             class="card"
-            data-tp="1"
+            role="listitem"
+            data-kelas="XI"
+            data-topik="1"
             aria-label="MPI 1.3 Mengidentifikasi Entitas dan Atribut dari Hasil Analisis Kebutuhan — Rekayasa Perangkat Lunak SMK Fase F"
           >
             <span class="card__stripe"></span>
@@ -450,9 +485,9 @@
                 Mengidentifikasi Entitas dan Atribut dari Hasil Analisis Kebutuhan
               </h2>
               <p class="card__desc">
-                Melanjutkan hasil penggalian kebutuhan lewat alur Problem Based Learning:
-                menandai calon entitas dan atribut pada studi kasus Sistem Informasi PKL,
-                mengelompokkannya ke entitas yang tepat, lalu menentukan atribut kuncinya.
+                Melanjutkan hasil penggalian kebutuhan lewat alur Problem Based Learning: menandai
+                calon entitas dan atribut pada studi kasus Sistem Informasi PKL, mengelompokkannya
+                ke entitas yang tepat, lalu menentukan atribut kuncinya.
               </p>
               <span class="card__cta">Buka materi</span>
             </div>
@@ -460,15 +495,15 @@
           <a
             href="fase-f/mpi-1.4/index.html"
             class="card"
-            data-tp="1"
+            role="listitem"
+            data-kelas="XI"
+            data-topik="1"
             aria-label="MPI 1.4 Menentukan Relasi Antar Entitas dan Jenisnya — Rekayasa Perangkat Lunak SMK Fase F"
           >
             <span class="card__stripe"></span>
             <div class="card__body">
               <span class="card__badge">Materi 1.4</span>
-              <h2 class="card__title">
-                Menentukan Relasi Antar Entitas dan Jenisnya
-              </h2>
+              <h2 class="card__title">Menentukan Relasi Antar Entitas dan Jenisnya</h2>
               <p class="card__desc">
                 Melanjutkan rancangan Sistem Informasi PKL lewat alur Problem Based Learning:
                 menelusuri petunjuk keterkaitan antar entitas, lalu menentukan kardinalitasnya —
@@ -481,20 +516,20 @@
           <a
             href="fase-f/mpi-2.1/index.html"
             class="card"
-            data-tp="2"
+            role="listitem"
+            data-kelas="XI"
+            data-topik="2"
             aria-label="MPI 2.1 Konsep dan Fungsi DBMS dalam Pengelolaan Basis Data — Rekayasa Perangkat Lunak SMK Fase F"
           >
             <span class="card__stripe"></span>
             <div class="card__body">
               <span class="card__badge">Materi 2.1</span>
-              <h2 class="card__title">
-                Konsep dan Fungsi DBMS dalam Pengelolaan Basis Data
-              </h2>
+              <h2 class="card__title">Konsep dan Fungsi DBMS dalam Pengelolaan Basis Data</h2>
               <p class="card__desc">
                 Menyelidiki data siswa yang tercecer di banyak file lewat alur Discovery Learning:
                 menemukan kejanggalannya, mengenal DBMS beserta bahasa DDL, DML, dan DCL, lalu
-                membuktikan lewat simulasi bagaimana fungsi DBMS menjaga data tetap konsisten,
-                aman, dan dapat dipulihkan.
+                membuktikan lewat simulasi bagaimana fungsi DBMS menjaga data tetap konsisten, aman,
+                dan dapat dipulihkan.
               </p>
               <span class="card__cta">Buka materi</span>
             </div>
@@ -502,15 +537,15 @@
           <a
             href="fase-f/mpi-2.2/index.html"
             class="card"
-            data-tp="2"
+            role="listitem"
+            data-kelas="XI"
+            data-topik="2"
             aria-label="MPI 2.2 Jenis-jenis DBMS dan Karakteristiknya — Rekayasa Perangkat Lunak SMK Fase F"
           >
             <span class="card__stripe"></span>
             <div class="card__body">
               <span class="card__badge">Materi 2.2</span>
-              <h2 class="card__title">
-                Jenis-jenis DBMS dan Karakteristiknya
-              </h2>
+              <h2 class="card__title">Jenis-jenis DBMS dan Karakteristiknya</h2>
               <p class="card__desc">
                 Mengintip enam gudang data toko online sekolah lewat alur Discovery Learning:
                 menemukan DBMS hierarkis, jaringan, relasional, berorientasi objek, dan NoSQL,
@@ -527,104 +562,195 @@
     <footer class="site-footer">
       <p>
         iLedia — Interactive Learning Media by
-        <a
-          href="https://github.com/vinjerdim"
-          target="_blank"
-          rel="noopener"
-          class="link"
-          >vinjerdim</a
-        >
+        <a href="https://github.com/vinjerdim" target="_blank" rel="noopener" class="link">
+          vinjerdim
+        </a>
       </p>
     </footer>
 
     <script>
-      // ── Pengalih tab fase ──
-      const tabs = document.querySelectorAll(".tab-btn");
-      const panels = document.querySelectorAll(".tab-panel");
+      // ── Hierarki Fase → Kelas → Topik ──
+      // Setiap card memakai data-kelas & data-topik yang harus terdaftar di sini.
+      // Kelas tanpa `topik` ditampilkan berlabel "segera".
+      const HIERARKI = {
+        'fase-f': {
+          nama: 'Fase F',
+          kelas: [
+            {
+              id: 'XI',
+              topik: {
+                1: 'Basis Data Relasional',
+                2: 'Sistem Manajemen Basis Data (DBMS)',
+              },
+            },
+            { id: 'XII' },
+          ],
+        },
+      };
+      const FASE_IDS = Object.keys(HIERARKI);
+      const STORAGE_KEY = 'iledia-soft:nav';
 
-      tabs.forEach((tab) => {
-        tab.addEventListener("click", () => {
-          const target = tab.getAttribute("aria-controls");
-          tabs.forEach((t) => t.setAttribute("aria-selected", "false"));
-          panels.forEach((p) => p.classList.remove("is-active"));
-          tab.setAttribute("aria-selected", "true");
-          document.getElementById(target).classList.add("is-active");
-        });
-      });
-
-      // ── Filter TP (pills, dibangun dari data-tp pada tiap card) ──
-      document.querySelectorAll(".tp-filter").forEach((filterEl) => {
-        const panelId = filterEl.dataset.panel;
-        const panel = document.getElementById(panelId);
-        if (!panel) return;
-        const cards = Array.from(panel.querySelectorAll(".card[data-tp]"));
-        if (!cards.length) return;
-
-        // Nilai TP unik, mengikuti urutan kemunculan di dokumen.
-        // Satu TP pun tetap ditampilkan pillsnya, supaya murid selalu
-        // melihat TP mana yang sedang dibuka.
-        const tpValues = [...new Set(cards.map((c) => c.dataset.tp))];
-
-        let tpLabels = {};
+      // ── Persistensi pilihan terakhir (aman bila storage diblokir) ──
+      function loadNav() {
         try {
-          tpLabels = JSON.parse(filterEl.dataset.tpLabels || "{}");
+          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+          if (saved && typeof saved === 'object') {
+            return {
+              fase: saved.fase,
+              perFase: saved.perFase && typeof saved.perFase === 'object' ? saved.perFase : {},
+            };
+          }
         } catch (e) {
-          tpLabels = {};
+          // abaikan: pakai default
         }
+        return { fase: FASE_IDS[0], perFase: {} };
+      }
 
-        const label = document.createElement("span");
-        label.className = "tp-filter__label";
-        label.textContent = "TP:";
-        filterEl.appendChild(label);
+      function saveNav() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(nav));
+        } catch (e) {
+          // abaikan: pilihan hanya tidak diingat
+        }
+      }
 
-        const group = document.createElement("div");
-        group.className = "tp-filter__group";
-        group.setAttribute("role", "group");
-        group.setAttribute("aria-label", "Pilih Tujuan Pembelajaran");
-        filterEl.appendChild(group);
+      // Pastikan pilihan valid terhadap HIERARKI; fallback ke item pertama
+      function normalize(faseId, pilihan) {
+        const fase = HIERARKI[faseId];
+        const sel = pilihan && typeof pilihan === 'object' ? pilihan : {};
+        const kelas = fase.kelas.find((k) => k.id === sel.kelas) || fase.kelas[0];
+        if (!kelas) return { kelas: null, topik: null };
+        const topikIds = kelas.topik ? Object.keys(kelas.topik) : [];
+        const topik = topikIds.includes(String(sel.topik))
+          ? String(sel.topik)
+          : topikIds[0] || null;
+        return { kelas: kelas.id, topik };
+      }
 
-        tpValues.forEach((tp, i) => {
-          const btn = document.createElement("button");
-          btn.className = "tp-filter__btn";
-          btn.textContent = `TP ${tp}`;
-          btn.dataset.tp = tp;
-          btn.setAttribute("aria-pressed", i === 0 ? "true" : "false");
-          btn.setAttribute("type", "button");
+      const nav = loadNav();
+      if (!HIERARKI[nav.fase]) nav.fase = FASE_IDS[0];
+
+      // ── Render ──
+      function buildSeg(label, items, activeId, onPick) {
+        const row = document.createElement('div');
+        row.className = 'nav-row';
+        const lbl = document.createElement('span');
+        lbl.className = 'nav-row__label';
+        lbl.textContent = label;
+        row.appendChild(lbl);
+
+        const group = document.createElement('div');
+        group.className = 'seg';
+        group.setAttribute('role', 'group');
+        group.setAttribute('aria-label', `Pilih ${label}`);
+        items.forEach((item) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'seg__btn';
+          btn.textContent = item.text;
+          if (item.soon) {
+            const soon = document.createElement('span');
+            soon.className = 'seg__soon';
+            soon.textContent = 'segera';
+            btn.appendChild(soon);
+          }
+          btn.setAttribute('aria-pressed', item.id === activeId ? 'true' : 'false');
+          btn.addEventListener('click', () => onPick(item.id));
           group.appendChild(btn);
         });
+        row.appendChild(group);
+        return row;
+      }
 
-        // Judul topik di atas grid, diperbarui tiap filter berubah.
-        const grid = panel.querySelector(".card-grid");
-        const topic = document.createElement("h2");
-        topic.className = "tp-topic";
-        topic.id = `tp-topic-${panelId}`;
-        topic.setAttribute("aria-live", "polite");
-        grid.before(topic);
-        grid.setAttribute("aria-labelledby", topic.id);
+      function renderPanel(faseId) {
+        const fase = HIERARKI[faseId];
+        const panel = document.getElementById(`panel-${faseId}`);
+        const picker = panel.querySelector('.nav-picker');
+        const placeholder = panel.querySelector('.placeholder');
+        const grid = panel.querySelector('.card-grid');
+        const sel = normalize(faseId, nav.perFase[faseId]);
+        nav.perFase[faseId] = sel;
 
-        function applyFilter(activeTp) {
-          const topicText = tpLabels[activeTp];
-          topic.textContent = topicText || "";
-          topic.hidden = !topicText;
+        picker.replaceChildren();
+        panel.querySelector('.topik-heading')?.remove();
 
-          cards.forEach((card) => {
-            card.style.display = card.dataset.tp === activeTp ? "" : "none";
-          });
-          group.querySelectorAll(".tp-filter__btn").forEach((btn) => {
-            btn.setAttribute(
-              "aria-pressed",
-              btn.dataset.tp === activeTp ? "true" : "false",
-            );
-          });
+        if (!sel.kelas) {
+          placeholder.textContent = `Materi ${fase.nama} sedang disiapkan.`;
+          placeholder.hidden = false;
+          grid.hidden = true;
+          return;
         }
 
-        applyFilter(tpValues[0]);
+        const kelas = fase.kelas.find((k) => k.id === sel.kelas);
+        picker.appendChild(
+          buildSeg(
+            'Kelas',
+            fase.kelas.map((k) => ({ id: k.id, text: `Kelas ${k.id}`, soon: !k.topik })),
+            sel.kelas,
+            (id) => pick(faseId, { kelas: id, topik: null })
+          )
+        );
 
-        group.addEventListener("click", (e) => {
-          const btn = e.target.closest(".tp-filter__btn");
-          if (btn) applyFilter(btn.dataset.tp);
+        if (!kelas.topik) {
+          placeholder.textContent = `Materi untuk Kelas ${kelas.id} sedang disiapkan.`;
+          placeholder.hidden = false;
+          grid.hidden = true;
+          return;
+        }
+
+        picker.appendChild(
+          buildSeg(
+            'Topik',
+            Object.entries(kelas.topik).map(([id, nama]) => ({
+              id,
+              text: `Topik ${id} · ${nama}`,
+            })),
+            sel.topik,
+            (id) => pick(faseId, { kelas: sel.kelas, topik: id })
+          )
+        );
+
+        const heading = document.createElement('h2');
+        heading.className = 'topik-heading';
+        heading.id = `topik-heading-${faseId}`;
+        heading.setAttribute('aria-live', 'polite');
+        heading.textContent = kelas.topik[sel.topik];
+        grid.before(heading);
+        grid.setAttribute('aria-labelledby', heading.id);
+
+        placeholder.hidden = true;
+        grid.hidden = false;
+        grid.querySelectorAll('.card').forEach((card) => {
+          const match = card.dataset.kelas === sel.kelas && card.dataset.topik === sel.topik;
+          card.style.display = match ? '' : 'none';
+        });
+      }
+
+      function showFase(faseId) {
+        FASE_IDS.forEach((id) => {
+          const active = id === faseId;
+          document.getElementById(`tab-${id}`).setAttribute('aria-selected', String(active));
+          document.getElementById(`panel-${id}`).classList.toggle('is-active', active);
+        });
+        renderPanel(faseId);
+      }
+
+      function pick(faseId, pilihan) {
+        nav.fase = faseId;
+        nav.perFase[faseId] = pilihan;
+        renderPanel(faseId);
+        saveNav();
+      }
+
+      document.querySelectorAll('.tab-btn').forEach((tab) => {
+        tab.addEventListener('click', () => {
+          nav.fase = tab.getAttribute('aria-controls').replace('panel-', '');
+          showFase(nav.fase);
+          saveNav();
         });
       });
+
+      showFase(nav.fase);
     </script>
   </body>
 </html>
