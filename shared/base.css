@@ -2397,3 +2397,275 @@ strong {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================================================
+   Relasi & kardinalitas ERD (engine seksi 13): diagram relasi gaya Chen
+   [A] notasi —◇kerja◇— notasi [B] dan pemilih kardinalitas dua sisi.
+   Di layar sempit diagram disusun vertikal agar tidak menggulir ke samping.
+   ========================================================================= */
+
+.rel-diagram {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-3);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+
+.rel-diagram__row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.rel-diagram__ent {
+  flex: 0 1 auto;
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--color-blue);
+  border-radius: var(--radius-sm);
+  background: var(--color-blue-soft);
+  color: var(--color-blue-strong);
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.rel-diagram__card {
+  flex: 0 0 auto;
+  padding: 2px var(--space-2);
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-primary);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.rel-diagram__card--kosong {
+  background: var(--color-surface);
+  border-style: dashed;
+  color: var(--color-ink-muted);
+}
+
+.rel-diagram__line {
+  flex: 1 1 var(--space-4);
+  min-width: var(--space-3);
+  max-width: var(--space-7);
+  height: 2px;
+  background: var(--color-ink-muted);
+}
+
+.rel-diagram__rel {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 56px;
+  background: var(--color-purple-soft);
+  color: var(--color-purple-strong);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.15;
+}
+
+.rel-diagram__rel span {
+  max-width: 66px;
+  overflow-wrap: anywhere;
+}
+
+.rel-diagram__jenis {
+  margin-top: var(--space-2);
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--color-success-strong);
+}
+
+.kard-picker {
+  padding: var(--space-4) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.kard-picker:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.kard-picker__rule {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-left: 4px solid var(--color-primary);
+  background: var(--color-primary-soft);
+  border-radius: var(--radius-sm);
+}
+
+.kard-picker__sides {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+/* =========================================================================
+   Kerja kelompok kooperatif (engine seksi 14): kartu peran, chip topik
+   ahli, dan papan penghargaan tim.
+   ========================================================================= */
+
+.role-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
+
+.role-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.role-card__icon {
+  font-size: 1.6rem;
+}
+
+.role-card__label {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.role-card__task {
+  margin: 0 0 var(--space-2);
+  font-size: 0.88rem;
+  color: var(--color-ink-muted);
+}
+
+.expert-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
+
+.expert-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  min-height: 44px;
+  padding: var(--space-3);
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.expert-chip:hover {
+  border-color: var(--color-primary);
+}
+
+.expert-chip.is-selected {
+  border-color: var(--color-primary-strong);
+  background: var(--color-primary-soft);
+  box-shadow: inset 0 0 0 1px var(--color-primary-strong);
+}
+
+.expert-chip__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.expert-chip__desc {
+  font-size: 0.88rem;
+  color: var(--color-ink-muted);
+}
+
+.reward-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.reward-stat {
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  text-align: center;
+}
+
+.reward-stat__label {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--color-ink-muted);
+}
+
+.reward-stat__value {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.6rem;
+}
+
+.reward-stat--accent {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.reward-inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.reward-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 2px solid var(--color-success);
+  border-radius: var(--radius-md);
+  background: var(--color-success-soft);
+}
+
+.reward-badge__icon {
+  font-size: 2rem;
+}
+
+.reward-badge__label {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+}
+
+@media (max-width: 600px) {
+  .rel-diagram__row {
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .rel-diagram__line {
+    flex: 0 0 auto;
+    width: 2px;
+    height: var(--space-3);
+    min-width: 0;
+  }
+
+  .kard-picker__sides,
+  .reward-grid {
+    grid-template-columns: 1fr;
+  }
+}
