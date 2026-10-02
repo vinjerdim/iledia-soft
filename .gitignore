@@ -1,3 +1,4 @@
-sample/
 .claude/
 .vscode/
+node_modules/
+sample/

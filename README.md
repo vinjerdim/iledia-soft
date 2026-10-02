@@ -1,19 +1,24 @@
 # iLedia — Media Pembelajaran Interaktif Rekayasa Perangkat Lunak (Fase F)
 
-Kumpulan media pembelajaran interaktif untuk mata pelajaran Rekayasa Perangkat Lunak SMK (Fase F). Setiap media berjalan langsung di browser sebagai situs statis (HTML, CSS, dan JavaScript) tanpa proses build maupun dependensi.
+Kumpulan media pembelajaran interaktif untuk mata pelajaran Rekayasa Perangkat Lunak SMK (Fase F). Setiap media berjalan langsung di browser sebagai situs statis (HTML, CSS, dan JavaScript). Tooling Node (Prettier, tes `node --test`, generator halaman) hanya dipakai saat pengembangan — situs di-deploy apa adanya.
 
 ## Daftar Materi
 
 | TP | Materi | Judul | Model | Folder |
 | -- | ------ | ----- | ----- | ------ |
-| 1 | 1.1 | Konsep Dasar Basis Data & Peran Analisis Kebutuhan Sistem | Discovery Learning | [`fase-f/mpi-1.1/`](fase-f/mpi-1.1/index.html) |
+| 1 | 1.1 | Menganalisis Kebutuhan Data: Mengidentifikasi Entitas & Atribut | Discovery Learning | [`fase-f/mpi-1.1/`](fase-f/mpi-1.1/index.html) |
 | 1 | 1.2 | Menggali Kebutuhan Informasi dan Data lewat Teknik Requirement Gathering | Problem Based Learning | [`fase-f/mpi-1.2/`](fase-f/mpi-1.2/index.html) |
 | 1 | 1.3 | Mengidentifikasi Entitas dan Atribut dari Hasil Analisis Kebutuhan Sistem | Problem Based Learning | [`fase-f/mpi-1.3/`](fase-f/mpi-1.3/index.html) |
 | 1 | 1.4 | Menentukan Relasi Antar Entitas dan Jenisnya | Problem Based Learning | [`fase-f/mpi-1.4/`](fase-f/mpi-1.4/index.html) |
 | 2 | 2.1 | Konsep dan Fungsi DBMS dalam Pengelolaan Basis Data | Discovery Learning | [`fase-f/mpi-2.1/`](fase-f/mpi-2.1/index.html) |
 | 2 | 2.2 | Jenis-jenis DBMS dan Karakteristiknya | Discovery Learning | [`fase-f/mpi-2.2/`](fase-f/mpi-2.2/index.html) |
 
-Halaman utama ([`index.html`](index.html)) menampilkan daftar materi, dikelompokkan per fase lewat tab dan per tujuan pembelajaran lewat pills **TP**. Pills dibangun otomatis dari atribut `data-tp` pada tiap card, dan judul topiknya diambil dari `data-tp-labels` pada elemen `.tp-filter`.
+Halaman utama ([`index.html`](index.html)) menampilkan daftar materi dengan navigasi **Fase → Kelas → Topik** (sama seperti iledia-math). Setiap card memakai `data-kelas` dan `data-topik`, yang wajib terdaftar pada objek `HIERARKI` di skrip halaman. Kelas tanpa topik ditampilkan berlabel "segera". Pilihan terakhir diingat di `localStorage` (`iledia-soft:nav`).
+
+| Kelas | Topik | Judul | Materi |
+| ----- | ----- | ----- | ------ |
+| XI | 1 | Basis Data Relasional | 1.1 – 1.4 |
+| XI | 2 | Sistem Manajemen Basis Data (DBMS) | 2.1 – 2.2 |
 
 ## Menjalankan Secara Lokal
 
@@ -25,21 +30,52 @@ python -m http.server 5173
 
 Lalu akses `http://localhost:5173`.
 
+## Pengembangan
+
+```bash
+npm install          # Prettier, husky, lint-staged
+npm test             # tes engine, konten modul, dan navigasi (node --test)
+npm run build:pages  # menghasilkan index.html modul dari shared/page-template.html
+```
+
+Pre-commit hook (husky + lint-staged) memformat berkas yang di-stage dengan Prettier.
+
 ## Struktur Folder
 
 ```
-├── index.html              # halaman utama (tab fase + pills TP + daftar materi)
-├── shared/                 # dipakai bersama oleh semua materi
-│   ├── tokens.css          # warna, font, dan spasi (ubah tema di sini)
-│   ├── base.css            # gaya dasar + komponen bersama
-│   └── engine.js           # progres, navigasi tahap, progress bar, pengacakan
-└── fase-f/mpi-X.Y/         # satu folder per materi
-    ├── index.html          # kerangka halaman
-    ├── data.js             # konten materi (teks, tabel, soal, kunci, umpan balik)
-    ├── app-core.js         # pembantu render yang dipakai bersama antar tahap
-    ├── app-stage-*.js      # renderer per kelompok tahap
-    ├── app.js              # perakitan: createLesson + init (dimuat TERAKHIR)
-    └── styles.css          # gaya khusus materi
+├── index.html                  # halaman utama (Fase → Kelas → Topik)
+├── shared/
+│   ├── tokens.css              # warna, font, dan spasi (ubah tema di sini)
+│   ├── base.css                # gaya dasar + komponen bersama
+│   ├── engine.js               # engine global + Engine.createLesson (modul lama)
+│   ├── page-template.html      # kerangka halaman modul gaya iledia-math
+│   ├── pages-manifest.json     # judul, deskripsi, jumlah tahap per modul
+│   └── partials/reset-modal.html
+├── scripts/build-pages.js      # template + manifest → fase-*/mpi-*/index.html
+├── tests/                      # node --test
+└── fase-f/mpi-X.Y/             # satu folder per materi
+```
+
+### Modul gaya iledia-math (mpi-1.1)
+
+Satu modul = `index.html` (dihasilkan `npm run build:pages`), `data.js` (konten), `app.js` (State, `createStore`, `createStageMachine`, renderer per tahap), dan `styles.css`. Urutan muat: `tokens.css` → `base.css` → `styles.css`; `engine.js` → `data.js` → `app.js`.
+
+Komponen bersama di `shared/engine.js`: mesin tahap & store, kepala tahap bersintaks, catatan guru, panel tujuan belajar, pilihan ganda, pemilahan kategori, urut-ketuk, pertanyaan penuntun bertingkat, multi-pilih berdiagnosa, skala Likert, modal reset, serta seksi **analisis kebutuhan data** (dokumen kebutuhan bertanda frasa `[[id|teks]]`, `cakupanKebutuhan`, kartu entitas).
+
+**Pengacakan:** setiap daftar pilihan diacak sekali di `initOrders()` lewat `ensureShuffledOrder` / `ensureSortStates` / `ensureTapOrderState` / `ensureMultiState`, disimpan di State, dan teracak ulang saat Reset. Jangan memanggil `shuffleArray()` dari renderer. Tes `tests/mpi-f-1.1-data.test.js` memastikan semua daftar pilihan teracak.
+
+### Modul lama (mpi-1.2 – 2.2)
+
+Masih memakai `Engine.createLesson()` (bagian 14 `shared/engine.js`, dipertahankan untuk kompatibilitas) dengan berkas `data.js`, `app-core.js`, `app-stage-*.js`, `app.js`, `styles.css` per modul. Tes `tests/engine-legacy.test.js` menjaga agar global engine baru tidak bertabrakan dengan nama global modul lama.
+
+```
+fase-f/mpi-X.Y/
+├── index.html          # kerangka halaman
+├── data.js             # konten materi (teks, tabel, soal, kunci, umpan balik)
+├── app-core.js         # pembantu render yang dipakai bersama antar tahap
+├── app-stage-*.js      # renderer per kelompok tahap
+├── app.js              # perakitan: createLesson + init (dimuat TERAKHIR)
+└── styles.css          # gaya khusus materi
 ```
 
 Konten materi dipisahkan di `data.js`, sehingga teks dan soal dapat diubah tanpa menyentuh logika.

@@ -3,14 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>
-      Menganalisis Kebutuhan Data: Mengidentifikasi Entitas &amp; Atribut — Rekayasa Perangkat Lunak
-      Fase F
-    </title>
-    <meta
-      name="description"
-      content="Media pembelajaran interaktif berbasis Discovery Learning untuk menganalisis kebutuhan data suatu studi kasus guna mengidentifikasi entitas dan atribut basis data: catatan spreadsheet Koperasi Siswa, dokumen kebutuhan bertanda frasa, contoh &amp; bukan contoh entitas, perancangan entitas–atribut–kunci, uji rancangan terhadap kebutuhan pengguna, dan uji terap servis laptop teaching factory."
-    />
+    <title>{{TITLE}}</title>
+    <meta name="description" content="{{DESCRIPTION}}" />
     <link rel="stylesheet" href="../../shared/tokens.css" />
     <link rel="stylesheet" href="../../shared/base.css" />
     <link rel="stylesheet" href="styles.css" />
@@ -21,10 +15,8 @@
 
     <header class="app-header">
       <div class="app-header__brand">
-        <span class="app-header__kicker">Rekayasa Perangkat Lunak — Fase F (SMK)</span>
-        <h1 class="app-header__title">
-          Menganalisis Kebutuhan Data: Mengidentifikasi Entitas &amp; Atribut
-        </h1>
+        <span class="app-header__kicker">{{KICKER}}</span>
+        <h1 class="app-header__title">{{H1}}</h1>
       </div>
       <div class="app-header__actions">
         <button type="button" id="resetAppBtn" class="btn btn--ghost btn--small">Reset</button>
@@ -41,7 +33,7 @@
     <main id="konten-utama">
       <div class="progress-bar-wrap">
         <div class="progress-bar-label">
-          <span id="progressLabel">0 dari 11 tahap selesai</span>
+          <span id="progressLabel">0 dari {{STAGE_COUNT}} tahap selesai</span>
           <span style="font-size: 0.78rem; color: var(--color-ink-muted)">
             Progress disimpan otomatis
           </span>
@@ -66,38 +58,10 @@
     </main>
 
     <div class="app-notice" id="appNotice" role="status" aria-live="polite"></div>
-    <!-- Reset confirmation modal -->
-    <div
-      class="modal-backdrop"
-      id="resetModal"
-      style="display: none"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="resetModalTitle"
-    >
-      <div class="modal">
-        <h3 id="resetModalTitle">Reset Progress?</h3>
-        <p>
-          Semua progress, jawaban, dan data latihan akan dihapus. Tindakan ini tidak dapat
-          dibatalkan.
-        </p>
-        <div class="btn-group btn-group--end">
-          <button type="button" class="btn btn--ghost" id="resetCancelBtn">Batal</button>
-          <button
-            type="button"
-            class="btn btn--primary"
-            id="resetConfirmBtn"
-            style="background: var(--color-error); border-color: var(--color-error)"
-          >
-            Ya, Reset
-          </button>
-        </div>
-      </div>
-    </div>
-
+    {{EXTRA_BODY}}
     <script src="../../shared/engine.js"></script>
     <script src="data.js"></script>
-
+    {{EXTRA_SCRIPTS}}
     <script src="app.js"></script>
   </body>
 </html>
