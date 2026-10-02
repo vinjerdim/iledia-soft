@@ -1,0 +1,27 @@
+<!-- Reset confirmation modal -->
+<div
+  class="modal-backdrop"
+  id="resetModal"
+  style="display: none"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="resetModalTitle"
+>
+  <div class="modal">
+    <h3 id="resetModalTitle">Reset Progress?</h3>
+    <p>
+      Semua progress, jawaban, dan data latihan akan dihapus. Tindakan ini tidak dapat dibatalkan.
+    </p>
+    <div class="btn-group btn-group--end">
+      <button type="button" class="btn btn--ghost" id="resetCancelBtn">Batal</button>
+      <button
+        type="button"
+        class="btn btn--primary"
+        id="resetConfirmBtn"
+        style="background: var(--color-error); border-color: var(--color-error)"
+      >
+        Ya, Reset
+      </button>
+    </div>
+  </div>
+</div>

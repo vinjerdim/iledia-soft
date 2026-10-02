@@ -1,0 +1,10 @@
+{
+  "fase-f/mpi-1.1": {
+    "title": "Menganalisis Kebutuhan Data: Mengidentifikasi Entitas & Atribut — Rekayasa Perangkat Lunak Fase F",
+    "description": "Media pembelajaran interaktif berbasis Discovery Learning untuk menganalisis kebutuhan data suatu studi kasus guna mengidentifikasi entitas dan atribut basis data: catatan spreadsheet Koperasi Siswa, dokumen kebutuhan bertanda frasa, contoh & bukan contoh entitas, perancangan entitas–atribut–kunci, uji rancangan terhadap kebutuhan pengguna, dan uji terap servis laptop teaching factory.",
+    "kicker": "Rekayasa Perangkat Lunak — Fase F (SMK)",
+    "h1": "Menganalisis Kebutuhan Data: Mengidentifikasi Entitas & Atribut",
+    "stageCount": 11,
+    "extraBody": "partials/reset-modal.html"
+  }
+}
