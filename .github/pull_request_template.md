@@ -4,7 +4,8 @@
 
 ## Jenis perubahan
 
-- [ ] `feat` — modul MPI baru atau revisi modul MPI yang sudah ada (pilih salah satu)
+- [ ] `feat` — modul MPI baru atau revisi modul MPI yang sudah ada
+<!-- Untuk feat, tulis salah satu saja, antara: modul baru atau revisi modul -->
 - [ ] `shared` — perubahan `engine.js` / `base.css` / `page-template.html` / manifest
 - [ ] `fix` — perbaikan bug
 - [ ] `refactor` — perubahan struktur tanpa mengubah perilaku
