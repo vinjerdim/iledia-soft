@@ -8,7 +8,7 @@ Kumpulan media pembelajaran interaktif untuk mata pelajaran Rekayasa Perangkat L
 | -- | ------ | ----- | ----- | ------ |
 | 1 | 1.1 | Menganalisis Kebutuhan Data: Mengidentifikasi Entitas & Atribut | Discovery Learning | [`fase-f/mpi-1.1/`](fase-f/mpi-1.1/index.html) |
 | 1 | 1.2 | Menentukan Jenis Relasi & Kardinalitas Antar Entitas dalam ERD | Cooperative Learning | [`fase-f/mpi-1.2/`](fase-f/mpi-1.2/index.html) |
-| 1 | 1.3 | Mengidentifikasi Entitas dan Atribut dari Hasil Analisis Kebutuhan Sistem | Problem Based Learning | [`fase-f/mpi-1.3/`](fase-f/mpi-1.3/index.html) |
+| 1 | 1.3 | Merancang ERD Lengkap dari Hasil Analisis Kebutuhan Data | Cooperative Learning | [`fase-f/mpi-1.3/`](fase-f/mpi-1.3/index.html) |
 | 1 | 1.4 | Menentukan Relasi Antar Entitas dan Jenisnya | Problem Based Learning | [`fase-f/mpi-1.4/`](fase-f/mpi-1.4/index.html) |
 | 2 | 2.1 | Konsep dan Fungsi DBMS dalam Pengelolaan Basis Data | Discovery Learning | [`fase-f/mpi-2.1/`](fase-f/mpi-2.1/index.html) |
 | 2 | 2.2 | Jenis-jenis DBMS dan Karakteristiknya | Discovery Learning | [`fase-f/mpi-2.2/`](fase-f/mpi-2.2/index.html) |
@@ -56,17 +56,17 @@ Pre-commit hook (husky + lint-staged) memformat berkas yang di-stage dengan Pret
 └── fase-f/mpi-X.Y/             # satu folder per materi
 ```
 
-### Modul gaya iledia-math (mpi-1.1, mpi-1.2)
+### Modul gaya iledia-math (mpi-1.1 – 1.3)
 
 Satu modul = `index.html` (dihasilkan `npm run build:pages`), `data.js` (konten), `app.js` (State, `createStore`, `createStageMachine`, renderer per tahap), dan `styles.css`. Urutan muat: `tokens.css` → `base.css` → `styles.css`; `engine.js` → `data.js` → `app.js`.
 
-Komponen bersama di `shared/engine.js`: mesin tahap & store, kepala tahap bersintaks, catatan guru, panel tujuan belajar, pilihan ganda, pemilahan kategori, urut-ketuk, pertanyaan penuntun bertingkat, multi-pilih berdiagnosa, skala Likert, modal reset, seksi **analisis kebutuhan data** (dokumen kebutuhan bertanda frasa `[[id|teks]]`, `cakupanKebutuhan`, kartu entitas), seksi **relasi & kardinalitas ERD** (notasi `min..maks`, `jenisDariKardinalitas`, `buildRelasiDiagram`, pemilih kardinalitas teracak `ensureKardinalitasState` / `buildKardinalitasPicker`), dan seksi **kerja kelompok kooperatif** (kartu peran, kuis sekali-jawab `buildKuisSekali` / `skorKuis`, `poinPeningkatan` STAD, `rataPoinTim`, `predikatTim`).
+Komponen bersama di `shared/engine.js`: mesin tahap & store, kepala tahap bersintaks, catatan guru, panel tujuan belajar, pilihan ganda, pemilahan kategori, urut-ketuk, pertanyaan penuntun bertingkat, multi-pilih berdiagnosa, skala Likert, modal reset, seksi **analisis kebutuhan data** (dokumen kebutuhan bertanda frasa `[[id|teks]]`, `cakupanKebutuhan`, kartu entitas), seksi **relasi & kardinalitas ERD** (notasi `min..maks`, `jenisDariKardinalitas`, `buildRelasiDiagram`, pemilih kardinalitas teracak `ensureKardinalitasState` / `buildKardinalitasPicker`), seksi **kerja kelompok kooperatif** (kartu peran, kuis sekali-jawab `buildKuisSekali` / `skorKuis`, `poinPeningkatan` STAD, `rataPoinTim`, `predikatTim`), dan seksi **ERD lengkap** (`letakKunciTamu` — 1:N di sisi banyak, 1:1 di sisi wajib, M:N lewat entitas penghubung —, `kunciPrimer` termasuk kunci gabungan, validasi `periksaErd`, diagram `buildErdLengkap`; `buildEntityCard` menandai PK 🔑, FK 🔗, dan entitas penghubung).
 
-**Pengacakan:** setiap daftar pilihan diacak sekali di `initOrders()` lewat `ensureShuffledOrder` / `ensureSortStates` / `ensureTapOrderState` / `ensureMultiState` / `ensureKardinalitasState`, disimpan di State, dan teracak ulang saat Reset. Jangan memanggil `shuffleArray()` dari renderer. Tes `tests/mpi-f-1.1-data.test.js` dan `tests/mpi-f-1.2-data.test.js` memastikan semua daftar pilihan teracak.
+**Pengacakan:** setiap daftar pilihan diacak sekali di `initOrders()` lewat `ensureShuffledOrder` / `ensureSortStates` / `ensureTapOrderState` / `ensureMultiState` / `ensureKardinalitasState`, disimpan di State, dan teracak ulang saat Reset. Jangan memanggil `shuffleArray()` dari renderer. Tes `tests/mpi-f-1.1-data.test.js` – `tests/mpi-f-1.3-data.test.js` memastikan semua daftar pilihan teracak.
 
-### Modul lama (mpi-1.3 – 2.2)
+### Modul lama (mpi-1.4 – 2.2)
 
-Masih memakai `Engine.createLesson()` (bagian 14 `shared/engine.js`, dipertahankan untuk kompatibilitas) dengan berkas `data.js`, `app-core.js`, `app-stage-*.js`, `app.js`, `styles.css` per modul. Tes `tests/engine-legacy.test.js` menjaga agar global engine baru tidak bertabrakan dengan nama global modul lama.
+Masih memakai `Engine.createLesson()` (bagian 17 `shared/engine.js`, dipertahankan untuk kompatibilitas) dengan berkas `data.js`, `app-core.js`, `app-stage-*.js`, `app.js`, `styles.css` per modul. Tes `tests/engine-legacy.test.js` menjaga agar global engine baru tidak bertabrakan dengan nama global modul lama.
 
 ```
 fase-f/mpi-X.Y/

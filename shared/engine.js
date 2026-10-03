@@ -1978,7 +1978,7 @@ function bindResetModal(onConfirm) {
 
 /* ============================================================
    17. KOMPATIBILITAS: Engine.createLesson (MODUL LAMA)
-   Modul fase-f/mpi-1.3 … 2.2 masih memakai API ini. Bagian ini
+   Modul fase-f/mpi-1.4 … 2.2 masih memakai API ini. Bagian ini
    dipertahankan apa adanya sampai modul-modul itu dimigrasikan ke
    pola mesin tahap + store di atas.
    ============================================================ */
