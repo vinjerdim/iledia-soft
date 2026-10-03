@@ -35,8 +35,12 @@
        ketergantungan penuh/parsial/transitif, bentuk normal 0–3,
        pemeriksaan dekomposisi, hitungan redundansi, tabel data
        bersel ketuk, skema relasi
-   17. Modal reset
-   18. Kompatibilitas: Engine.createLesson (modul lama)
+   17. SQL DDL — pengurai & simulator DDL mini (CREATE/ALTER/DROP/
+       TRUNCATE/RENAME, basis data, kunci primer & tamu), struktur
+       tabel dari ERD, urutan pembuatan tabel, pemeriksaan struktur,
+       pembangkit CREATE TABLE, penyorot sintaks, konsol berlangkah
+   18. Modal reset
+   19. Kompatibilitas: Engine.createLesson (modul lama)
 
    ATURAN PENGACAKAN: setiap daftar pilihan yang ditampilkan ke
    murid WAJIB diacak. Acak SEKALI saat State disiapkan (pakai
@@ -2427,7 +2431,1396 @@ function buildSkemaRelasi(tabel) {
 }
 
 /* ============================================================
-   17. MODAL RESET
+   17. SQL DDL — PERINTAH PEMBUAT STRUKTUR BASIS DATA
+   Komponen RPL untuk mengenal perintah Data Definition Language
+   lewat simulasi DBMS mini di browser, lalu menurunkan struktur
+   tabel dari ERD (format seksi 15).
+     skema = { basisData: [{ nama, tabel: [tabel] }], aktif }
+     tabel = { nama, baris,
+               kolom: [{ nama, tipe, notNull, unique, autoInc, bawaan }],
+               pk:    [namaKolom],
+               fk:    [{ kolom, rujukTabel, rujukKolom }] }
+   Atribut ERD boleh membawa `tipe` (mis. 'VARCHAR(50)') dan
+   `wajib: true` (NOT NULL); entitas boleh membawa `tabel` (nama
+   tabel bila berbeda dari id entitas).
+   Simulator menjalankan perintah DDL (CREATE/ALTER/DROP/TRUNCATE/
+   RENAME, CREATE/DROP DATABASE, USE) dan INSERT sederhana — cukup
+   untuk membandingkan "mengubah struktur" dengan "mengubah isi".
+   Nama tabel & kolom dibandingkan tanpa membedakan huruf besar.
+   ============================================================ */
+
+var SQL_KATEGORI = {
+  CREATE: 'ddl',
+  ALTER: 'ddl',
+  DROP: 'ddl',
+  TRUNCATE: 'ddl',
+  RENAME: 'ddl',
+  INSERT: 'dml',
+  UPDATE: 'dml',
+  DELETE: 'dml',
+  SELECT: 'dml',
+  GRANT: 'dcl',
+  REVOKE: 'dcl',
+  COMMIT: 'tcl',
+  ROLLBACK: 'tcl',
+  SAVEPOINT: 'tcl',
+};
+
+var SQL_TIPE = {
+  INT: 'bulat',
+  INTEGER: 'bulat',
+  TINYINT: 'bulat',
+  SMALLINT: 'bulat',
+  MEDIUMINT: 'bulat',
+  BIGINT: 'bulat',
+  DECIMAL: 'desimal',
+  NUMERIC: 'desimal',
+  FLOAT: 'desimal',
+  DOUBLE: 'desimal',
+  CHAR: 'teks',
+  VARCHAR: 'teks',
+  TEXT: 'teks',
+  DATE: 'waktu',
+  DATETIME: 'waktu',
+  TIMESTAMP: 'waktu',
+  TIME: 'waktu',
+  YEAR: 'waktu',
+  BOOLEAN: 'logika',
+  BOOL: 'logika',
+};
+
+var SQL_KATA_KUNCI = (
+  'CREATE DATABASE SCHEMA TABLE USE ALTER ADD COLUMN DROP MODIFY RENAME TO TRUNCATE ' +
+  'PRIMARY KEY FOREIGN REFERENCES CONSTRAINT NOT NULL UNIQUE DEFAULT AUTO_INCREMENT IF ' +
+  'EXISTS INSERT INTO VALUES SELECT FROM WHERE UPDATE SET DELETE GRANT REVOKE ON COMMIT ROLLBACK'
+).split(' ');
+
+function samaNama(a, b) {
+  return String(a).toLowerCase() === String(b).toLowerCase();
+}
+
+function cariNama(list, nama, kunci) {
+  var k = kunci || 'nama';
+  for (var i = 0; i < list.length; i++) {
+    if (samaNama(list[i][k], nama)) return list[i];
+  }
+  return null;
+}
+
+/* Membuang komentar SQL (-- … dan /* … *\/) di luar teks berkutip. */
+function buangKomentarSql(sql) {
+  var s = String(sql || '');
+  var out = '';
+  var i = 0;
+  while (i < s.length) {
+    var c = s[i];
+    if (c === "'" || c === '"' || c === '`') {
+      var j = i + 1;
+      while (j < s.length && s[j] !== c) j++;
+      out += s.slice(i, j + 1);
+      i = j + 1;
+    } else if (c === '-' && s[i + 1] === '-') {
+      while (i < s.length && s[i] !== '\n') i++;
+    } else if (c === '/' && s[i + 1] === '*') {
+      var e = s.indexOf('*/', i + 2);
+      i = e === -1 ? s.length : e + 2;
+    } else {
+      out += c;
+      i++;
+    }
+  }
+  return out;
+}
+
+/* Memecah skrip menjadi pernyataan per titik koma (di luar kutip). */
+function pecahPernyataan(sql) {
+  var s = buangKomentarSql(sql);
+  var out = [];
+  var cur = '';
+  var kutip = null;
+  for (var i = 0; i < s.length; i++) {
+    var c = s[i];
+    if (kutip) {
+      if (c === kutip) kutip = null;
+      cur += c;
+    } else if (c === "'" || c === '"' || c === '`') {
+      kutip = c;
+      cur += c;
+    } else if (c === ';') {
+      if (cur.trim()) out.push(cur.trim());
+      cur = '';
+    } else {
+      cur += c;
+    }
+  }
+  if (cur.trim()) out.push(cur.trim());
+  return out;
+}
+
+/* Kategori bahasa sebuah perintah SQL: 'ddl' | 'dml' | 'dcl' | 'tcl' | 'lain'. */
+function klasifikasiPerintah(sql) {
+  var m = buangKomentarSql(sql)
+    .trim()
+    .match(/^[A-Za-z]+/);
+  return (m && SQL_KATEGORI[m[0].toUpperCase()]) || 'lain';
+}
+
+/* Token: { t: 'kata' | 'id' | 'angka' | 'teks' | 'simbol', v }. */
+function tokenSql(sql) {
+  var s = String(sql);
+  var out = [];
+  var i = 0;
+  while (i < s.length) {
+    var c = s[i];
+    if (/\s/.test(c)) {
+      i++;
+    } else if (c === "'" || c === '"') {
+      var j = i + 1;
+      while (j < s.length && s[j] !== c) j++;
+      if (j >= s.length) throw { galat: 'Tanda kutip ' + c + ' belum ditutup.' };
+      out.push({ t: 'teks', v: s.slice(i, j + 1) });
+      i = j + 1;
+    } else if (c === '`') {
+      var k = s.indexOf('`', i + 1);
+      if (k === -1) throw { galat: 'Tanda ` belum ditutup.' };
+      out.push({ t: 'id', v: s.slice(i + 1, k) });
+      i = k + 1;
+    } else if (/[0-9]/.test(c) || (c === '-' && /[0-9]/.test(s[i + 1] || ''))) {
+      var m = s.slice(i).match(/^-?[0-9]+(\.[0-9]+)?/);
+      out.push({ t: 'angka', v: m[0] });
+      i += m[0].length;
+    } else if (/[A-Za-z_]/.test(c)) {
+      var w = s.slice(i).match(/^[A-Za-z_][A-Za-z0-9_]*/)[0];
+      out.push({ t: 'kata', v: w });
+      i += w.length;
+    } else {
+      out.push({ t: 'simbol', v: c });
+      i++;
+    }
+  }
+  return out;
+}
+
+/* Kursor pengurai di atas daftar token. */
+function kursorSql(tokens) {
+  var i = 0;
+  var K = {
+    lihat: function (n) {
+      return tokens[i + (n || 0)] || null;
+    },
+    habis: function () {
+      return i >= tokens.length;
+    },
+    maju: function () {
+      return tokens[i++] || null;
+    },
+    kata: function (w, n) {
+      var t = K.lihat(n);
+      return !!t && t.t === 'kata' && t.v.toUpperCase() === w;
+    },
+    ambilKata: function (w) {
+      if (!K.kata(w)) return false;
+      i++;
+      return true;
+    },
+    harusKata: function (w, konteks) {
+      if (K.ambilKata(w)) return;
+      var t = K.lihat();
+      throw {
+        galat:
+          'Diharapkan kata kunci ' +
+          w +
+          (konteks ? ' ' + konteks : '') +
+          (t ? ', tetapi tertulis "' + t.v + '".' : ', tetapi pernyataan sudah berakhir.'),
+      };
+    },
+    simbol: function (v) {
+      var t = K.lihat();
+      return !!t && t.t === 'simbol' && t.v === v;
+    },
+    harusSimbol: function (v, konteks) {
+      if (K.simbol(v)) {
+        i++;
+        return;
+      }
+      var t = K.lihat();
+      throw {
+        galat:
+          'Diharapkan tanda "' +
+          v +
+          '"' +
+          (konteks ? ' ' + konteks : '') +
+          (t ? ', tetapi tertulis "' + t.v + '".' : ', tetapi pernyataan sudah berakhir.'),
+      };
+    },
+    nama: function (apa) {
+      var t = K.lihat();
+      if (t && (t.t === 'id' || t.t === 'kata')) {
+        i++;
+        return t.v;
+      }
+      throw { galat: 'Nama ' + apa + ' belum ditulis.' };
+    },
+    daftarNama: function (apa) {
+      K.harusSimbol('(', 'sebelum daftar ' + apa);
+      var out = [K.nama(apa)];
+      while (K.simbol(',')) {
+        i++;
+        out.push(K.nama(apa));
+      }
+      K.harusSimbol(')', 'setelah daftar ' + apa);
+      return out;
+    },
+  };
+  return K;
+}
+
+/* nama TIPE[(n[,m])] [NOT NULL | NULL | UNIQUE | PRIMARY KEY | AUTO_INCREMENT | DEFAULT x]… */
+function uraiKolomSql(K) {
+  var kol = { nama: K.nama('kolom'), tipe: '', notNull: false, unique: false, autoInc: false };
+  var t = K.maju();
+  if (!t || t.t !== 'kata') throw { galat: 'Tipe data kolom ' + kol.nama + ' belum ditulis.' };
+  var dasar = t.v.toUpperCase();
+  if (!SQL_TIPE[dasar]) {
+    throw { galat: 'Tipe data ' + t.v + ' (kolom ' + kol.nama + ') tidak dikenal.' };
+  }
+  var tipe = dasar;
+  if (K.simbol('(')) {
+    K.maju();
+    var n = K.maju();
+    if (!n || n.t !== 'angka') throw { galat: 'Panjang tipe ' + dasar + ' harus berupa angka.' };
+    tipe += '(' + n.v;
+    if (K.simbol(',')) {
+      K.maju();
+      var m = K.maju();
+      if (!m || m.t !== 'angka') throw { galat: 'Skala tipe ' + dasar + ' harus berupa angka.' };
+      tipe += ',' + m.v;
+    }
+    K.harusSimbol(')', 'setelah panjang tipe');
+    tipe += ')';
+  } else if (dasar === 'VARCHAR') {
+    throw {
+      galat: 'Tipe VARCHAR (kolom ' + kol.nama + ') wajib diberi panjang, mis. VARCHAR(50).',
+    };
+  }
+  kol.tipe = tipe;
+  var pk = false;
+  for (;;) {
+    if (K.ambilKata('NOT')) {
+      K.harusKata('NULL', 'setelah NOT');
+      kol.notNull = true;
+    } else if (K.ambilKata('NULL')) {
+      kol.notNull = false;
+    } else if (K.ambilKata('UNIQUE')) {
+      K.ambilKata('KEY');
+      kol.unique = true;
+    } else if (K.ambilKata('PRIMARY')) {
+      K.harusKata('KEY', 'setelah PRIMARY');
+      pk = true;
+      kol.notNull = true;
+    } else if (K.ambilKata('AUTO_INCREMENT')) {
+      kol.autoInc = true;
+    } else if (K.ambilKata('DEFAULT')) {
+      var d = K.maju();
+      if (!d || d.t === 'simbol')
+        throw { galat: 'Nilai DEFAULT kolom ' + kol.nama + ' belum ditulis.' };
+      kol.bawaan = d.v;
+    } else {
+      break;
+    }
+  }
+  return { kolom: kol, pk: pk };
+}
+
+/* FOREIGN KEY (kolom) REFERENCES tabel(kolom) — FOREIGN sudah diambil. */
+function uraiFkSql(K) {
+  K.harusKata('KEY', 'setelah FOREIGN');
+  var kol = K.daftarNama('kolom');
+  K.harusKata('REFERENCES', 'setelah FOREIGN KEY (…)');
+  var tab = K.nama('tabel rujukan');
+  var ruj = K.daftarNama('kolom rujukan');
+  if (kol.length !== 1 || ruj.length !== 1) {
+    throw { galat: 'Di media ini setiap FOREIGN KEY memakai tepat satu kolom.' };
+  }
+  return { kolom: kol[0], rujukTabel: tab, rujukKolom: ruj[0] };
+}
+
+function uraiCreateTable(K) {
+  var p = { jenis: 'createTable', ifNotExists: false, kolom: [], pk: [], fk: [] };
+  if (K.ambilKata('IF')) {
+    K.harusKata('NOT', 'setelah IF');
+    K.harusKata('EXISTS', 'setelah IF NOT');
+    p.ifNotExists = true;
+  }
+  p.nama = K.nama('tabel');
+  K.harusSimbol('(', 'setelah nama tabel');
+  for (;;) {
+    if (K.ambilKata('PRIMARY')) {
+      K.harusKata('KEY', 'setelah PRIMARY');
+      p.pk = K.daftarNama('kolom kunci primer');
+    } else if (K.kata('CONSTRAINT') || K.kata('FOREIGN')) {
+      if (K.ambilKata('CONSTRAINT')) K.nama('constraint');
+      K.harusKata('FOREIGN');
+      p.fk.push(uraiFkSql(K));
+    } else if (K.kata('UNIQUE') && K.lihat(1) && K.lihat(1).v === '(') {
+      K.maju();
+      var u = K.daftarNama('kolom');
+      u.forEach(function (nm) {
+        var k = cariNama(p.kolom, nm);
+        if (k) k.unique = true;
+      });
+    } else {
+      var hasil = uraiKolomSql(K);
+      p.kolom.push(hasil.kolom);
+      if (hasil.pk) p.pk.push(hasil.kolom.nama);
+    }
+    if (K.simbol(',')) {
+      K.maju();
+      continue;
+    }
+    K.harusSimbol(')', 'untuk menutup daftar kolom');
+    break;
+  }
+  p.pk.forEach(function (nm) {
+    var k = cariNama(p.kolom, nm);
+    if (k) k.notNull = true;
+  });
+  return p;
+}
+
+function uraiAlterTable(K) {
+  var p = { jenis: 'alterTable', nama: K.nama('tabel'), aksi: [] };
+  for (;;) {
+    if (K.ambilKata('ADD')) {
+      if (K.ambilKata('PRIMARY')) {
+        K.harusKata('KEY', 'setelah PRIMARY');
+        p.aksi.push({ tipe: 'addPk', kolom: K.daftarNama('kolom kunci primer') });
+      } else if (K.kata('CONSTRAINT') || K.kata('FOREIGN')) {
+        if (K.ambilKata('CONSTRAINT')) K.nama('constraint');
+        K.harusKata('FOREIGN');
+        p.aksi.push({ tipe: 'addFk', fk: uraiFkSql(K) });
+      } else {
+        K.ambilKata('COLUMN');
+        var h = uraiKolomSql(K);
+        p.aksi.push({ tipe: 'add', kolom: h.kolom, pk: h.pk });
+      }
+    } else if (K.ambilKata('DROP')) {
+      K.ambilKata('COLUMN');
+      p.aksi.push({ tipe: 'drop', nama: K.nama('kolom') });
+    } else if (K.ambilKata('MODIFY')) {
+      K.ambilKata('COLUMN');
+      p.aksi.push({ tipe: 'modify', kolom: uraiKolomSql(K).kolom });
+    } else if (K.ambilKata('RENAME')) {
+      if (K.ambilKata('COLUMN')) {
+        var lama = K.nama('kolom');
+        K.harusKata('TO', 'setelah RENAME COLUMN …');
+        p.aksi.push({ tipe: 'renameCol', dari: lama, ke: K.nama('kolom baru') });
+      } else {
+        if (!K.ambilKata('TO')) K.ambilKata('AS');
+        p.aksi.push({ tipe: 'renameTo', nama: K.nama('tabel baru') });
+      }
+    } else {
+      var t = K.lihat();
+      throw {
+        galat:
+          'Setelah ALTER TABLE ' +
+          p.nama +
+          ' tulis ADD, DROP, MODIFY, atau RENAME' +
+          (t ? ' (tertulis "' + t.v + '").' : '.'),
+      };
+    }
+    if (!K.simbol(',')) break;
+    K.maju();
+  }
+  return p;
+}
+
+/* INSERT INTO t [(kolom…)] VALUES (…), (…) — hanya jumlah baris & nilai. */
+function uraiInsert(K) {
+  K.harusKata('INTO', 'setelah INSERT');
+  var p = { jenis: 'insert', nama: K.nama('tabel'), kolom: null, baris: 0, nilai: [] };
+  if (K.simbol('(')) p.kolom = K.daftarNama('kolom');
+  K.harusKata('VALUES', 'sebelum daftar nilai');
+  for (;;) {
+    K.harusSimbol('(', 'sebelum nilai baris');
+    var n = 0;
+    while (!K.simbol(')')) {
+      var t = K.maju();
+      if (!t) throw { galat: 'Daftar nilai belum ditutup dengan ")".' };
+      if (t.v !== ',') n++;
+    }
+    K.maju();
+    p.baris++;
+    p.nilai.push(n);
+    if (!K.simbol(',')) break;
+    K.maju();
+  }
+  return p;
+}
+
+function uraiSatuDdl(sql) {
+  var kategori = klasifikasiPerintah(sql);
+  try {
+    var K = kursorSql(tokenSql(sql));
+    var p;
+    if (K.ambilKata('CREATE')) {
+      if (K.ambilKata('DATABASE') || K.ambilKata('SCHEMA')) {
+        p = { jenis: 'createDatabase', ifNotExists: false };
+        if (K.ambilKata('IF')) {
+          K.harusKata('NOT', 'setelah IF');
+          K.harusKata('EXISTS', 'setelah IF NOT');
+          p.ifNotExists = true;
+        }
+        p.nama = K.nama('basis data');
+      } else if (K.ambilKata('TABLE')) {
+        p = uraiCreateTable(K);
+      } else {
+        throw { galat: 'Setelah CREATE tulis DATABASE atau TABLE.' };
+      }
+    } else if (K.ambilKata('DROP')) {
+      var db = K.ambilKata('DATABASE') || K.ambilKata('SCHEMA');
+      if (!db) K.harusKata('TABLE', 'atau DATABASE setelah DROP');
+      p = { jenis: db ? 'dropDatabase' : 'dropTable', ifExists: false };
+      if (K.ambilKata('IF')) {
+        K.harusKata('EXISTS', 'setelah IF');
+        p.ifExists = true;
+      }
+      p.nama = K.nama(db ? 'basis data' : 'tabel');
+    } else if (K.ambilKata('USE')) {
+      p = { jenis: 'use', nama: K.nama('basis data') };
+    } else if (K.ambilKata('ALTER')) {
+      K.harusKata('TABLE', 'setelah ALTER');
+      p = uraiAlterTable(K);
+    } else if (K.ambilKata('TRUNCATE')) {
+      K.ambilKata('TABLE');
+      p = { jenis: 'truncate', nama: K.nama('tabel') };
+    } else if (K.ambilKata('RENAME')) {
+      K.harusKata('TABLE', 'setelah RENAME');
+      p = { jenis: 'renameTable', dari: K.nama('tabel') };
+      K.harusKata('TO', 'di antara nama lama dan nama baru');
+      p.ke = K.nama('tabel baru');
+    } else if (K.ambilKata('INSERT')) {
+      p = uraiInsert(K);
+    } else if (kategori !== 'lain') {
+      return { jenis: 'bukanDdl', kategori: kategori, sql: sql };
+    } else {
+      var t0 = K.lihat();
+      throw { galat: 'Perintah "' + (t0 ? t0.v : '') + '" tidak dikenali.' };
+    }
+    if (!K.habis()) throw { galat: 'Ada teks berlebih: "' + K.lihat().v + '".' };
+    p.sql = sql;
+    return p;
+  } catch (e) {
+    if (!e || !e.galat) throw e;
+    return { jenis: 'galat', pesan: e.galat, sql: sql };
+  }
+}
+
+/* Mengurai skrip SQL menjadi daftar pernyataan terstruktur. */
+function uraiDdl(sql) {
+  return pecahPernyataan(sql).map(uraiSatuDdl);
+}
+
+function skemaKosong() {
+  return { basisData: [], aktif: null };
+}
+
+function ddlDbAktif(skema) {
+  return skema && skema.aktif ? cariNama(skema.basisData, skema.aktif) : null;
+}
+
+function ddlTabel(skema, nama) {
+  var db = ddlDbAktif(skema);
+  return db ? cariNama(db.tabel, nama) : null;
+}
+
+/* Tipe dasar tanpa panjang; INTEGER disamakan dengan INT. */
+function tipeDasar(tipe) {
+  var d = String(tipe || '')
+    .toUpperCase()
+    .replace(/\(.*$/, '');
+  return d === 'INTEGER' ? 'INT' : d;
+}
+
+function ddlPerluDb(skema) {
+  var db = ddlDbAktif(skema);
+  if (!db) {
+    throw { galat: 'Belum ada basis data yang dipilih. Jalankan USE nama_basis_data; lebih dulu.' };
+  }
+  return db;
+}
+
+function ddlPerluTabel(db, nama) {
+  var t = cariNama(db.tabel, nama);
+  if (!t) throw { galat: 'Tabel ' + nama + ' tidak ada di basis data ' + db.nama + '.' };
+  return t;
+}
+
+/* Tabel lain yang punya kunci tamu ke `nama` (opsional: ke kolom tertentu). */
+function perujukTabel(db, nama, kolom) {
+  return db.tabel.filter(function (t) {
+    return (
+      !samaNama(t.nama, nama) &&
+      t.fk.some(function (f) {
+        return samaNama(f.rujukTabel, nama) && (!kolom || samaNama(f.rujukKolom, kolom));
+      })
+    );
+  });
+}
+
+function periksaFkBaru(db, t, fk) {
+  var k = cariNama(t.kolom, fk.kolom);
+  if (!k)
+    throw { galat: 'Kolom ' + fk.kolom + ' untuk FOREIGN KEY tidak ada di tabel ' + t.nama + '.' };
+  var r = cariNama(db.tabel, fk.rujukTabel);
+  if (!r) {
+    throw {
+      galat:
+        'Tabel rujukan ' +
+        fk.rujukTabel +
+        ' belum ada. Buat tabel ' +
+        fk.rujukTabel +
+        ' lebih dulu, baru tabel ' +
+        t.nama +
+        ' yang merujuknya.',
+    };
+  }
+  var rk = cariNama(r.kolom, fk.rujukKolom);
+  if (!rk)
+    throw { galat: 'Kolom ' + fk.rujukKolom + ' tidak ada di tabel rujukan ' + r.nama + '.' };
+  var kunci =
+    rk.unique ||
+    (r.pk.length === 1 && samaNama(r.pk[0], rk.nama)) ||
+    (r.pk.length > 1 && samaNama(r.pk[0], rk.nama));
+  if (!kunci) {
+    throw {
+      galat:
+        'Kolom ' +
+        r.nama +
+        '.' +
+        rk.nama +
+        ' bukan kunci primer, jadi tidak bisa dirujuk kunci tamu.',
+    };
+  }
+  if (tipeDasar(k.tipe) !== tipeDasar(rk.tipe)) {
+    throw {
+      galat:
+        'Tipe data ' +
+        t.nama +
+        '.' +
+        k.nama +
+        ' (' +
+        k.tipe +
+        ') harus sama dengan ' +
+        r.nama +
+        '.' +
+        rk.nama +
+        ' (' +
+        rk.tipe +
+        ') yang dirujuknya.',
+    };
+  }
+}
+
+function gantiRujukan(db, lama, baru) {
+  db.tabel.forEach(function (t) {
+    t.fk.forEach(function (f) {
+      if (samaNama(f.rujukTabel, lama)) f.rujukTabel = baru;
+    });
+  });
+}
+
+/* Menerapkan satu pernyataan pada skema (dimutasi). → pesan sukses. */
+function terapkanDdl(skema, p) {
+  var db, t, ada;
+  switch (p.jenis) {
+    case 'galat':
+      throw { galat: 'Galat sintaks: ' + p.pesan };
+    case 'bukanDdl':
+      throw {
+        galat:
+          'Perintah ini termasuk ' +
+          p.kategori.toUpperCase() +
+          '. Simulator ini hanya menjalankan perintah DDL (ditambah INSERT untuk contoh isi data).',
+      };
+    case 'createDatabase':
+      if (cariNama(skema.basisData, p.nama)) {
+        if (p.ifNotExists) return 'Basis data ' + p.nama + ' sudah ada — dilewati (IF NOT EXISTS).';
+        throw { galat: 'Basis data ' + p.nama + ' sudah ada.' };
+      }
+      skema.basisData.push({ nama: p.nama, tabel: [] });
+      return (
+        'Basis data ' + p.nama + ' dibuat. Pilih dengan USE ' + p.nama + '; sebelum membuat tabel.'
+      );
+    case 'dropDatabase':
+      db = cariNama(skema.basisData, p.nama);
+      if (!db) {
+        if (p.ifExists) return 'Basis data ' + p.nama + ' tidak ada — dilewati (IF EXISTS).';
+        throw { galat: 'Basis data ' + p.nama + ' tidak ada.' };
+      }
+      skema.basisData.splice(skema.basisData.indexOf(db), 1);
+      if (skema.aktif && samaNama(skema.aktif, db.nama)) skema.aktif = null;
+      return 'Basis data ' + db.nama + ' beserta semua tabelnya dihapus.';
+    case 'use':
+      db = cariNama(skema.basisData, p.nama);
+      if (!db) {
+        throw { galat: 'Basis data ' + p.nama + ' belum ada. Buat dulu dengan CREATE DATABASE.' };
+      }
+      skema.aktif = db.nama;
+      return 'Basis data ' + db.nama + ' sekarang aktif.';
+    case 'createTable':
+      db = ddlPerluDb(skema);
+      if (cariNama(db.tabel, p.nama)) {
+        if (p.ifNotExists) return 'Tabel ' + p.nama + ' sudah ada — dilewati (IF NOT EXISTS).';
+        throw { galat: 'Tabel ' + p.nama + ' sudah ada.' };
+      }
+      t = { nama: p.nama, baris: 0, kolom: [], pk: [], fk: [] };
+      p.kolom.forEach(function (k) {
+        if (cariNama(t.kolom, k.nama)) throw { galat: 'Kolom ' + k.nama + ' ditulis dua kali.' };
+        t.kolom.push(JSON.parse(JSON.stringify(k)));
+      });
+      p.pk.forEach(function (nm) {
+        var k = cariNama(t.kolom, nm);
+        if (!k) throw { galat: 'Kunci primer memakai kolom ' + nm + ' yang tidak ada di tabel.' };
+        t.pk.push(k.nama);
+      });
+      p.fk.forEach(function (f) {
+        periksaFkBaru(db, t, f);
+        t.fk.push({ kolom: f.kolom, rujukTabel: f.rujukTabel, rujukKolom: f.rujukKolom });
+      });
+      db.tabel.push(t);
+      return 'Tabel ' + t.nama + ' dibuat dengan ' + t.kolom.length + ' kolom.';
+    case 'alterTable':
+      db = ddlPerluDb(skema);
+      t = ddlPerluTabel(db, p.nama);
+      return p.aksi
+        .map(function (a) {
+          return terapkanAlter(db, t, a);
+        })
+        .join(' ');
+    case 'dropTable':
+      db = ddlPerluDb(skema);
+      t = cariNama(db.tabel, p.nama);
+      if (!t) {
+        if (p.ifExists) return 'Tabel ' + p.nama + ' tidak ada — dilewati (IF EXISTS).';
+        throw { galat: 'Tabel ' + p.nama + ' tidak ada.' };
+      }
+      ada = perujukTabel(db, t.nama);
+      if (ada.length) {
+        throw {
+          galat:
+            'Tabel ' +
+            t.nama +
+            ' masih dirujuk kunci tamu tabel ' +
+            ada[0].nama +
+            '. Hapus tabel ' +
+            ada[0].nama +
+            ' lebih dulu.',
+        };
+      }
+      db.tabel.splice(db.tabel.indexOf(t), 1);
+      return 'Tabel ' + t.nama + ' beserta struktur dan seluruh isinya dihapus.';
+    case 'truncate':
+      db = ddlPerluDb(skema);
+      t = ddlPerluTabel(db, p.nama);
+      ada = t.baris;
+      t.baris = 0;
+      return 'Isi tabel ' + t.nama + ' dikosongkan (' + ada + ' baris dihapus). Strukturnya tetap.';
+    case 'renameTable':
+      db = ddlPerluDb(skema);
+      t = ddlPerluTabel(db, p.dari);
+      if (cariNama(db.tabel, p.ke)) throw { galat: 'Tabel ' + p.ke + ' sudah ada.' };
+      gantiRujukan(db, t.nama, p.ke);
+      ada = t.nama;
+      t.nama = p.ke;
+      return 'Tabel ' + ada + ' berganti nama menjadi ' + p.ke + '. Isi dan strukturnya tetap.';
+    case 'insert':
+      db = ddlPerluDb(skema);
+      t = ddlPerluTabel(db, p.nama);
+      (p.kolom || []).forEach(function (nm) {
+        if (!cariNama(t.kolom, nm)) {
+          throw { galat: 'Kolom ' + nm + ' tidak ada di tabel ' + t.nama + '.' };
+        }
+      });
+      var perlu = p.kolom ? p.kolom.length : t.kolom.length;
+      p.nilai.forEach(function (n) {
+        if (n !== perlu) {
+          throw {
+            galat:
+              'Jumlah nilai (' +
+              n +
+              ') tidak sama dengan jumlah kolom (' +
+              perlu +
+              ') tabel ' +
+              t.nama +
+              '.',
+          };
+        }
+      });
+      t.baris += p.baris;
+      return (
+        p.baris +
+        ' baris data ditambahkan ke tabel ' +
+        t.nama +
+        '. Isinya bertambah, strukturnya tidak berubah.'
+      );
+  }
+  throw { galat: 'Pernyataan tidak dikenali.' };
+}
+
+function terapkanAlter(db, t, a) {
+  var k;
+  if (a.tipe === 'add') {
+    if (cariNama(t.kolom, a.kolom.nama)) {
+      throw { galat: 'Kolom ' + a.kolom.nama + ' sudah ada di tabel ' + t.nama + '.' };
+    }
+    t.kolom.push(JSON.parse(JSON.stringify(a.kolom)));
+    if (a.pk) t.pk = [a.kolom.nama];
+    return 'Kolom ' + a.kolom.nama + ' ditambahkan ke tabel ' + t.nama + '.';
+  }
+  if (a.tipe === 'drop') {
+    k = cariNama(t.kolom, a.nama);
+    if (!k) throw { galat: 'Kolom ' + a.nama + ' tidak ada di tabel ' + t.nama + '.' };
+    var ruj = perujukTabel(db, t.nama, k.nama);
+    if (ruj.length) {
+      throw {
+        galat:
+          'Kolom ' +
+          k.nama +
+          ' dirujuk kunci tamu tabel ' +
+          ruj[0].nama +
+          ', jadi tidak bisa dihapus.',
+      };
+    }
+    if (t.kolom.length === 1) {
+      throw {
+        galat: 'Tabel harus punya minimal satu kolom. Pakai DROP TABLE untuk menghapus tabel.',
+      };
+    }
+    t.kolom.splice(t.kolom.indexOf(k), 1);
+    t.pk = t.pk.filter(function (nm) {
+      return !samaNama(nm, k.nama);
+    });
+    t.fk = t.fk.filter(function (f) {
+      return !samaNama(f.kolom, k.nama);
+    });
+    return 'Kolom ' + k.nama + ' dihapus dari tabel ' + t.nama + '.';
+  }
+  if (a.tipe === 'modify') {
+    k = cariNama(t.kolom, a.kolom.nama);
+    if (!k) throw { galat: 'Kolom ' + a.kolom.nama + ' tidak ada di tabel ' + t.nama + '.' };
+    var baru = JSON.parse(JSON.stringify(a.kolom));
+    baru.nama = k.nama;
+    if (
+      t.pk.some(function (nm) {
+        return samaNama(nm, k.nama);
+      })
+    )
+      baru.notNull = true;
+    t.kolom[t.kolom.indexOf(k)] = baru;
+    return 'Definisi kolom ' + k.nama + ' diubah menjadi ' + baru.tipe + '.';
+  }
+  if (a.tipe === 'renameCol') {
+    k = cariNama(t.kolom, a.dari);
+    if (!k) throw { galat: 'Kolom ' + a.dari + ' tidak ada di tabel ' + t.nama + '.' };
+    if (cariNama(t.kolom, a.ke))
+      throw { galat: 'Kolom ' + a.ke + ' sudah ada di tabel ' + t.nama + '.' };
+    var lama = k.nama;
+    t.pk = t.pk.map(function (nm) {
+      return samaNama(nm, lama) ? a.ke : nm;
+    });
+    t.fk.forEach(function (f) {
+      if (samaNama(f.kolom, lama)) f.kolom = a.ke;
+    });
+    db.tabel.forEach(function (o) {
+      o.fk.forEach(function (f) {
+        if (samaNama(f.rujukTabel, t.nama) && samaNama(f.rujukKolom, lama)) f.rujukKolom = a.ke;
+      });
+    });
+    k.nama = a.ke;
+    return 'Kolom ' + lama + ' berganti nama menjadi ' + a.ke + '.';
+  }
+  if (a.tipe === 'renameTo') {
+    if (cariNama(db.tabel, a.nama)) throw { galat: 'Tabel ' + a.nama + ' sudah ada.' };
+    var dulu = t.nama;
+    gantiRujukan(db, dulu, a.nama);
+    t.nama = a.nama;
+    return 'Tabel ' + dulu + ' berganti nama menjadi ' + a.nama + '.';
+  }
+  if (a.tipe === 'addPk') {
+    if (t.pk.length) throw { galat: 'Tabel ' + t.nama + ' sudah punya kunci primer.' };
+    a.kolom.forEach(function (nm) {
+      var kk = cariNama(t.kolom, nm);
+      if (!kk) throw { galat: 'Kolom ' + nm + ' tidak ada di tabel ' + t.nama + '.' };
+      kk.notNull = true;
+      t.pk.push(kk.nama);
+    });
+    return 'Kunci primer (' + t.pk.join(', ') + ') ditambahkan ke tabel ' + t.nama + '.';
+  }
+  periksaFkBaru(db, t, a.fk);
+  t.fk.push({ kolom: a.fk.kolom, rujukTabel: a.fk.rujukTabel, rujukKolom: a.fk.rujukKolom });
+  return (
+    'Kunci tamu ' + a.fk.kolom + ' → ' + a.fk.rujukTabel + '.' + a.fk.rujukKolom + ' ditambahkan.'
+  );
+}
+
+/*
+ * Menjalankan skrip SQL pada salinan skema. Berhenti di galat pertama
+ * (pernyataan sebelumnya tetap berlaku, seperti DBMS sungguhan).
+ * → { ok, skema, log: [{ sql, ok, pesan, kategori }] }
+ */
+function jalankanDdl(skema, sql) {
+  var s = JSON.parse(JSON.stringify(skema || skemaKosong()));
+  var log = [];
+  var ok = true;
+  var daftar = uraiDdl(sql);
+  for (var i = 0; i < daftar.length; i++) {
+    var p = daftar[i];
+    var entri = { sql: p.sql, kategori: klasifikasiPerintah(p.sql), ok: true, pesan: '' };
+    try {
+      entri.pesan = terapkanDdl(s, p);
+    } catch (e) {
+      if (!e || !e.galat) throw e;
+      entri.ok = false;
+      entri.pesan = e.galat;
+    }
+    log.push(entri);
+    if (!entri.ok) {
+      ok = false;
+      break;
+    }
+  }
+  if (!daftar.length) {
+    ok = false;
+    log.push({
+      sql: '',
+      kategori: 'lain',
+      ok: false,
+      pesan: 'Belum ada perintah SQL yang ditulis.',
+    });
+  }
+  return { ok: ok, skema: s, log: log };
+}
+
+/* Struktur tabel harapan dari ERD lengkap (urutan entitas ERD). */
+function strukturDariErd(erd) {
+  function namaTabel(ent) {
+    return ent.tabel || ent.id;
+  }
+  return erd.entitas.map(function (ent) {
+    var pk = kunciPrimer(ent);
+    return {
+      nama: namaTabel(ent),
+      kolom: ent.atribut.map(function (a) {
+        return {
+          nama: a.teks,
+          tipe: a.tipe || 'VARCHAR(50)',
+          notNull: !!(a.pk || a.wajib),
+        };
+      }),
+      pk: ent.atribut
+        .filter(function (a) {
+          return pk.indexOf(a.id) !== -1;
+        })
+        .map(function (a) {
+          return a.teks;
+        }),
+      fk: ent.atribut
+        .filter(function (a) {
+          return a.fk;
+        })
+        .map(function (a) {
+          var ref = erdEntitas(erd, a.fk);
+          var refPk = ref.atribut.filter(function (x) {
+            return x.pk;
+          });
+          var sama = refPk.filter(function (x) {
+            return x.teks === a.teks;
+          })[0];
+          return {
+            kolom: a.teks,
+            rujukTabel: namaTabel(ref),
+            rujukKolom: (sama || refPk[0]).teks,
+          };
+        }),
+    };
+  });
+}
+
+function tergantungPada(t) {
+  return t.fk
+    .map(function (f) {
+      return f.rujukTabel;
+    })
+    .filter(function (n) {
+      return !samaNama(n, t.nama);
+    });
+}
+
+/*
+ * Urutan CREATE TABLE yang sah: tabel induk (yang dirujuk) lebih dulu.
+ * `preferensi` (daftar nama tabel) diikuti sejauh masih sah, sehingga
+ * urutan murid yang benar dikembalikan apa adanya.
+ */
+function urutanBuatTabel(erd, preferensi) {
+  var st = strukturDariErd(erd);
+  var prioritas = (preferensi || [])
+    .map(function (n) {
+      return cariNama(st, n);
+    })
+    .filter(Boolean);
+  st.forEach(function (t) {
+    if (prioritas.indexOf(t) === -1) prioritas.push(t);
+  });
+  var hasil = [];
+  while (hasil.length < st.length) {
+    var pilih = null;
+    for (var i = 0; i < prioritas.length && !pilih; i++) {
+      var t = prioritas[i];
+      if (hasil.indexOf(t.nama) !== -1) continue;
+      var siap = tergantungPada(t).every(function (n) {
+        return hasil.some(function (h) {
+          return samaNama(h, n);
+        });
+      });
+      if (siap) pilih = t;
+    }
+    if (!pilih) {
+      pilih = prioritas.filter(function (x) {
+        return hasil.indexOf(x.nama) === -1;
+      })[0];
+    }
+    hasil.push(pilih.nama);
+  }
+  return hasil;
+}
+
+function urutanValid(erd, urutan) {
+  var st = strukturDariErd(erd);
+  if (!Array.isArray(urutan) || urutan.length !== st.length) return false;
+  return urutanBuatTabel(erd, urutan).join('|') === urutan.join('|');
+}
+
+/* Membandingkan basis data aktif dengan struktur harapan. → [pesan]. */
+function periksaStruktur(skema, harapan) {
+  var db = ddlDbAktif(skema);
+  if (!db) return ['Belum ada basis data yang aktif.'];
+  var salah = [];
+  harapan.forEach(function (h) {
+    var t = cariNama(db.tabel, h.nama);
+    if (!t) {
+      salah.push('Tabel ' + h.nama + ' belum ada.');
+      return;
+    }
+    h.kolom.forEach(function (hk) {
+      var k = cariNama(t.kolom, hk.nama);
+      if (!k) salah.push('Tabel ' + h.nama + ' belum punya kolom ' + hk.nama + '.');
+      else if (tipeDasar(k.tipe) !== tipeDasar(hk.tipe)) {
+        salah.push(
+          'Kolom ' + h.nama + '.' + hk.nama + ' bertipe ' + k.tipe + ', seharusnya ' + hk.tipe + '.'
+        );
+      }
+    });
+    var kunci = function (arr) {
+      return arr
+        .map(function (n) {
+          return n.toLowerCase();
+        })
+        .sort()
+        .join(',');
+    };
+    if (kunci(t.pk) !== kunci(h.pk)) {
+      salah.push('Kunci primer tabel ' + h.nama + ' seharusnya (' + h.pk.join(', ') + ').');
+    }
+    h.fk.forEach(function (hf) {
+      var ada = t.fk.some(function (f) {
+        return samaNama(f.kolom, hf.kolom) && samaNama(f.rujukTabel, hf.rujukTabel);
+      });
+      if (!ada) {
+        salah.push(
+          'Tabel ' +
+            h.nama +
+            ' belum punya kunci tamu ' +
+            hf.kolom +
+            ' → ' +
+            hf.rujukTabel +
+            '.' +
+            hf.rujukKolom +
+            '.'
+        );
+      }
+    });
+  });
+  return salah;
+}
+
+/* Teks CREATE TABLE terformat untuk satu struktur tabel. */
+function ddlBuatTabel(t) {
+  var baris = t.kolom.map(function (k) {
+    return '  ' + k.nama + ' ' + k.tipe + (k.notNull ? ' NOT NULL' : '');
+  });
+  if (t.pk.length) baris.push('  PRIMARY KEY (' + t.pk.join(', ') + ')');
+  t.fk.forEach(function (f) {
+    baris.push(
+      '  FOREIGN KEY (' + f.kolom + ') REFERENCES ' + f.rujukTabel + '(' + f.rujukKolom + ')'
+    );
+  });
+  return 'CREATE TABLE ' + t.nama + ' (\n' + baris.join(',\n') + '\n);';
+}
+
+/* Skrip lengkap: CREATE DATABASE, USE, lalu CREATE TABLE berurutan. */
+function ddlSkripErd(erd, namaDb, urutan) {
+  var st = strukturDariErd(erd);
+  var u = urutan || urutanBuatTabel(erd);
+  return (
+    'CREATE DATABASE ' +
+    namaDb +
+    ';\nUSE ' +
+    namaDb +
+    ';\n\n' +
+    u
+      .map(function (n) {
+        return ddlBuatTabel(cariNama(st, n));
+      })
+      .join('\n\n')
+  );
+}
+
+/* Penyorot sintaks SQL; setiap potongan di-escape lebih dulu. */
+function sorotSql(sql) {
+  var s = String(sql || '');
+  var out = '';
+  var i = 0;
+  function bungkus(cls, teks) {
+    return '<span class="' + cls + '">' + esc(teks) + '</span>';
+  }
+  while (i < s.length) {
+    var c = s[i];
+    var j;
+    if (c === '-' && s[i + 1] === '-') {
+      j = s.indexOf('\n', i);
+      if (j === -1) j = s.length;
+      out += bungkus('sql-com', s.slice(i, j));
+      i = j;
+    } else if (c === "'" || c === '"') {
+      j = s.indexOf(c, i + 1);
+      j = j === -1 ? s.length : j + 1;
+      out += bungkus('sql-str', s.slice(i, j));
+      i = j;
+    } else if (/[0-9]/.test(c) && !/[A-Za-z_]/.test(s[i - 1] || '')) {
+      var m = s.slice(i).match(/^[0-9]+(\.[0-9]+)?/)[0];
+      out += bungkus('sql-num', m);
+      i += m.length;
+    } else if (/[A-Za-z_]/.test(c)) {
+      var w = s.slice(i).match(/^[A-Za-z_][A-Za-z0-9_]*/)[0];
+      var up = w.toUpperCase();
+      if (SQL_KATA_KUNCI.indexOf(up) !== -1) out += bungkus('sql-kw', w);
+      else if (SQL_TIPE[up]) out += bungkus('sql-type', w);
+      else out += esc(w);
+      i += w.length;
+    } else {
+      out += esc(c);
+      i++;
+    }
+  }
+  return out;
+}
+
+/* Blok kode SQL bersorot. opts.label → aria-label blok. */
+function buildSqlKode(sql, opts) {
+  opts = opts || {};
+  return (
+    '<pre class="sql-code' +
+    (opts.kecil ? ' sql-code--kecil' : '') +
+    '"' +
+    (opts.label ? ' aria-label="' + esc(opts.label) + '"' : '') +
+    '><code>' +
+    sorotSql(sql) +
+    '</code></pre>'
+  );
+}
+
+/* Kartu tabel dari basis data aktif: kolom, tipe, PK 🔑, FK 🔗, jumlah baris. */
+function buildSkemaDdl(skema, opts) {
+  opts = opts || {};
+  var judul = opts.judul ? '<p class="ddl-schema__judul">' + esc(opts.judul) + '</p>' : '';
+  if (!skema || !skema.basisData.length) {
+    return (
+      '<div class="ddl-schema ddl-schema--kosong">' +
+      judul +
+      '<p class="ddl-schema__db">🗄️ Belum ada basis data di DBMS.</p></div>'
+    );
+  }
+  var db = ddlDbAktif(skema);
+  var daftarDb =
+    '<p class="ddl-schema__db">🗄️ ' +
+    skema.basisData
+      .map(function (b) {
+        var aktif = db && b === db;
+        return aktif ? '<strong>' + esc(b.nama) + '</strong> (aktif)' : esc(b.nama);
+      })
+      .join(', ') +
+    '</p>';
+  if (!db) {
+    return (
+      '<div class="ddl-schema">' +
+      judul +
+      daftarDb +
+      '<p class="ddl-schema__kosong">Belum ada basis data yang dipilih dengan USE.</p></div>'
+    );
+  }
+  var tabel = db.tabel.length
+    ? '<div class="ddl-schema__grid">' +
+      db.tabel
+        .map(function (t) {
+          return (
+            '<div class="ddl-table"><div class="ddl-table__head"><span class="ddl-table__nama">▦ ' +
+            esc(t.nama) +
+            '</span><span class="ddl-table__baris">' +
+            t.baris +
+            ' baris</span></div><ul class="ddl-table__kolom">' +
+            t.kolom
+              .map(function (k) {
+                var pk = t.pk.some(function (n) {
+                  return samaNama(n, k.nama);
+                });
+                var fk = t.fk.filter(function (f) {
+                  return samaNama(f.kolom, k.nama);
+                })[0];
+                return (
+                  '<li class="ddl-col' +
+                  (pk ? ' ddl-col--pk' : '') +
+                  (fk ? ' ddl-col--fk' : '') +
+                  '"><span class="ddl-col__nama">' +
+                  (pk ? '<span aria-label="kunci primer">🔑</span> ' : '') +
+                  (fk ? '<span aria-label="kunci tamu">🔗</span> ' : '') +
+                  esc(k.nama) +
+                  '</span><span class="ddl-col__tipe">' +
+                  esc(k.tipe) +
+                  (k.notNull && !pk ? ' · NOT NULL' : '') +
+                  (k.unique ? ' · UNIQUE' : '') +
+                  '</span>' +
+                  (fk
+                    ? '<span class="ddl-col__ref">→ ' +
+                      esc(fk.rujukTabel + '.' + fk.rujukKolom) +
+                      '</span>'
+                    : '') +
+                  '</li>'
+                );
+              })
+              .join('') +
+            '</ul></div>'
+          );
+        })
+        .join('') +
+      '</div>'
+    : '<p class="ddl-schema__kosong">Basis data ini belum punya tabel.</p>';
+  return '<div class="ddl-schema">' + judul + daftarDb + tabel + '</div>';
+}
+
+/* ---------- Konsol DDL berlangkah ----------
+   langkah = [{ id, sql, amati? }]  — pernyataan siap-jalan berurutan
+   state[key] = { jalan, bebas, draf }
+     jalan  banyaknya langkah yang sudah dijalankan
+     bebas  pernyataan yang diketik murid sendiri (setelah langkah tuntas)
+     draf   isi kotak ketik yang belum dijalankan
+   Skema dihitung ulang dari awal (putarKonsol), bukan disimpan. */
+
+function ensureKonsolState(state, key) {
+  var st = state[key];
+  if (!st || typeof st !== 'object' || typeof st.jalan !== 'number' || !Array.isArray(st.bebas)) {
+    st = { jalan: 0, bebas: [], draf: '' };
+  }
+  if (typeof st.draf !== 'string') st.draf = '';
+  state[key] = st;
+  return state;
+}
+
+/* Setiap langkah dijalankan terpisah; galat satu langkah tidak menghentikan berikutnya. */
+function putarKonsol(awal, langkah, st) {
+  var skema = awal || skemaKosong();
+  var log = [];
+  function jalan(sql, tanda) {
+    var h = jalankanDdl(skema, sql);
+    skema = h.skema;
+    h.log.forEach(function (l) {
+      Object.keys(tanda).forEach(function (k) {
+        l[k] = tanda[k];
+      });
+      log.push(l);
+    });
+  }
+  var n = Math.min(st.jalan, langkah.length);
+  for (var i = 0; i < n; i++) jalan(langkah[i].sql, { langkah: langkah[i].id });
+  st.bebas.forEach(function (sql, j) {
+    jalan(sql, { bebas: j });
+  });
+  return { skema: skema, log: log };
+}
+
+function buildLogDdl(entri) {
+  return (
+    '<li class="ddl-log__item ddl-log__item--' +
+    (entri.ok ? 'ok' : 'galat') +
+    '"><span class="ddl-log__ikon" aria-hidden="true">' +
+    (entri.ok ? '✓' : '✗') +
+    '</span><span><span class="ddl-log__kat">' +
+    esc(entri.kategori === 'lain' ? 'SQL' : entri.kategori.toUpperCase()) +
+    '</span> ' +
+    esc(entri.pesan) +
+    '</span></li>'
+  );
+}
+
+/*
+ *   opts.awal    skema awal (default kosong)
+ *   opts.bebas   true → kotak "coba sendiri" setelah semua langkah dijalankan
+ *   opts.judulSkema  judul panel skema
+ */
+function buildKonsolDdl(id, langkah, st, opts) {
+  opts = opts || {};
+  var hasil = putarKonsol(opts.awal, langkah, st);
+  var tuntas = st.jalan >= langkah.length;
+  var daftar = langkah
+    .map(function (l, i) {
+      var log = hasil.log.filter(function (e) {
+        return e.langkah === l.id;
+      });
+      var sudah = i < st.jalan;
+      var giliran = i === st.jalan;
+      var ok =
+        sudah &&
+        log.every(function (e) {
+          return e.ok;
+        });
+      return (
+        '<li class="ddl-step' +
+        (sudah
+          ? ok
+            ? ' ddl-step--ok'
+            : ' ddl-step--galat'
+          : giliran
+            ? ' ddl-step--next'
+            : ' ddl-step--wait') +
+        '"><span class="ddl-step__no" aria-hidden="true">' +
+        (sudah ? (ok ? '✓' : '✗') : i + 1) +
+        '</span><div class="ddl-step__body">' +
+        buildSqlKode(l.sql, { kecil: true }) +
+        (sudah
+          ? '<ul class="ddl-log">' +
+            log.map(buildLogDdl).join('') +
+            '</ul>' +
+            (l.amati ? '<p class="ddl-step__amati">👀 ' + l.amati + '</p>' : '')
+          : '') +
+        (giliran
+          ? '<button type="button" class="btn btn--primary btn--small" id="' +
+            esc(id) +
+            'Run" data-konsol-run="' +
+            esc(id) +
+            '">▶ Jalankan langkah ' +
+            (i + 1) +
+            '</button>'
+          : '') +
+        '</div></li>'
+      );
+    })
+    .join('');
+  var bebas = '';
+  if (opts.bebas && tuntas) {
+    var logBebas = hasil.log.filter(function (e) {
+      return typeof e.bebas === 'number';
+    });
+    bebas =
+      '<div class="ddl-free"><label class="input-label" for="' +
+      esc(id) +
+      'Bebas">🧪 Coba sendiri — ketik perintah DDL lalu jalankan</label>' +
+      '<textarea class="input-textarea ddl-free__input" id="' +
+      esc(id) +
+      'Bebas" rows="3" spellcheck="false" autocapitalize="off" placeholder="ALTER TABLE anggota ADD no_hp VARCHAR(15);">' +
+      esc(st.draf) +
+      '</textarea><div class="btn-group"><button type="button" class="btn btn--primary btn--small" id="' +
+      esc(id) +
+      'BebasRun">▶ Jalankan</button>' +
+      (st.bebas.length
+        ? '<button type="button" class="btn btn--ghost btn--small" id="' +
+          esc(id) +
+          'BebasClear">Hapus percobaanku</button>'
+        : '') +
+      '</div><ul class="ddl-log ddl-log--bebas" aria-live="polite">' +
+      (logBebas.length
+        ? logBebas.map(buildLogDdl).join('')
+        : '<li class="ddl-log__item">Belum ada percobaan.</li>') +
+      '</ul></div>';
+  }
+  return (
+    '<div class="ddl-console" id="' +
+    esc(id) +
+    '"><div class="ddl-console__grid"><div class="ddl-console__langkah"><ol class="ddl-steps">' +
+    daftar +
+    '</ol>' +
+    bebas +
+    (st.jalan > 0
+      ? '<div class="btn-group"><button type="button" class="btn btn--ghost btn--small" id="' +
+        esc(id) +
+        'Ulang">↺ Ulangi percobaan dari awal</button></div>'
+      : '') +
+    '</div><div class="ddl-console__skema" aria-live="polite">' +
+    buildSkemaDdl(hasil.skema, { judul: opts.judulSkema || 'Isi DBMS saat ini' }) +
+    '</div></div></div>'
+  );
+}
+
+function bindKonsolDdl(root, id, langkah, st, save, rerender) {
+  var run = root.querySelector('#' + id + 'Run');
+  if (run) {
+    run.addEventListener('click', function () {
+      if (st.jalan >= langkah.length) return;
+      st.jalan += 1;
+      save();
+      rerender();
+    });
+  }
+  var ulang = root.querySelector('#' + id + 'Ulang');
+  if (ulang) {
+    ulang.addEventListener('click', function () {
+      st.jalan = 0;
+      st.bebas = [];
+      st.draf = '';
+      save();
+      rerender();
+    });
+  }
+  var ta = root.querySelector('#' + id + 'Bebas');
+  if (ta) {
+    ta.addEventListener('input', function () {
+      st.draf = ta.value;
+      save();
+    });
+  }
+  var bebas = root.querySelector('#' + id + 'BebasRun');
+  if (bebas) {
+    bebas.addEventListener('click', function () {
+      var sql = (st.draf || '').trim();
+      if (!sql) return;
+      st.bebas.push(sql);
+      if (st.bebas.length > 20) st.bebas.shift();
+      st.draf = '';
+      save();
+      rerender();
+    });
+  }
+  var clear = root.querySelector('#' + id + 'BebasClear');
+  if (clear) {
+    clear.addEventListener('click', function () {
+      st.bebas = [];
+      save();
+      rerender();
+    });
+  }
+}
+
+/* ============================================================
+   18. MODAL RESET
    Halaman modul menyertakan shared/partials/reset-modal.html.
    onConfirm dipanggil setelah murid menekan "Ya, Reset".
    ============================================================ */
@@ -2464,8 +3857,8 @@ function bindResetModal(onConfirm) {
 }
 
 /* ============================================================
-   18. KOMPATIBILITAS: Engine.createLesson (MODUL LAMA)
-   Modul fase-f/mpi-2.1 … 2.2 masih memakai API ini. Bagian ini
+   19. KOMPATIBILITAS: Engine.createLesson (MODUL LAMA)
+   Modul fase-f/mpi-2.2 masih memakai API ini. Bagian ini
    dipertahankan apa adanya sampai modul-modul itu dimigrasikan ke
    pola mesin tahap + store di atas.
    ============================================================ */
