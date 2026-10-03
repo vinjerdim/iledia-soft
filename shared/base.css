@@ -2669,3 +2669,102 @@ strong {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================================================
+   ERD lengkap (engine seksi 15): legenda, kartu entitas ber-PK/FK,
+   entitas penghubung, dan daftar relasi. Kartu entitas mengalir dalam
+   grid auto-fit sehingga tidak pernah menggulir ke samping.
+   ========================================================================= */
+
+.erd {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  min-width: 0;
+}
+
+.erd__judul {
+  margin-bottom: var(--space-2);
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.erd__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+  color: var(--color-ink-muted);
+}
+
+.erd__legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.erd__swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 2px solid var(--color-blue);
+  background: var(--color-blue-soft);
+}
+
+.erd__swatch--link {
+  border-color: var(--color-green);
+  background: var(--color-green-soft);
+  border-style: dashed;
+}
+
+.erd__grid {
+  margin-bottom: var(--space-4);
+}
+
+.erd__relasi .rel-diagram {
+  background: var(--color-surface);
+}
+
+.erd__catatan {
+  margin: calc(-1 * var(--space-2)) 0 var(--space-3);
+  font-size: 0.85rem;
+  color: var(--color-green-strong);
+}
+
+.entity-card--link {
+  border-color: var(--color-green);
+  border-style: dashed;
+}
+
+.entity-card--link .entity-card__head {
+  background: var(--color-green-soft);
+  color: var(--color-green-strong);
+}
+
+.entity-card__tag {
+  margin-left: auto;
+  padding: 0 var(--space-2);
+  border-radius: 999px;
+  background: var(--color-surface);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.entity-card__attr--fk {
+  font-style: italic;
+}
+
+.entity-card__ref {
+  font-size: 0.76rem;
+  color: var(--color-ink-muted);
+}
+
+.entity-card--link .entity-card__head {
+  flex-wrap: wrap;
+}

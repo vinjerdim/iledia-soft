@@ -1260,13 +1260,19 @@ function cakupanKebutuhan(atributRancangan, kebutuhan) {
  * Kartu entitas dengan daftar atributnya.
  *   ent    { id, label, ikon, deskripsi? }
  *   attrs  [{ id, teks }]
- *   opts.kunci  id atribut kunci (diberi 🔑)
- *   opts.kosong teks bila belum ada atribut
+ *   opts.kunci       id atribut kunci (diberi 🔑); boleh array (kunci komposit)
+ *   opts.fk          { <id atribut>: label entitas rujukan } — diberi 🔗
+ *   opts.penghubung  true → ditandai sebagai entitas penghubung
+ *   opts.kosong      teks bila belum ada atribut
  */
 function buildEntityCard(ent, attrs, opts) {
   opts = opts || {};
+  var kunci = [].concat(opts.kunci || []);
+  var fk = opts.fk || {};
   return (
-    '<div class="entity-card" data-entitas="' +
+    '<div class="entity-card' +
+    (opts.penghubung ? ' entity-card--link' : '') +
+    '" data-entitas="' +
     esc(ent.id) +
     '">' +
     '<div class="entity-card__head">' +
@@ -1276,18 +1282,23 @@ function buildEntityCard(ent, attrs, opts) {
     '<span class="entity-card__name">' +
     esc(ent.label) +
     '</span>' +
+    (opts.penghubung ? '<span class="entity-card__tag">penghubung</span>' : '') +
     '</div>' +
     (attrs.length
       ? '<ul class="entity-card__attrs">' +
         attrs
           .map(function (a) {
-            var key = opts.kunci && a.id === opts.kunci;
+            var key = kunci.indexOf(a.id) !== -1;
+            var ref = fk[a.id];
             return (
               '<li class="entity-card__attr' +
               (key ? ' entity-card__attr--key' : '') +
+              (ref ? ' entity-card__attr--fk' : '') +
               '">' +
               (key ? '<span aria-label="atribut kunci">🔑</span> ' : '') +
+              (ref ? '<span aria-label="kunci tamu">🔗</span> ' : '') +
               esc(a.teks) +
+              (ref ? ' <span class="entity-card__ref">→ ' + esc(ref) + '</span>' : '') +
               '</li>'
             );
           })
@@ -1773,7 +1784,163 @@ function predikatTim(rata) {
 }
 
 /* ============================================================
-   15. MODAL RESET
+   15. ERD LENGKAP
+   Komponen RPL untuk merangkai ERD utuh: entitas beserta atribut,
+   kunci primer (PK), kunci tamu (FK), relasi & kardinalitas, dan
+   entitas penghubung untuk relasi M:N.
+     erd = {
+       entitas: [{ id, label, ikon, penghubung?,
+                   atribut: [{ id, teks, pk?, fk? }] }],
+                   // pk: true → bagian kunci primer
+                   // fk: id entitas yang dirujuk
+       relasi:  [rel]   // format seksi 13; relasi M:N memakai
+                        // rel.penghubung = id entitas penghubung
+     }
+   ============================================================ */
+
+/*
+ * Di mana kunci tamu sebuah relasi diletakkan?
+ *   1:N → di sisi "banyak"; N:1 → kebalikannya;
+ *   1:1 → di sisi yang wajib punya pasangan (minimum 1), bawaan B;
+ *   M:N → tidak bisa: perlu entitas penghubung.
+ * → { jenis: 'fk', di, rujuk } | { jenis: 'penghubung' } | null
+ */
+function letakKunciTamu(rel) {
+  var j = jenisDariKardinalitas(rel.ab, rel.ba);
+  if (!j) return null;
+  if (j === 'M:N') return { jenis: 'penghubung' };
+  if (j === '1:N') return { jenis: 'fk', di: rel.b.id, rujuk: rel.a.id };
+  if (j === 'N:1') return { jenis: 'fk', di: rel.a.id, rujuk: rel.b.id };
+  var bWajib = uraiKardinalitas(rel.ba).min === '1';
+  var aWajib = uraiKardinalitas(rel.ab).min === '1';
+  if (!bWajib && aWajib) return { jenis: 'fk', di: rel.a.id, rujuk: rel.b.id };
+  return { jenis: 'fk', di: rel.b.id, rujuk: rel.a.id };
+}
+
+function erdEntitas(erd, id) {
+  for (var i = 0; i < erd.entitas.length; i++) {
+    if (erd.entitas[i].id === id) return erd.entitas[i];
+  }
+  return null;
+}
+
+/* Id atribut kunci primer sebuah entitas (bisa komposit). */
+function kunciPrimer(ent) {
+  return ent.atribut
+    .filter(function (a) {
+      return a.pk;
+    })
+    .map(function (a) {
+      return a.id;
+    });
+}
+
+function adaFk(ent, rujuk) {
+  return (
+    !!ent &&
+    ent.atribut.some(function (a) {
+      return a.fk === rujuk;
+    })
+  );
+}
+
+/*
+ * Memeriksa kelengkapan ERD. → array pesan kesalahan; [] bila lengkap.
+ *   • setiap entitas punya kunci primer;
+ *   • setiap kunci tamu merujuk entitas yang ada;
+ *   • relasi 1:1 / 1:N punya kunci tamu di tempat yang tepat;
+ *   • relasi M:N punya entitas penghubung berkunci tamu ke kedua sisi.
+ */
+function periksaErd(erd) {
+  var salah = [];
+  erd.entitas.forEach(function (ent) {
+    if (!kunciPrimer(ent).length) salah.push(ent.label + ' belum punya kunci primer.');
+    ent.atribut.forEach(function (a) {
+      if (a.fk && !erdEntitas(erd, a.fk)) {
+        salah.push(ent.label + '.' + a.teks + ' merujuk entitas yang tidak ada.');
+      }
+    });
+  });
+  erd.relasi.forEach(function (rel) {
+    var letak = letakKunciTamu(rel);
+    var nama = rel.a.label + ' – ' + rel.b.label;
+    if (!letak) {
+      salah.push(nama + ': kardinalitas belum valid.');
+    } else if (letak.jenis === 'penghubung') {
+      var p = rel.penghubung ? erdEntitas(erd, rel.penghubung) : null;
+      if (!p || !adaFk(p, rel.a.id) || !adaFk(p, rel.b.id)) {
+        salah.push(nama + ': relasi M:N belum diwujudkan dengan entitas penghubung.');
+      }
+    } else if (!adaFk(erdEntitas(erd, letak.di), letak.rujuk)) {
+      salah.push(nama + ': kunci tamu belum diletakkan di sisi yang tepat.');
+    }
+  });
+  return salah;
+}
+
+/*
+ * ERD lengkap yang responsif: legenda, kartu entitas (PK 🔑, FK 🔗,
+ * entitas penghubung bertanda) dan daftar relasi gaya Chen.
+ *   opts.judul   judul figur (opsional)
+ *   opts.relasi  false → sembunyikan daftar relasi
+ */
+function buildErdLengkap(erd, opts) {
+  opts = opts || {};
+  var legenda =
+    '<ul class="erd__legend" aria-label="Keterangan notasi">' +
+    '<li><span class="erd__swatch erd__swatch--ent" aria-hidden="true"></span>Entitas</li>' +
+    '<li><span class="erd__swatch erd__swatch--link" aria-hidden="true"></span>Entitas penghubung</li>' +
+    '<li><span aria-hidden="true">🔑</span> Kunci primer (PK)</li>' +
+    '<li><span aria-hidden="true">🔗</span> Kunci tamu (FK)</li>' +
+    '</ul>';
+  var kartu = erd.entitas
+    .map(function (ent) {
+      var fk = {};
+      ent.atribut.forEach(function (a) {
+        if (a.fk) {
+          var r = erdEntitas(erd, a.fk);
+          fk[a.id] = r ? r.label : a.fk;
+        }
+      });
+      return buildEntityCard(ent, ent.atribut, {
+        kunci: kunciPrimer(ent),
+        fk: fk,
+        penghubung: !!ent.penghubung,
+      });
+    })
+    .join('');
+  var relasi =
+    opts.relasi === false
+      ? ''
+      : '<div class="erd__relasi">' +
+        erd.relasi
+          .map(function (rel) {
+            var p = rel.penghubung ? erdEntitas(erd, rel.penghubung) : null;
+            return (
+              buildRelasiDiagram(rel) +
+              (p
+                ? '<p class="erd__catatan">↳ Diwujudkan lewat entitas penghubung <strong>' +
+                  esc(p.label) +
+                  '</strong>.</p>'
+                : '')
+            );
+          })
+          .join('') +
+        '</div>';
+  return (
+    '<figure class="erd">' +
+    (opts.judul ? '<figcaption class="erd__judul">' + esc(opts.judul) + '</figcaption>' : '') +
+    legenda +
+    '<div class="entity-grid erd__grid">' +
+    kartu +
+    '</div>' +
+    relasi +
+    '</figure>'
+  );
+}
+
+/* ============================================================
+   16. MODAL RESET
    Halaman modul menyertakan shared/partials/reset-modal.html.
    onConfirm dipanggil setelah murid menekan "Ya, Reset".
    ============================================================ */
@@ -1810,7 +1977,7 @@ function bindResetModal(onConfirm) {
 }
 
 /* ============================================================
-   16. KOMPATIBILITAS: Engine.createLesson (MODUL LAMA)
+   17. KOMPATIBILITAS: Engine.createLesson (MODUL LAMA)
    Modul fase-f/mpi-1.3 … 2.2 masih memakai API ini. Bagian ini
    dipertahankan apa adanya sampai modul-modul itu dimigrasikan ke
    pola mesin tahap + store di atas.
