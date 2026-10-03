@@ -14,5 +14,13 @@
     "h1": "Menentukan Jenis Relasi & Kardinalitas Antar Entitas dalam ERD",
     "stageCount": 11,
     "extraBody": "partials/reset-modal.html"
+  },
+  "fase-f/mpi-1.3": {
+    "title": "Merancang ERD Lengkap dari Hasil Analisis Kebutuhan Data — Rekayasa Perangkat Lunak Fase F",
+    "description": "Media pembelajaran interaktif berbasis Cooperative Learning (Jigsaw, Dua Tinggal Dua Tamu, dan poin peningkatan STAD) untuk merancang ERD lengkap berdasarkan hasil analisis kebutuhan data: kuis awal, komponen dan langkah merancang ERD, pembagian peran tim, meja ahli empat komponen ERD, bedah dokumen kebutuhan Sistem Peminjaman Alat Lab RPL, rakit entitas–atribut–kunci primer, rakit relasi–kardinalitas–entitas penghubung–kunci tamu, evaluasi individu dan uji silang, serta penghargaan tim.",
+    "kicker": "Rekayasa Perangkat Lunak — Fase F (SMK)",
+    "h1": "Merancang ERD Lengkap dari Hasil Analisis Kebutuhan Data",
+    "stageCount": 12,
+    "extraBody": "partials/reset-modal.html"
   }
 }
