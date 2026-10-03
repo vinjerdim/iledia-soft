@@ -38,7 +38,9 @@
    17. SQL DDL — pengurai & simulator DDL mini (CREATE/ALTER/DROP/
        TRUNCATE/RENAME, basis data, kunci primer & tamu), struktur
        tabel dari ERD, urutan pembuatan tabel, pemeriksaan struktur,
-       pembangkit CREATE TABLE, penyorot sintaks, konsol berlangkah
+       pembangkit CREATE TABLE, penyorot sintaks, konsol berlangkah,
+       kamus data rancangan, editor DDL berpemeriksa (murid menulis
+       skrip sendiri lalu dicek terhadap rancangan)
    18. Modal reset
    19. Kompatibilitas: Engine.createLesson (modul lama)
 
@@ -2441,8 +2443,9 @@ function buildSkemaRelasi(tabel) {
                pk:    [namaKolom],
                fk:    [{ kolom, rujukTabel, rujukKolom }] }
    Atribut ERD boleh membawa `tipe` (mis. 'VARCHAR(50)') dan
-   `wajib: true` (NOT NULL); entitas boleh membawa `tabel` (nama
-   tabel bila berbeda dari id entitas).
+   `wajib: true` (NOT NULL) serta `ket` (keterangan di kamus data);
+   entitas boleh membawa `tabel` (nama tabel bila berbeda dari id
+   entitas).
    Simulator menjalankan perintah DDL (CREATE/ALTER/DROP/TRUNCATE/
    RENAME, CREATE/DROP DATABASE, USE) dan INSERT sederhana — cukup
    untuk membandingkan "mengubah struktur" dengan "mengubah isi".
@@ -3312,11 +3315,13 @@ function strukturDariErd(erd) {
     return {
       nama: namaTabel(ent),
       kolom: ent.atribut.map(function (a) {
-        return {
+        var k = {
           nama: a.teks,
           tipe: a.tipe || 'VARCHAR(50)',
           notNull: !!(a.pk || a.wajib),
         };
+        if (a.ket) k.ket = a.ket;
+        return k;
       }),
       pk: ent.atribut
         .filter(function (a) {
@@ -3401,12 +3406,25 @@ function urutanValid(erd, urutan) {
   return urutanBuatTabel(erd, urutan).join('|') === urutan.join('|');
 }
 
-/* Membandingkan basis data aktif dengan struktur harapan. → [pesan]. */
-function periksaStruktur(skema, harapan) {
+/*
+ * Membandingkan basis data aktif dengan struktur harapan. → [pesan].
+ *   opts.tabel  daftar nama tabel yang diperiksa saja (subset harapan)
+ *   opts.ketat  true → kolom wajib harus NOT NULL dan tidak boleh ada
+ *               kolom di luar rancangan
+ */
+function periksaStruktur(skema, harapan, opts) {
+  opts = opts || {};
   var db = ddlDbAktif(skema);
   if (!db) return ['Belum ada basis data yang aktif.'];
   var salah = [];
-  harapan.forEach(function (h) {
+  var daftar = opts.tabel
+    ? harapan.filter(function (h) {
+        return opts.tabel.some(function (n) {
+          return samaNama(n, h.nama);
+        });
+      })
+    : harapan;
+  daftar.forEach(function (h) {
     var t = cariNama(db.tabel, h.nama);
     if (!t) {
       salah.push('Tabel ' + h.nama + ' belum ada.');
@@ -3419,8 +3437,17 @@ function periksaStruktur(skema, harapan) {
         salah.push(
           'Kolom ' + h.nama + '.' + hk.nama + ' bertipe ' + k.tipe + ', seharusnya ' + hk.tipe + '.'
         );
+      } else if (opts.ketat && hk.notNull && !k.notNull) {
+        salah.push('Kolom ' + h.nama + '.' + hk.nama + ' wajib diisi — tambahkan NOT NULL.');
       }
     });
+    if (opts.ketat) {
+      t.kolom.forEach(function (k) {
+        if (!cariNama(h.kolom, k.nama)) {
+          salah.push('Kolom ' + h.nama + '.' + k.nama + ' tidak ada di rancangan.');
+        }
+      });
+    }
     var kunci = function (arr) {
       return arr
         .map(function (n) {
@@ -3813,6 +3840,302 @@ function bindKonsolDdl(root, id, langkah, st, save, rerender) {
   if (clear) {
     clear.addEventListener('click', function () {
       st.bebas = [];
+      save();
+      rerender();
+    });
+  }
+}
+
+/* ---------- Kamus data & editor DDL ----------
+   Rancangan basis data ditampilkan sebagai kamus data, lalu murid
+   MENULIS SENDIRI skripnya di editor. Skrip dijalankan di simulator
+   dan diperiksa terhadap rancangan (periksaSkripDdl).
+   state[key] = { draf, jalan, percobaan, lulus, lulusPertama, petunjuk }
+     draf          isi editor saat ini
+     jalan         skrip yang terakhir dijalankan (null bila belum)
+     percobaan     banyaknya menjalankan
+     lulus         skrip terakhir sesuai rancangan?
+     lulusPertama  hasil percobaan pertama (null bila belum mencoba)
+     petunjuk      banyaknya petunjuk yang sudah dibuka
+   Hasil dihitung ulang dari `jalan`, bukan disimpan. */
+
+/*
+ * Menjalankan skrip lalu memeriksanya terhadap rancangan.
+ *   opts.awal    skema awal (default kosong)
+ *   opts.namaDb  basis data yang harus ada dan aktif
+ *   opts.tabel   hanya tabel ini yang diperiksa ([] → tidak ada tabel)
+ *   opts.ketat   default true (lihat periksaStruktur)
+ * → { ok, lulus, log, skema, salah }
+ */
+function periksaSkripDdl(sql, harapan, opts) {
+  opts = opts || {};
+  var h = jalankanDdl(opts.awal || skemaKosong(), sql);
+  var salah = [];
+  if (h.ok && opts.namaDb) {
+    if (!cariNama(h.skema.basisData, opts.namaDb)) {
+      salah.push('Basis data ' + opts.namaDb + ' belum dibuat.');
+    } else if (!h.skema.aktif || !samaNama(h.skema.aktif, opts.namaDb)) {
+      salah.push('Basis data ' + opts.namaDb + ' belum dipilih dengan USE.');
+    }
+  }
+  if (h.ok && !salah.length && harapan && harapan.length) {
+    salah = periksaStruktur(h.skema, harapan, {
+      tabel: opts.tabel,
+      ketat: opts.ketat !== false,
+    });
+  }
+  return { ok: h.ok, lulus: h.ok && !salah.length, log: h.log, skema: h.skema, salah: salah };
+}
+
+/* Aturan satu kolom dalam kata-kata kamus data. */
+function aturanKolom(t, k) {
+  var aturan = [];
+  var pk = t.pk.some(function (n) {
+    return samaNama(n, k.nama);
+  });
+  var fk = t.fk.filter(function (f) {
+    return samaNama(f.kolom, k.nama);
+  })[0];
+  if (pk) aturan.push('🔑 Kunci primer' + (t.pk.length > 1 ? ' (gabungan)' : ''));
+  if (fk) aturan.push('🔗 Kunci tamu → ' + fk.rujukTabel + '.' + fk.rujukKolom);
+  if (!pk) aturan.push(k.notNull ? 'Wajib diisi' : 'Boleh kosong');
+  return aturan;
+}
+
+/*
+ * Rancangan tabel sebagai kamus data. struktur = hasil strukturDariErd.
+ *   opts.tabel  daftar nama tabel yang ditampilkan (default semua)
+ *   opts.judul  judul di atas kamus data
+ *   opts.namaDb nama basis data rancangan
+ */
+function buildKamusData(struktur, opts) {
+  opts = opts || {};
+  var daftar = opts.tabel
+    ? struktur.filter(function (t) {
+        return opts.tabel.some(function (n) {
+          return samaNama(n, t.nama);
+        });
+      })
+    : struktur;
+  var adaKet = daftar.some(function (t) {
+    return t.kolom.some(function (k) {
+      return !!k.ket;
+    });
+  });
+  return (
+    '<div class="kamus-data">' +
+    (opts.judul ? '<p class="kamus-data__judul">' + esc(opts.judul) + '</p>' : '') +
+    (opts.namaDb
+      ? '<p class="kamus-data__db">🗄️ Basis data: <code>' + esc(opts.namaDb) + '</code></p>'
+      : '') +
+    daftar
+      .map(function (t) {
+        return (
+          '<div class="kamus-data__tabel"><div class="mini-table-wrap"><table class="mini-table kamus-data__grid">' +
+          '<caption class="kamus-data__nama">▦ Tabel <code>' +
+          esc(t.nama) +
+          '</code></caption><thead><tr><th scope="col">Kolom</th><th scope="col">Tipe data</th>' +
+          '<th scope="col">Aturan</th>' +
+          (adaKet ? '<th scope="col">Keterangan</th>' : '') +
+          '</tr></thead><tbody>' +
+          t.kolom
+            .map(function (k) {
+              return (
+                '<tr><td><code>' +
+                esc(k.nama) +
+                '</code></td><td><code>' +
+                esc(k.tipe) +
+                '</code></td><td>' +
+                aturanKolom(t, k).map(esc).join('<br />') +
+                '</td>' +
+                (adaKet ? '<td>' + esc(k.ket || '') + '</td>' : '') +
+                '</tr>'
+              );
+            })
+            .join('') +
+          '</tbody></table></div></div>'
+        );
+      })
+      .join('') +
+    '</div>'
+  );
+}
+
+function ensureEditorState(state, key) {
+  var st = state[key];
+  if (!st || typeof st !== 'object' || typeof st.percobaan !== 'number') {
+    st = { draf: '', jalan: null, percobaan: 0, lulus: false, lulusPertama: null, petunjuk: 0 };
+  }
+  if (typeof st.draf !== 'string') st.draf = '';
+  if (typeof st.jalan !== 'string') st.jalan = null;
+  if (typeof st.petunjuk !== 'number') st.petunjuk = 0;
+  st.lulus = !!st.lulus;
+  state[key] = st;
+  return st;
+}
+
+/* Hasil pemeriksaan skrip terakhir; null bila belum dijalankan. */
+function hasilEditorDdl(st, opts) {
+  if (st.jalan === null) return null;
+  return periksaSkripDdl(st.jalan, opts.harapan, opts);
+}
+
+/*
+ *   opts.harapan, opts.namaDb, opts.awal, opts.tabel, opts.ketat
+ *                    diteruskan ke periksaSkripDdl
+ *   opts.label       label editor
+ *   opts.placeholder contoh isi editor
+ *   opts.kerangka    teks awal yang dapat disisipkan murid
+ *   opts.petunjuk    [html] petunjuk bertingkat
+ *   opts.sukses      HTML umpan balik setelah lulus
+ *   opts.rows        tinggi editor (default 8)
+ *   opts.judulSkema  judul panel skema hasil
+ */
+function buildEditorDdl(id, st, opts) {
+  opts = opts || {};
+  var hasil = hasilEditorDdl(st, opts);
+  var tombol = st.lulus
+    ? ''
+    : '<button type="button" class="btn btn--primary" id="' +
+      esc(id) +
+      'Run"' +
+      (st.draf.trim() ? '' : ' disabled') +
+      '>▶ Jalankan &amp; periksa</button>' +
+      (opts.kerangka && !st.draf.trim()
+        ? '<button type="button" class="btn btn--ghost btn--small" id="' +
+          esc(id) +
+          'Kerangka">📋 Sisipkan kerangka</button>'
+        : '') +
+      (st.draf
+        ? '<button type="button" class="btn btn--ghost btn--small" id="' +
+          esc(id) +
+          'Clear">↺ Kosongkan</button>'
+        : '') +
+      buildHintToggle(id + 'Hint', opts.petunjuk, st.petunjuk);
+  var umpan = '';
+  if (hasil) {
+    if (hasil.lulus) {
+      umpan = buildFeedbackBox(
+        'success',
+        '✓',
+        opts.sukses || '<strong>Skripmu berjalan dan sesuai rancangan!</strong>'
+      );
+    } else if (hasil.ok) {
+      umpan = buildFeedbackBox(
+        'warning',
+        '💭',
+        '<strong>Skrip berjalan, tetapi belum sesuai rancangan:</strong><ul>' +
+          hasil.salah
+            .map(function (s) {
+              return '<li>' + esc(s) + '</li>';
+            })
+            .join('') +
+          '</ul>Bandingkan lagi dengan kamus data, perbaiki, lalu jalankan ulang.'
+      );
+    } else {
+      umpan = buildFeedbackBox(
+        'error',
+        '✗',
+        '<strong>DBMS menolak skripmu.</strong> Baca pesan bertanda ✗, perbaiki baris itu, lalu jalankan ulang.'
+      );
+    }
+  }
+  return (
+    '<div class="ddl-editor' +
+    (st.lulus ? ' ddl-editor--lulus' : '') +
+    '" id="' +
+    esc(id) +
+    '"><label class="input-label" for="' +
+    esc(id) +
+    'Input">' +
+    esc(opts.label || 'Tulis skrip SQL-mu') +
+    '</label><textarea class="input-textarea ddl-editor__input" id="' +
+    esc(id) +
+    'Input" rows="' +
+    (opts.rows || 8) +
+    '" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off"' +
+    ' aria-describedby="' +
+    esc(id) +
+    'Info"' +
+    (opts.placeholder ? ' placeholder="' + esc(opts.placeholder) + '"' : '') +
+    (st.lulus ? ' readonly' : '') +
+    '>' +
+    esc(st.draf) +
+    '</textarea><p class="ddl-editor__info" id="' +
+    esc(id) +
+    'Info">' +
+    (st.lulus
+      ? '✓ Lulus pada percobaan ke-' + st.percobaan + '.'
+      : 'Akhiri setiap perintah dengan titik koma ( ; ). Tekan Ctrl + Enter untuk menjalankan.' +
+        (st.percobaan ? ' Percobaan: ' + st.percobaan + '.' : '')) +
+    '</p>' +
+    (tombol ? '<div class="btn-group">' + tombol + '</div>' : '') +
+    buildHintStack(opts.petunjuk, st.lulus ? 0 : st.petunjuk) +
+    (hasil
+      ? '<div class="ddl-editor__hasil" aria-live="polite"><div class="ddl-editor__log">' +
+        '<ul class="ddl-log">' +
+        hasil.log.map(buildLogDdl).join('') +
+        '</ul>' +
+        umpan +
+        '</div>' +
+        buildSkemaDdl(hasil.skema, { judul: opts.judulSkema || 'Isi DBMS setelah skripmu' }) +
+        '</div>'
+      : '') +
+    '</div>'
+  );
+}
+
+function bindEditorDdl(root, id, st, opts, save, rerender) {
+  opts = opts || {};
+  var ta = root.querySelector('#' + id + 'Input');
+  var run = root.querySelector('#' + id + 'Run');
+  function jalankan() {
+    var sql = (st.draf || '').trim();
+    if (!sql || st.lulus) return;
+    st.jalan = st.draf;
+    st.percobaan += 1;
+    st.lulus = periksaSkripDdl(sql, opts.harapan, opts).lulus;
+    if (st.lulusPertama === null) st.lulusPertama = st.lulus;
+    save();
+    rerender();
+  }
+  if (ta && !st.lulus) {
+    ta.addEventListener('input', function () {
+      st.draf = ta.value;
+      if (run) run.disabled = !st.draf.trim();
+      save();
+    });
+    ta.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        jalankan();
+      }
+    });
+  }
+  if (run) run.addEventListener('click', jalankan);
+  var kerangka = root.querySelector('#' + id + 'Kerangka');
+  if (kerangka) {
+    kerangka.addEventListener('click', function () {
+      st.draf = opts.kerangka;
+      save();
+      rerender();
+      var baru = document.getElementById(id + 'Input');
+      if (baru) baru.focus();
+    });
+  }
+  var clear = root.querySelector('#' + id + 'Clear');
+  if (clear) {
+    clear.addEventListener('click', function () {
+      st.draf = '';
+      st.jalan = null;
+      save();
+      rerender();
+    });
+  }
+  var hint = root.querySelector('#' + id + 'Hint');
+  if (hint) {
+    hint.addEventListener('click', function () {
+      st.petunjuk += 1;
       save();
       rerender();
     });

@@ -1,765 +1,1350 @@
 'use strict';
 
 /* ============================================================
-   data.js — seluruh isi materi 2.2
-   ============================================================
-   Berkas ini hanya berisi KONTEN. Logika tampilan ada di app.js
-   dan berkas app-stage-*.js. Guru dapat menyunting teks, tabel,
-   soal, dan umpan balik di sini tanpa menyentuh kode.
+   data.js — Konten media pembelajaran
+   Rekayasa Perangkat Lunak: Membuat Basis Data dan Tabel dengan
+   CREATE DATABASE dan CREATE TABLE sesuai Rancangan Basis Data
+   Fase F — SMK Rekayasa Perangkat Lunak, Problem Based Learning
 
-   ATURAN PENTING: setiap pilihan yang ditampilkan ke murid wajib
-   punya `id` yang unik dan stabil. Urutan tampilnya diacak oleh
-   engine, dan jawaban murid disimpan berdasarkan id — bukan
-   berdasarkan nomor urut. Mengganti id sama dengan menghapus
-   jawaban murid yang sudah tersimpan.
+   Berkas ini hanya berisi KONTEN; logika tampilan ada di app.js
+   dan shared/engine.js (seksi 17 SQL DDL: simulator, kamus data,
+   editor DDL berpemeriksa). Guru dapat menyunting teks, soal,
+   kunci, dan umpan balik di sini tanpa menyentuh kode.
+
+   Masalah autentik: Bank Sampah Sekolah (program Adiwiyata).
+   Tim TEFA sudah membuat aplikasi pencatat setoran dan rancangan
+   basis data `bank_sampah` (kamus data) sudah disetujui, tetapi
+   aplikasi galat: basis data dan tabelnya belum pernah dibuat.
+   Tim murid menerjemahkan kamus data menjadi skrip CREATE
+   DATABASE dan CREATE TABLE, menulisnya SENDIRI di editor DDL,
+   menguji di DBMS tiruan, lalu menyajikan buktinya. Kasus transfer
+   pada evaluasi: Servis Laptop TEFA (hasil 3NF dari MPI 1.4).
+
+   Pemetaan sintaks PBL → tahap media:
+     1. Orientasi murid pada masalah
+                         → orientasi   (TP, alur, apersepsi)
+                         → masalah     (laporan galat aplikasi,
+                                        kamus data, akar masalah,
+                                        rumusan masalah)
+     2. Mengorganisasi murid untuk belajar
+                         → organisasi  (peran tim, rencana langkah)
+     3. Membimbing penyelidikan individu & kelompok
+                         → konsep      (kartu sintaks, terjemahkan
+                                        kamus data → tipe data &
+                                        constraint)
+                         → basisData   (selidiki CREATE DATABASE &
+                                        USE di konsol, tulis sendiri)
+                         → tabelInduk  (lengkapi jenis_sampah, tulis
+                                        nasabah & petugas sendiri)
+     4. Mengembangkan & menyajikan hasil karya
+                         → tabelAnak   (urutan tabel, tulis setoran
+                                        berkunci tamu)
+                         → sajikan     (jalankan skrip tim dari awal,
+                                        bandingkan dengan kamus data,
+                                        klaim presentasi)
+     5. Menganalisis & mengevaluasi proses pemecahan masalah
+                         → evaluasi    (kasus Servis Laptop TEFA +
+                                        uji silang skrip Tim Biru)
+                         → refleksi
+     Penutup             → selesai
+
+   KONVENSI: rancangan memakai format ERD engine seksi 15 dengan
+   `tipe`, `wajib`, dan `ket` per atribut serta `tabel` per entitas
+   (seksi 17). `kunci` berisi skrip contoh untuk setiap editor;
+   semuanya diuji otomatis terhadap simulator engine
+   (tests/mpi-f-2.2-data.test.js).
+
+   ATURAN: setiap pilihan punya `id` unik dan stabil. Urutan
+   tampilnya DIACAK oleh app.js (initOrders) dan jawaban murid
+   disimpan per id.
    ============================================================ */
 
-const DATA = {
+/* soalPilih('q1', 'Tanya?', 'b', [['a', 'Label', 'Umpan'], …]) */
+function soalPilih(id, tanya, correct, opsi) {
+  var umpan = {};
+  opsi.forEach(function (o) {
+    umpan[o[0]] = o[2];
+  });
+  return {
+    id: id,
+    tanya: tanya,
+    correct: correct,
+    opsi: opsi.map(function (o) {
+      return { id: o[0], label: o[1] };
+    }),
+    umpan: umpan,
+  };
+}
+
+/* ---------- Rancangan utama: Bank Sampah Sekolah ---------- */
+
+var ERD_BANK = {
+  entitas: [
+    {
+      id: 'setoran',
+      tabel: 'setoran',
+      label: 'Setoran',
+      ikon: '♻️',
+      atribut: [
+        { id: 's_no', teks: 'no_setoran', pk: true, tipe: 'INT', ket: 'Nomor urut setoran' },
+        { id: 's_tgl', teks: 'tgl_setor', tipe: 'DATE', wajib: true, ket: 'Tanggal setor' },
+        {
+          id: 's_nasabah',
+          teks: 'id_nasabah',
+          fk: 'nasabah',
+          tipe: 'INT',
+          wajib: true,
+          ket: 'Nasabah yang menyetor',
+        },
+        {
+          id: 's_jenis',
+          teks: 'kode_jenis',
+          fk: 'jenis',
+          tipe: 'CHAR(4)',
+          wajib: true,
+          ket: 'Jenis sampah yang disetor',
+        },
+        {
+          id: 's_petugas',
+          teks: 'id_petugas',
+          fk: 'petugas',
+          tipe: 'INT',
+          wajib: true,
+          ket: 'Petugas yang menimbang',
+        },
+        {
+          id: 's_berat',
+          teks: 'berat_kg',
+          tipe: 'DECIMAL(5,2)',
+          wajib: true,
+          ket: 'Berat dalam kg, mis. 2.75',
+        },
+      ],
+    },
+    {
+      id: 'nasabah',
+      tabel: 'nasabah',
+      label: 'Nasabah',
+      ikon: '🧑‍🎓',
+      atribut: [
+        { id: 'n_id', teks: 'id_nasabah', pk: true, tipe: 'INT', ket: 'Nomor nasabah' },
+        {
+          id: 'n_nama',
+          teks: 'nama_nasabah',
+          tipe: 'VARCHAR(50)',
+          wajib: true,
+          ket: 'Nama lengkap',
+        },
+        { id: 'n_kelas', teks: 'kelas', tipe: 'VARCHAR(10)', wajib: true, ket: 'Mis. XI RPL 1' },
+        { id: 'n_hp', teks: 'no_hp', tipe: 'VARCHAR(15)', ket: 'Boleh kosong' },
+      ],
+    },
+    {
+      id: 'jenis',
+      tabel: 'jenis_sampah',
+      label: 'Jenis Sampah',
+      ikon: '🗑️',
+      atribut: [
+        { id: 'j_kode', teks: 'kode_jenis', pk: true, tipe: 'CHAR(4)', ket: 'Selalu 4 karakter' },
+        {
+          id: 'j_nama',
+          teks: 'nama_jenis',
+          tipe: 'VARCHAR(30)',
+          wajib: true,
+          ket: 'Mis. Botol plastik',
+        },
+        {
+          id: 'j_harga',
+          teks: 'harga_per_kg',
+          tipe: 'INT',
+          wajib: true,
+          ket: 'Rupiah tanpa sen',
+        },
+      ],
+    },
+    {
+      id: 'petugas',
+      tabel: 'petugas',
+      label: 'Petugas',
+      ikon: '🧑‍🔧',
+      atribut: [
+        { id: 'p_id', teks: 'id_petugas', pk: true, tipe: 'INT', ket: 'Nomor petugas' },
+        {
+          id: 'p_nama',
+          teks: 'nama_petugas',
+          tipe: 'VARCHAR(50)',
+          wajib: true,
+          ket: 'Nama petugas piket',
+        },
+      ],
+    },
+  ],
+  relasi: [],
+};
+
+/* ---------- Kasus transfer evaluasi: Servis Laptop TEFA (MPI 1.4) ---------- */
+
+var ERD_TEFA = {
+  entitas: [
+    {
+      id: 'detail',
+      tabel: 'detail_servis',
+      label: 'Detail Servis',
+      ikon: '🧾',
+      penghubung: true,
+      atribut: [
+        { id: 'd_srv', teks: 'no_servis', pk: true, fk: 'servis', tipe: 'CHAR(3)' },
+        { id: 'd_lay', teks: 'kode_lay', pk: true, fk: 'layanan', tipe: 'CHAR(2)' },
+      ],
+    },
+    {
+      id: 'servis',
+      tabel: 'servis',
+      label: 'Servis',
+      ikon: '💻',
+      atribut: [
+        { id: 's_no', teks: 'no_servis', pk: true, tipe: 'CHAR(3)', ket: 'Mis. S01' },
+        { id: 's_tgl', teks: 'tgl_masuk', tipe: 'DATE', wajib: true },
+        { id: 's_plg', teks: 'kode_plg', fk: 'pelanggan', tipe: 'CHAR(3)', wajib: true },
+        { id: 's_tek', teks: 'kode_tek', fk: 'teknisi', tipe: 'CHAR(2)', wajib: true },
+      ],
+    },
+    {
+      id: 'pelanggan',
+      tabel: 'pelanggan',
+      label: 'Pelanggan',
+      ikon: '🙋',
+      atribut: [
+        { id: 'p_kode', teks: 'kode_plg', pk: true, tipe: 'CHAR(3)', ket: 'Mis. P01' },
+        { id: 'p_nama', teks: 'nama_plg', tipe: 'VARCHAR(50)', wajib: true },
+        { id: 'p_hp', teks: 'no_hp', tipe: 'VARCHAR(15)' },
+      ],
+    },
+    {
+      id: 'teknisi',
+      tabel: 'teknisi',
+      label: 'Teknisi',
+      ikon: '🧑‍🔧',
+      atribut: [
+        { id: 't_kode', teks: 'kode_tek', pk: true, tipe: 'CHAR(2)', ket: 'Mis. T1' },
+        { id: 't_nama', teks: 'nama_tek', tipe: 'VARCHAR(50)', wajib: true },
+      ],
+    },
+    {
+      id: 'layanan',
+      tabel: 'layanan',
+      label: 'Layanan',
+      ikon: '🛠️',
+      atribut: [
+        { id: 'l_kode', teks: 'kode_lay', pk: true, tipe: 'CHAR(2)', ket: 'Mis. L1' },
+        { id: 'l_nama', teks: 'nama_lay', tipe: 'VARCHAR(40)', wajib: true },
+        { id: 'l_biaya', teks: 'biaya', tipe: 'DECIMAL(10,2)', wajib: true, ket: 'Rupiah' },
+      ],
+    },
+  ],
+  relasi: [],
+};
+
+/* Skrip Tim Biru (uji silang): tiga kesalahan yang muncul bergiliran
+   saat diperbaiki — lupa USE, tabel anak dibuat sebelum induknya,
+   dan VARCHAR tanpa panjang. */
+var SKRIP_TIM_BIRU =
+  'CREATE DATABASE tefa_servis;\n\n' +
+  'CREATE TABLE servis (\n' +
+  '  no_servis CHAR(3),\n' +
+  '  tgl_masuk DATE NOT NULL,\n' +
+  '  kode_plg CHAR(3) NOT NULL,\n' +
+  '  kode_tek CHAR(2) NOT NULL,\n' +
+  '  PRIMARY KEY (no_servis),\n' +
+  '  FOREIGN KEY (kode_plg) REFERENCES pelanggan(kode_plg),\n' +
+  '  FOREIGN KEY (kode_tek) REFERENCES teknisi(kode_tek)\n' +
+  ');\n\n' +
+  'CREATE TABLE pelanggan (\n' +
+  '  kode_plg CHAR(3),\n' +
+  '  nama_plg VARCHAR NOT NULL,\n' +
+  '  no_hp VARCHAR(15),\n' +
+  '  PRIMARY KEY (kode_plg)\n' +
+  ');';
+
+/* Pernyataan berumpang tahap Tabel Induk; __n__ = isian ke-n. */
+var RUMPANG_JENIS =
+  'CREATE TABLE jenis_sampah (\n' +
+  '  kode_jenis __1__,\n' +
+  '  nama_jenis VARCHAR(30) __2__,\n' +
+  '  harga_per_kg __3__ NOT NULL,\n' +
+  '  __4__ (kode_jenis)\n' +
+  ');';
+
+/* Pernyataan konsol yang dipakai berulang. */
+var SQL_NASABAH_MINI = 'CREATE TABLE nasabah (\n  id_nasabah INT PRIMARY KEY\n);';
+
+var DATA = {
   meta: {
-    title: 'Jenis-jenis DBMS dan Karakteristiknya',
-    subject: 'Rekayasa Perangkat Lunak — Fase F (SMK)',
-    model: 'Discovery Learning',
-    goal: 'Mengidentifikasi dan membandingkan jenis-jenis DBMS beserta karakteristiknya.'
+    judul: 'Membuat Basis Data dan Tabel dengan CREATE DATABASE dan CREATE TABLE',
+    mapel: 'Rekayasa Perangkat Lunak — Fase F (SMK)',
+    model: 'Problem Based Learning',
+  },
+
+  tahap: [
+    { id: 'orientasi', label: 'Orientasi', sintaks: 'Sintaks 1 · Orientasi pada Masalah' },
+    {
+      id: 'masalah',
+      label: 'Masalah Bank Sampah',
+      sintaks: 'Sintaks 1 · Orientasi pada Masalah',
+    },
+    {
+      id: 'organisasi',
+      label: 'Bentuk Tim',
+      sintaks: 'Sintaks 2 · Mengorganisasi Murid untuk Belajar',
+    },
+    { id: 'konsep', label: 'Bekal Sintaks', sintaks: 'Sintaks 3 · Membimbing Penyelidikan' },
+    { id: 'basisData', label: 'Buat Basis Data', sintaks: 'Sintaks 3 · Membimbing Penyelidikan' },
+    { id: 'tabelInduk', label: 'Tabel Induk', sintaks: 'Sintaks 3 · Membimbing Penyelidikan' },
+    {
+      id: 'tabelAnak',
+      label: 'Tabel Berelasi',
+      sintaks: 'Sintaks 4 · Mengembangkan & Menyajikan Hasil Karya',
+    },
+    {
+      id: 'sajikan',
+      label: 'Sajikan Hasil',
+      sintaks: 'Sintaks 4 · Mengembangkan & Menyajikan Hasil Karya',
+    },
+    {
+      id: 'evaluasi',
+      label: 'Evaluasi',
+      sintaks: 'Sintaks 5 · Menganalisis & Mengevaluasi Pemecahan Masalah',
+    },
+    {
+      id: 'refleksi',
+      label: 'Refleksi',
+      sintaks: 'Sintaks 5 · Menganalisis & Mengevaluasi Pemecahan Masalah',
+    },
+    { id: 'selesai', label: 'Selesai', sintaks: '' },
+  ],
+
+  erd: ERD_BANK,
+  erdTefa: ERD_TEFA,
+  namaDb: 'bank_sampah',
+  namaDbTefa: 'tefa_servis',
+
+  /* Skrip contoh tiap editor — kunci guru & bahan tes otomatis.
+     Murid boleh menulis versi lain selama hasilnya sesuai rancangan. */
+  kunci: {
+    db: 'CREATE DATABASE bank_sampah;\nUSE bank_sampah;',
+    induk:
+      'CREATE TABLE nasabah (\n' +
+      '  id_nasabah INT,\n' +
+      '  nama_nasabah VARCHAR(50) NOT NULL,\n' +
+      '  kelas VARCHAR(10) NOT NULL,\n' +
+      '  no_hp VARCHAR(15),\n' +
+      '  PRIMARY KEY (id_nasabah)\n' +
+      ');\n\n' +
+      'CREATE TABLE petugas (\n' +
+      '  id_petugas INT,\n' +
+      '  nama_petugas VARCHAR(50) NOT NULL,\n' +
+      '  PRIMARY KEY (id_petugas)\n' +
+      ');',
+    anak:
+      'CREATE TABLE setoran (\n' +
+      '  no_setoran INT,\n' +
+      '  tgl_setor DATE NOT NULL,\n' +
+      '  id_nasabah INT NOT NULL,\n' +
+      '  kode_jenis CHAR(4) NOT NULL,\n' +
+      '  id_petugas INT NOT NULL,\n' +
+      '  berat_kg DECIMAL(5,2) NOT NULL,\n' +
+      '  PRIMARY KEY (no_setoran),\n' +
+      '  FOREIGN KEY (id_nasabah) REFERENCES nasabah(id_nasabah),\n' +
+      '  FOREIGN KEY (kode_jenis) REFERENCES jenis_sampah(kode_jenis),\n' +
+      '  FOREIGN KEY (id_petugas) REFERENCES petugas(id_petugas)\n' +
+      ');',
   },
 
   /* ==========================================================
-     TAHAP 1 — Orientasi
+     SINTAKS 1 — Orientasi pada masalah
      ========================================================== */
   orientasi: {
     kicker: 'Tahap 1 · Orientasi',
-    title: 'Sebelum Mulai',
-    goal: 'Memahami tujuan, alur, dan cara memakai media ini.',
-    salam:
-      'Di materi sebelumnya kamu sudah tahu bahwa DBMS adalah perangkat lunak pengelola basis data. ' +
-      'Ternyata DBMS tidak hanya satu jenis! Di media ini kamu akan mengintip enam "gudang data" milik ' +
-      'RPL Mart, toko online sekolah, yang menyimpan data yang sama dengan cara berbeda-beda. ' +
-      'Dari situ kamu akan menemukan sendiri jenis-jenis DBMS dan apa yang membedakan mereka.',
-    tujuanLabel: 'Setelah menyelesaikan media ini kamu dapat:',
-    tujuan: [
-      'Mengidentifikasi jenis-jenis DBMS berdasarkan model datanya: hierarkis, jaringan, relasional, berorientasi objek, dan NoSQL (dokumen, key-value, kolom lebar, graf).',
-      'Menjelaskan karakteristik tiap jenis DBMS: struktur data, skema, bahasa kueri, konsistensi, dan skalabilitas.',
-      'Mengelompokkan contoh produk DBMS ke dalam jenisnya.',
-      'Membandingkan DBMS relasional, NoSQL, serta hierarkis & jaringan.',
-      'Memilih jenis DBMS yang tepat untuk suatu kebutuhan beserta alasannya.'
+    title: 'Aplikasi Bank Sampah Tidak Bisa Menyimpan Data',
+    goal: 'Mengetahui tujuan belajar, alur pemecahan masalah, dan cara memakai media ini.',
+    guru: 'Kaitkan dengan MPI 2.1: murid sudah tahu fungsi perintah DDL, kini mereka harus <em>menulisnya sendiri</em> dari rancangan. Ceritakan masalah Bank Sampah secara singkat seperti laporan klien sungguhan, lalu minta murid menjawab pemanasan. Jangan memberi skrip jadi — masalah inilah yang akan mereka pecahkan.',
+    tpJudul: 'Tujuan belajar hari ini',
+    tp: 'Membuat basis data dan tabel menggunakan perintah CREATE DATABASE dan CREATE TABLE sesuai rancangan basis data yang telah ditentukan.',
+    kriteria: [
+      'Membaca kamus data: nama tabel, kolom, tipe data, kunci primer, kunci tamu, dan kolom wajib.',
+      'Menulis perintah CREATE DATABASE dan USE untuk menyiapkan basis data sesuai nama di rancangan.',
+      'Menulis perintah CREATE TABLE lengkap dengan tipe data, NOT NULL, dan PRIMARY KEY.',
+      'Menulis FOREIGN KEY … REFERENCES dan mengurutkan pembuatan tabel: induk sebelum anak.',
+      'Menguji skrip di DBMS, membaca pesan galat, lalu memperbaiki skrip sendiri maupun skrip tim lain.',
     ],
-    alurLabel: 'Alur belajar (9 tahap)',
+    pengantar:
+      'Bank Sampah Sekolah menukar sampah pilah menjadi tabungan. Tim TEFA RPL sudah membuat <strong>aplikasi pencatat setoran</strong> dan rancangan basis datanya sudah disetujui pembina. Tetapi saat aplikasi dicoba, setiap setoran <strong>gagal disimpan</strong>. Timmu dipanggil untuk memecahkan masalah ini.',
     alur: [
-      { title: 'Stimulasi', desc: 'Mengintip enam gudang data RPL Mart dan mencatat perbedaannya.' },
-      { title: 'Rumusan Masalah', desc: 'Menetapkan pertanyaan yang akan diselidiki.' },
-      { title: 'Pengumpulan Data', desc: 'Membuka kartu konsep jenis-jenis DBMS, lalu menjodohkan jenis dengan cirinya.' },
-      { title: 'Pengolahan Data', desc: 'Memilah produk DBMS ke jenisnya dan membandingkan karakteristiknya.' },
-      { title: 'Verifikasi', desc: 'Menjadi Konsultan DBMS: memilih jenis DBMS untuk kebutuhan nyata lalu membuktikannya.' },
-      { title: 'Generalisasi', desc: 'Menyimpulkan perbandingan jenis DBMS, lalu menguji pemahaman.' },
-      { title: 'Refleksi & Selesai', desc: 'Menilai pemahamanmu sendiri dan melihat tabel perbandingan akhir.' }
+      { judul: 'Masalah', desk: 'Baca laporan galat aplikasi dan rancangan basis data.' },
+      { judul: 'Bentuk Tim', desk: 'Bagi peran dan susun rencana langkah pemecahan masalah.' },
+      { judul: 'Bekal Sintaks', desk: 'Terjemahkan kamus data menjadi tipe data dan constraint.' },
+      { judul: 'Buat Basis Data', desk: 'Selidiki CREATE DATABASE dan USE, lalu tulis sendiri.' },
+      { judul: 'Tabel Induk', desk: 'Tulis CREATE TABLE untuk tabel tanpa kunci tamu.' },
+      { judul: 'Tabel Berelasi', desk: 'Tulis tabel setoran beserta FOREIGN KEY-nya.' },
+      { judul: 'Sajikan Hasil', desk: 'Jalankan skrip tim dari awal dan tunjukkan buktinya.' },
+      { judul: 'Evaluasi', desk: 'Uji kemampuan pada kasus Servis Laptop TEFA.' },
     ],
-    caraPakaiLabel: 'Cara memakai',
     caraPakai: [
-      'Tahap terbuka berurutan — selesaikan satu tahap untuk membuka tahap berikutnya.',
-      'Progresmu tersimpan otomatis di perangkat ini. Boleh ditutup lalu dilanjutkan nanti.',
-      'Tidak apa-apa salah. Setiap jawaban salah diberi penjelasan, bukan hukuman.',
-      'Tombol Reset di kanan atas menghapus seluruh progres dan mengacak ulang pilihan jawaban.'
+      'Kamu akan <strong>mengetik skrip SQL sendiri</strong> di editor. Tekan <em>Jalankan &amp; periksa</em>: DBMS tiruan menjalankan skripmu lalu mencocokkannya dengan rancangan.',
+      'Galat bukan kegagalan — baca pesan DBMS, perbaiki, dan jalankan lagi. Petunjuk bertingkat tersedia bila buntu.',
+      'Pertanyaan boleh dicoba lagi sampai benar; skor dihitung dari percobaan pertama. Kuis evaluasi hanya bisa dijawab sekali.',
+      'Urutan pilihan jawaban diacak. Progres tersimpan di perangkat ini; tombol Reset mengulang dari awal dan mengacak ulang pilihan.',
     ],
-    mulaiLabel: 'Mulai menyelidiki →'
+    apersepsi: {
+      tanya:
+        'Pemanasan: aplikasi sudah jadi dan rancangan basis data sudah disetujui, tetapi data tetap gagal disimpan. Menurut dugaanmu, apa penyebabnya?',
+      opsi: [
+        { id: 'wadah', label: 'Basis data dan tabelnya belum dibuat di DBMS' },
+        { id: 'aplikasi', label: 'Kode aplikasinya harus ditulis ulang' },
+        { id: 'internet', label: 'Koneksi internet sekolah lambat' },
+        { id: 'rancangan', label: 'Rancangan basis datanya salah total' },
+      ],
+      umpan:
+        'Simpan dugaanmu — tahap berikutnya memberi bukti. Ingat MPI 2.1: rancangan di atas kertas belum menjadi apa-apa di DBMS sampai seseorang <strong>menjalankan perintah DDL</strong> untuk membangunnya.',
+    },
   },
 
-  /* ==========================================================
-     TAHAP 2 — Stimulasi
-     ========================================================== */
-  stimulasi: {
-    kicker: 'Tahap 2 · Stimulasi',
-    title: 'Satu Data, Enam Gudang',
-    goal: 'Mengamati bagaimana data yang sama dapat disimpan dengan cara yang berbeda-beda.',
-    cerita:
-      '<p><strong>RPL Mart</strong> adalah toko online buatan siswa RPL. Isinya sederhana: ' +
-      '<strong>Dewi</strong> membeli Kaos RPL dan Stiker, <strong>Bima</strong> membeli Tumbler, ' +
-      'dan Dewi berteman dengan Bima.</p>' +
-      '<p>Enam tim siswa diminta menyimpan data itu. Setiap tim memakai DBMS yang berbeda, ' +
-      'dan hasilnya disebut <strong>gudang</strong>. Bu Sari, guru pembimbing, bertanya:</p>',
-    keluhan:
-      '"Datanya sama persis, tapi kenapa bentuk gudangnya beda-beda? Coba intip satu per satu. ' +
-      'Perhatikan bentuk datanya, cara menanyakan datanya, dan catatan dari penjaga gudangnya."',
-    instruction:
-      '<strong>Ketuk setiap gudang</strong> untuk membukanya. Amati bentuk penyimpanan, cara bertanya, ' +
-      'dan kata penjaga gudang.',
-    bukaLabel: 'Gudang dibuka',
-    bentukLabel: 'Bentuk data',
-    tanyaLabel: 'Cara bertanya ke gudang',
-    penjagaLabel: 'Kata penjaga gudang',
-    /* Gudang TIDAK diacak: ini bahan pengamatan, bukan pilihan jawaban.
-       Nama jenis DBMS sengaja tidak disebut — murid menemukannya di tahap 4. */
-    gudang: [
-      {
-        id: 'g-pohon',
-        icon: '🌳',
-        name: 'Gudang Pohon',
-        tim: 'Tim 1',
-        visual:
-          'RPL Mart\n' +
-          '├── Pelanggan: Dewi\n' +
-          '│   └── Pesanan #101\n' +
-          '│       ├── Kaos RPL  ×1\n' +
-          '│       └── Stiker    ×3\n' +
-          '└── Pelanggan: Bima\n' +
-          '    └── Pesanan #102\n' +
-          '        └── Tumbler   ×1',
-        tanya: 'Mulai dari akar → RPL Mart → Dewi → Pesanan #101 → daftar barang',
-        penjaga:
-          'Setiap data hanya punya SATU induk. Kalau Bima juga membeli Kaos RPL, data kaos harus saya tulis ' +
-          'lagi di cabang Bima. Untuk mencari data, saya selalu menelusuri dari atas ke bawah.'
-      },
-      {
-        id: 'g-jaring',
-        icon: '🕸️',
-        name: 'Gudang Jaring',
-        tim: 'Tim 2',
-        visual:
-          '[Dewi] ──────► [Pesanan #101] ◄────── [Kaos RPL]\n' +
-          '                     ▲\n' +
-          '[Stiker] ────────────┘\n' +
-          '\n' +
-          '[Bima] ──────► [Pesanan #102] ◄────── [Tumbler]',
-        tanya: 'FIND Dewi → ikuti pointer ke Pesanan → ikuti pointer ke setiap Produk',
-        penjaga:
-          'Satu pesanan boleh punya lebih dari satu induk: pelanggannya dan produknya. Semua dihubungkan ' +
-          'dengan penunjuk (pointer). Cepat, tetapi kalau strukturnya diubah, program yang menelusuri jalurnya ikut harus diubah.'
-      },
-      {
-        id: 'g-tabel',
-        icon: '📋',
-        name: 'Gudang Tabel',
-        tim: 'Tim 3',
-        visual:
-          'pelanggan               produk\n' +
-          '+----+------+           +----+----------+-------+\n' +
-          '| id | nama |           | id | nama     | harga |\n' +
-          '+----+------+           +----+----------+-------+\n' +
-          '| 1  | Dewi |           | K1 | Kaos RPL | 75000 |\n' +
-          '| 2  | Bima |           | S1 | Stiker   |  5000 |\n' +
-          '+----+------+           | T1 | Tumbler  | 45000 |\n' +
-          '                        +----+----------+-------+\n' +
-          'pesanan\n' +
-          '+-----+--------------+-----------+--------+\n' +
-          '| no  | id_pelanggan | id_produk | jumlah |\n' +
-          '+-----+--------------+-----------+--------+\n' +
-          '| 101 | 1            | K1        | 1      |\n' +
-          '| 101 | 1            | S1        | 3      |\n' +
-          '| 102 | 2            | T1        | 1      |\n' +
-          '+-----+--------------+-----------+--------+',
-        tanya:
-          'SELECT p.nama, pr.nama FROM pesanan ps\n' +
-          '  JOIN pelanggan p ON p.id = ps.id_pelanggan\n' +
-          '  JOIN produk pr  ON pr.id = ps.id_produk;',
-        penjaga:
-          'Semua data saya simpan dalam tabel berkolom tetap, dihubungkan lewat kunci (id). Mau menambah kolom ' +
-          '"hobi"? Ubah dulu strukturnya. Setiap transaksi saya jamin utuh: berhasil semua atau batal semua.'
-      },
-      {
-        id: 'g-dokumen',
-        icon: '📄',
-        name: 'Gudang Map Dokumen',
-        tim: 'Tim 4',
-        visual:
-          '{ "_id": "dewi",\n' +
-          '  "nama": "Dewi",\n' +
-          '  "pesanan": [\n' +
-          '    { "no": 101, "barang": ["Kaos RPL", "Stiker"] }\n' +
-          '  ] }\n' +
-          '\n' +
-          '{ "_id": "bima",\n' +
-          '  "nama": "Bima",\n' +
-          '  "kelas": "XI RPL 1",\n' +
-          '  "hobi": ["futsal"],\n' +
-          '  "pesanan": [ { "no": 102, "barang": ["Tumbler"] } ] }',
-        tanya: 'db.pelanggan.find({ "nama": "Dewi" })',
-        penjaga:
-          'Setiap pelanggan satu map dokumen (mirip JSON). Pesanannya ikut disimpan di dalam map itu. ' +
-          'Lihat, dokumen Bima punya "kelas" dan "hobi", Dewi tidak — dan itu boleh! Kalau pelanggan makin banyak, cukup tambah server.'
-      },
-      {
-        id: 'g-loker',
-        icon: '🔑',
-        name: 'Gudang Loker',
-        tim: 'Tim 5',
-        visual:
-          'KUNCI                 NILAI\n' +
-          'keranjang:dewi   →   "Kaos RPL, Stiker"\n' +
-          'keranjang:bima   →   "Tumbler"\n' +
-          'sesi:dewi        →   "token-a81f"\n' +
-          'stok:tumbler     →   12',
-        tanya: 'GET keranjang:dewi',
-        penjaga:
-          'Saya hanya kenal pasangan kunci → nilai, seperti loker bernomor. Kalau kamu tahu nomor lokernya, ' +
-          'isinya saya berikan dalam sekejap. Tapi jangan tanya "siapa saja yang membeli kaos?" — saya tidak bisa mencari berdasarkan isi.'
-      },
-      {
-        id: 'g-peta',
-        icon: '🔗',
-        name: 'Gudang Peta Relasi',
-        tim: 'Tim 6',
-        visual:
-          '(Dewi) ──BERTEMAN──► (Bima)\n' +
-          '  │                     │\n' +
-          'MEMBELI              MEMBELI\n' +
-          '  ▼                     ▼\n' +
-          '(Kaos RPL)          (Tumbler)\n' +
-          '  │\n' +
-          '(Stiker) ◄──MEMBELI── (Dewi)',
-        tanya:
-          'MATCH (dewi)-[:BERTEMAN]->(teman)-[:MEMBELI]->(barang)\n' +
-          'RETURN barang   // "Temanmu juga membeli…"',
-        penjaga:
-          'Saya menyimpan data sebagai simpul (orang, barang) dan garis hubungan (berteman, membeli). ' +
-          'Menelusuri "teman dari teman" atau "yang juga dibeli temanmu" adalah keahlian saya.'
-      }
-    ],
-    amatLabel: 'Catat hasil pengamatanmu',
-    amatInstruction:
-      'Dari keenam gudang di atas, <strong>pilih semua pernyataan</strong> yang sesuai dengan pengamatanmu.',
-    amatan: [
-      { id: 'o-bentuk', valid: true, text: 'Data yang sama dapat disimpan dengan struktur berbeda: pohon, jaringan, tabel, dokumen, kunci-nilai, atau simpul-garis.', feedback: 'Benar. Keenam gudang menyimpan data RPL Mart yang sama persis, tetapi strukturnya berbeda.' },
-      { id: 'o-induk', valid: true, text: 'Di Gudang Pohon, setiap data hanya punya satu induk sehingga data yang sama bisa tertulis berulang.', feedback: 'Benar. Kaos RPL harus ditulis ulang di cabang Bima bila Bima juga membelinya.' },
-      { id: 'o-skema', valid: true, text: 'Gudang Tabel memakai kolom yang tetap, sedangkan Gudang Map Dokumen membolehkan tiap data punya isian berbeda.', feedback: 'Benar. Dokumen Bima punya "kelas" dan "hobi", Dewi tidak. Di Gudang Tabel, kolom baru harus ditambahkan ke strukturnya dulu.' },
-      { id: 'o-bahasa', valid: true, text: 'Cara bertanya ke tiap gudang berbeda; tidak semuanya memakai SQL.', feedback: 'Benar. Hanya Gudang Tabel yang memakai SELECT … JOIN. Gudang lain memakai find(), GET, MATCH, atau menelusuri jalur.' },
-      { id: 'o-relasi', valid: true, text: 'Gudang Peta Relasi paling mudah menelusuri hubungan seperti "yang juga dibeli temanmu".', feedback: 'Benar. Hubungan disimpan langsung sebagai garis, sehingga penelusurannya cepat.' },
-      { id: 'o-kunci', valid: true, text: 'Gudang Loker sangat cepat mengambil data asalkan kuncinya diketahui.', feedback: 'Benar. GET keranjang:dewi langsung dijawab, tetapi Gudang Loker tidak bisa mencari berdasarkan isi.' },
-      { id: 'o-sama', valid: false, text: 'Semua gudang sebenarnya sama saja, hanya warna tampilannya yang berbeda.', feedback: 'Bukan. Perbedaannya ada pada struktur, aturan, dan cara bertanya — bukan pada tampilan.' },
-      { id: 'o-sql', valid: false, text: 'Semua gudang wajib memakai perintah SQL seperti SELECT … FROM.', feedback: 'Bukan. Hanya Gudang Tabel yang memakai SQL.' },
-      { id: 'o-terbaik', valid: false, text: 'Sudah pasti ada satu gudang yang paling baik untuk semua kebutuhan.', feedback: 'Belum tentu. Tiap gudang unggul di hal yang berbeda. Inilah yang akan kamu selidiki.' }
-    ],
-    cekLabel: 'Periksa pengamatan',
-    lanjutLabel: 'Lanjut ke Rumusan Masalah →'
-  },
-
-  /* ==========================================================
-     TAHAP 3 — Rumusan Masalah
-     ========================================================== */
   masalah: {
-    kicker: 'Tahap 3 · Rumusan Masalah',
-    title: 'Apa yang Sebenarnya Harus Diselidiki?',
-    goal: 'Merumuskan pertanyaan tentang jenis-jenis DBMS yang akan diselidiki.',
-    ringkasLabel: 'Pengamatanmu sejauh ini',
-    instruction: 'Pilih <strong>satu</strong> rumusan masalah yang paling tepat mewakili hasil pengamatanmu.',
-    options: [
-      {
-        id: 'rm-jenis',
-        correct: true,
-        text: 'Apa saja jenis-jenis DBMS berdasarkan cara penyimpanan datanya, apa karakteristik masing-masing, dan kapan setiap jenis tepat dipakai?',
-        feedback: 'Tepat. Rumusan ini mencakup semua perbedaan yang kamu amati dan mengarah ke penyelidikan tentang jenis dan karakteristik DBMS.'
-      },
-      {
-        id: 'rm-mahal',
-        correct: false,
-        text: 'Merek DBMS apa yang harganya paling mahal?',
-        feedback: 'Kurang tepat. Harga tidak menjelaskan mengapa struktur dan cara bertanya tiap gudang berbeda.'
-      },
-      {
-        id: 'rm-warna',
-        correct: false,
-        text: 'Bagaimana cara mengganti warna tampilan tiap gudang agar lebih menarik?',
-        feedback: 'Kurang tepat. Tampilan bukan pembeda jenis DBMS.'
-      },
-      {
-        id: 'rm-sql',
-        correct: false,
-        text: 'Bagaimana cara menulis perintah SELECT di Gudang Tabel?',
-        feedback: 'Terlalu sempit. Ini hanya membahas satu gudang, padahal yang kamu amati adalah perbedaan keenam gudang.'
-      }
+    kicker: 'Tahap 2 · Orientasi pada Masalah',
+    title: 'Laporan Masalah dari Bank Sampah',
+    goal: 'Menemukan akar masalah dari laporan galat dan rancangan basis data, lalu merumuskan masalah.',
+    guru: "Bacakan laporan Bu Rina seperti klien sungguhan. Minta tim menandai kata kunci pada pesan galat (<em>Unknown database</em>, <em>doesn't exist</em>). Rumusan masalah tidak dinilai otomatis; pilih dua rumusan tim untuk dibacakan dan dijadikan pegangan kelas.",
+    kutipan:
+      '"Aplikasinya sudah dipasang di laptop pos Bank Sampah, tapi setiap kali petugas menekan Simpan, muncul pesan merah. Rancangan basis datanya sudah kami setujui bulan lalu. Tolong cari tahu apa yang kurang, ya." — Bu Rina, pembina Bank Sampah',
+    logJudul: 'Log galat aplikasi',
+    log: [
+      "[07:02] Koneksi ke server … gagal: Unknown database 'bank_sampah'",
+      "[07:15] Simpan setoran #1 … gagal: Unknown database 'bank_sampah'",
+      "[07:16] Cek tabel setoran … gagal: Table 'bank_sampah.setoran' doesn't exist",
     ],
-    cekLabel: 'Periksa rumusan',
-    ownLabel: 'Pertanyaan penyelidikanmu',
-    ownPrompt: 'Tulis satu pertanyaan yang ingin kamu jawab di tahap berikutnya.',
-    ownPlaceholder: 'Contoh: Mengapa Gudang Map Dokumen boleh punya isian berbeda-beda, sedangkan Gudang Tabel tidak?',
-    ownMin: 30,
-    lanjutLabel: 'Lanjut ke Pengumpulan Data →'
+    kamusJudul: 'Rancangan basis data (kamus data) yang sudah disetujui',
+    akar: {
+      tanya:
+        'Berdasarkan log galat dan kamus data, pilih SEMUA pernyataan yang tepat tentang masalahnya.',
+      opsi: [
+        {
+          id: 'db',
+          label: 'Basis data <code>bank_sampah</code> belum ada di DBMS',
+          benar: true,
+          alasan: '"Unknown database" berarti DBMS tidak mengenal basis data dengan nama itu.',
+        },
+        {
+          id: 'tabel',
+          label: 'Tabel-tabel sesuai rancangan belum dibuat',
+          benar: true,
+          alasan: '"Table … doesn\'t exist": tabel setoran (dan kawan-kawannya) memang belum ada.',
+        },
+        {
+          id: 'rancangan',
+          label: 'Rancangan sudah tersedia, tinggal diwujudkan dengan perintah SQL',
+          benar: true,
+          alasan:
+            'Kamus data sudah lengkap: nama tabel, kolom, tipe, dan kunci tinggal diterjemahkan ke CREATE DATABASE dan CREATE TABLE.',
+        },
+        {
+          id: 'insert',
+          label: 'Data setoran harus dimasukkan dulu dengan INSERT',
+          benar: false,
+          alasan:
+            'INSERT mengisi baris ke tabel. Tabelnya sendiri belum ada, jadi INSERT pun akan gagal.',
+        },
+        {
+          id: 'kode',
+          label: 'Kode aplikasi salah sehingga harus ditulis ulang',
+          benar: false,
+          alasan:
+            'Aplikasi sudah benar mencari basis data bank_sampah; yang belum ada adalah basis datanya.',
+        },
+        {
+          id: 'ulang',
+          label: 'Rancangan basis data harus dibuat ulang dari awal',
+          benar: false,
+          alasan: 'Rancangan sudah disetujui dan tidak ada galat yang menyinggung rancangan.',
+        },
+      ],
+      done: '<strong>Akar masalah ditemukan:</strong> wadah datanya (basis data dan tabel) belum pernah dibangun dari rancangan.',
+    },
+    rumusan: {
+      label: 'Rumusan masalah tim',
+      petunjuk:
+        'Tulis rumusan masalah dalam bentuk pertanyaan yang memuat kata "basis data", "tabel", dan "rancangan".',
+      placeholder:
+        'Contoh: Bagaimana membuat basis data bank_sampah beserta tabel-tabelnya dengan perintah SQL agar sesuai rancangan?',
+      min: 40,
+    },
   },
 
   /* ==========================================================
-     TAHAP 4 — Pengumpulan Data
+     SINTAKS 2 — Mengorganisasi murid untuk belajar
+     ========================================================== */
+  organisasi: {
+    kicker: 'Tahap 3 · Mengorganisasi Belajar',
+    title: 'Bentuk Tim Pembangun Basis Data',
+    goal: 'Membagi peran tim dan menyusun rencana langkah membangun basis data dari rancangan.',
+    guru: 'Bentuk tim berempat dan pastikan setiap peran terisi; peran boleh dirangkap bila tim bertiga. Penulis skrip memegang keyboard, tetapi Pembaca Rancangan wajib mengecek setiap baris terhadap kamus data. Diskusikan rencana langkah bersama sebelum murid lanjut.',
+    peran: [
+      {
+        id: 'ketua',
+        ikon: '🧭',
+        label: 'Ketua',
+        tugas: 'Mengatur waktu, memastikan urutan langkah diikuti, dan memimpin presentasi.',
+      },
+      {
+        id: 'pembaca',
+        ikon: '📖',
+        label: 'Pembaca Rancangan',
+        tugas: 'Membacakan kamus data: tabel, kolom, tipe data, kunci, dan kolom wajib.',
+      },
+      {
+        id: 'penulis',
+        ikon: '⌨️',
+        label: 'Penulis Skrip',
+        tugas: 'Mengetik perintah CREATE DATABASE dan CREATE TABLE di editor.',
+      },
+      {
+        id: 'penguji',
+        ikon: '🔍',
+        label: 'Penguji',
+        tugas: 'Menjalankan skrip, membaca pesan galat, dan mencocokkan hasil dengan rancangan.',
+      },
+    ],
+    rencana: {
+      pengantar:
+        'Susun rencana kerja tim. Ketuk kartu sesuai urutan yang paling masuk akal untuk membangun basis data dari rancangan.',
+      items: [
+        { id: 'r1', label: 'Baca kamus data: catat tabel, kolom, tipe, dan kunci' },
+        { id: 'r2', label: 'Buat basis data dengan CREATE DATABASE' },
+        { id: 'r3', label: 'Pilih basis data itu dengan USE' },
+        { id: 'r4', label: 'Buat tabel induk (yang tidak punya kunci tamu)' },
+        { id: 'r5', label: 'Buat tabel anak yang punya FOREIGN KEY' },
+        { id: 'r6', label: 'Uji: bandingkan isi DBMS dengan kamus data' },
+      ],
+      sukses:
+        '<strong>Rencana tim siap!</strong> Wadah dulu (basis data), pilih wadahnya, isi dengan tabel induk, baru tabel anak yang merujuk induknya — lalu uji.',
+      salah:
+        'Ingat: tabel hanya bisa dibuat di dalam basis data yang sudah <em>dipilih</em>, dan kunci tamu hanya bisa merujuk tabel yang sudah ada.',
+    },
+  },
+
+  /* ==========================================================
+     SINTAKS 3 — Membimbing penyelidikan
      ========================================================== */
   konsep: {
-    kicker: 'Tahap 4 · Pengumpulan Data',
-    title: 'Mengenal Jenis-jenis DBMS',
-    goal: 'Mengumpulkan informasi tentang jenis-jenis DBMS dan karakteristiknya.',
-    instruction: 'Buka semua kartu konsep di bawah. Cocokkan isinya dengan gudang yang kamu intip di tahap Stimulasi.',
-    cards: [
+    kicker: 'Tahap 4 · Membimbing Penyelidikan',
+    title: 'Bekal Sintaks: Dari Kamus Data ke SQL',
+    goal: 'Menerjemahkan isi kamus data menjadi tipe data dan constraint SQL.',
+    guru: 'Minta Pembaca Rancangan membuka kartu sintaks lalu menjelaskannya ke tim dengan kata-kata sendiri. Saat memilah, tekankan alasan: nomor HP bukan INT (angka 0 di depan hilang), kode berpanjang tetap cocok CHAR. Gunakan pertanyaan "Bagaimana kamu tahu?" daripada memberi jawaban.',
+    pengantar:
+      'Setiap baris kamus data harus diterjemahkan ke SQL. Buka kartu di bawah untuk melihat sintaksnya, lalu latih terjemahanmu.',
+    kartu: [
       {
-        id: 'c-model',
-        icon: '🧭',
-        term: 'Model Data: Pembeda Jenis DBMS',
-        def: 'Jenis DBMS dibedakan terutama oleh model datanya, yaitu cara data disusun dan dihubungkan. Karakteristik yang biasa dibandingkan: struktur data, skema, bahasa kueri, konsistensi, dan skalabilitas.',
-        example: 'Keenam gudang RPL Mart = enam model data yang berbeda.'
+        ikon: '🗄️',
+        istilah: 'CREATE DATABASE',
+        def: 'Membuat basis data baru — wadah bagi tabel-tabel. Nama tanpa spasi; gunakan garis bawah.',
+        contoh: 'CREATE DATABASE nama_basis_data;',
       },
       {
-        id: 'c-hierarkis',
-        icon: '🌳',
-        term: 'DBMS Hierarkis',
-        def: 'Data disusun seperti pohon. Setiap record anak hanya punya satu induk (relasi satu-ke-banyak). Data diakses dengan menelusuri dari akar. Model generasi awal (1960-an).',
-        example: 'Contoh: IBM IMS, Windows Registry. = Gudang Pohon.'
+        ikon: '👉',
+        istilah: 'USE',
+        def: 'Memilih basis data yang akan dipakai. Tabel selalu dibuat di basis data yang sedang aktif.',
+        contoh: 'USE nama_basis_data;',
       },
       {
-        id: 'c-jaringan',
-        icon: '🕸️',
-        term: 'DBMS Jaringan (Network)',
-        def: 'Pengembangan model hierarkis: satu record boleh punya banyak induk, dihubungkan dengan pointer sehingga mendukung relasi banyak-ke-banyak. Aksesnya tetap menelusuri jalur, dan strukturnya sulit diubah.',
-        example: 'Contoh: IDMS, Integrated Data Store (IDS). = Gudang Jaring.'
+        ikon: '▦',
+        istilah: 'CREATE TABLE',
+        def: 'Membuat tabel. Di dalam kurung: satu definisi kolom per baris (nama, tipe, constraint), dipisah koma; kunci ditulis di akhir.',
+        contoh:
+          'CREATE TABLE nama_tabel (\n  kolom1 TIPE NOT NULL,\n  kolom2 TIPE,\n  PRIMARY KEY (kolom1)\n);',
       },
       {
-        id: 'c-relasional',
-        icon: '📋',
-        term: 'DBMS Relasional (RDBMS)',
-        def: 'Data disimpan dalam tabel (baris & kolom) yang dihubungkan dengan kunci (primary key & foreign key). Skemanya tetap, memakai bahasa standar SQL, dan menjamin transaksi ACID. Jenis yang paling banyak dipakai.',
-        example: 'Contoh: MySQL, MariaDB, PostgreSQL, Oracle Database, SQL Server, SQLite. = Gudang Tabel.'
+        ikon: '🔢',
+        istilah: 'Tipe data',
+        def: 'INT bilangan bulat; DECIMAL(p,s) bilangan berkoma; VARCHAR(n) teks panjang berubah maks n; CHAR(n) teks panjang tetap n; DATE tanggal.',
+        contoh: 'harga INT,\nberat DECIMAL(5,2),\nnama VARCHAR(50),\nkode CHAR(4),\ntanggal DATE',
       },
       {
-        id: 'c-objek',
-        icon: '🧊',
-        term: 'DBMS Berorientasi Objek (OODBMS)',
-        def: 'Data disimpan sebagai objek lengkap dengan atribut dan perilakunya, sama seperti objek pada pemrograman berorientasi objek (class, pewarisan). Cocok untuk data kompleks seperti desain teknik/CAD.',
-        example: 'Contoh: ObjectDB, db4o, Versant. Varian gabungannya disebut objek-relasional, misalnya PostgreSQL.'
+        ikon: '🚫',
+        istilah: 'NOT NULL',
+        def: 'Kolom wajib diisi; DBMS menolak baris yang mengosongkannya. Tanpa NOT NULL, kolom boleh kosong.',
+        contoh: 'nama_nasabah VARCHAR(50) NOT NULL',
       },
       {
-        id: 'c-nosql',
-        icon: '🚀',
-        term: 'NoSQL (Not Only SQL)',
-        def: 'Kelompok DBMS non-relasional yang muncul untuk data besar dan aplikasi web. Umumnya berskema fleksibel, mudah diskalakan horizontal (menambah server), dan banyak yang memakai konsistensi akhir (BASE). Terbagi menjadi empat jenis: dokumen, key-value, kolom lebar, dan graf.',
-        example: 'NoSQL bukan berarti tanpa aturan atau tanpa kueri — bahasanya saja yang berbeda-beda.'
+        ikon: '🔑',
+        istilah: 'PRIMARY KEY',
+        def: 'Kunci primer: nilai unik penanda setiap baris dan otomatis wajib diisi.',
+        contoh: 'PRIMARY KEY (id_nasabah)',
       },
       {
-        id: 'c-dokumen',
-        icon: '📄',
-        term: 'NoSQL Dokumen',
-        def: 'Data disimpan sebagai dokumen mirip JSON. Setiap dokumen boleh punya field berbeda, dan data terkait bisa disimpan bersarang di dalamnya.',
-        example: 'Contoh: MongoDB, CouchDB, Firebase Firestore. = Gudang Map Dokumen.'
+        ikon: '🔗',
+        istilah: 'FOREIGN KEY … REFERENCES',
+        def: 'Kunci tamu: kolom yang merujuk kunci primer tabel lain. Tipe datanya harus sama, dan tabel rujukan harus sudah ada.',
+        contoh: 'FOREIGN KEY (id_nasabah)\n  REFERENCES nasabah(id_nasabah)',
       },
-      {
-        id: 'c-kv',
-        icon: '🔑',
-        term: 'NoSQL Key-Value',
-        def: 'Model paling sederhana: pasangan kunci → nilai. Sangat cepat membaca dan menulis bila kuncinya diketahui, tetapi tidak bisa mencari berdasarkan isi nilai.',
-        example: 'Contoh: Redis, Riak KV. Dipakai untuk cache, sesi login, keranjang belanja. = Gudang Loker.'
-      },
-      {
-        id: 'c-kolom',
-        icon: '🧱',
-        term: 'NoSQL Kolom Lebar (Wide-Column)',
-        def: 'Data dikelompokkan dalam keluarga kolom; setiap baris boleh punya kolom berbeda dan jumlahnya bisa sangat banyak. Dirancang untuk menulis data berukuran raksasa dengan cepat di banyak server.',
-        example: 'Contoh: Apache Cassandra, Apache HBase. Dipakai untuk log aktivitas dan data sensor (IoT).'
-      },
-      {
-        id: 'c-graf',
-        icon: '🔗',
-        term: 'NoSQL Graf',
-        def: 'Data disimpan sebagai simpul (node) dan garis hubungan (edge) yang masing-masing boleh punya properti. Unggul untuk menelusuri hubungan berlapis.',
-        example: 'Contoh: Neo4j, Amazon Neptune. Dipakai untuk media sosial, rekomendasi, deteksi penipuan. = Gudang Peta Relasi.'
-      },
-      {
-        id: 'c-banding',
-        icon: '⚖️',
-        term: 'ACID vs BASE · Vertikal vs Horizontal',
-        def: 'ACID (Atomicity, Consistency, Isolation, Durability): data selalu konsisten di setiap transaksi — ciri RDBMS. BASE (Basically Available, Soft state, Eventually consistent): data selalu tersedia dan akhirnya konsisten — banyak dipakai NoSQL. Skala vertikal = memperkuat satu server; skala horizontal = menambah banyak server.',
-        example: 'Transfer saldo butuh ACID. Jumlah "like" yang telat sedetik masih boleh (BASE).'
-      }
     ],
-    ujiTitle: 'Jodohkan jenis dengan cirinya',
-    ujiInstruction: 'Ketuk satu istilah di kolom kiri, lalu ketuk ciri/pengertiannya di kolom kanan. Ketuk istilah yang sudah berpasangan untuk melepasnya.',
-    terms: [
-      { id: 't-hierarkis', label: 'Hierarkis' },
-      { id: 't-jaringan', label: 'Jaringan' },
-      { id: 't-relasional', label: 'Relasional' },
-      { id: 't-objek', label: 'Berorientasi objek' },
-      { id: 't-dokumen', label: 'Dokumen' },
-      { id: 't-kv', label: 'Key-value' },
-      { id: 't-kolom', label: 'Kolom lebar' },
-      { id: 't-graf', label: 'Graf' },
-      { id: 't-acid', label: 'ACID' },
-      { id: 't-horizontal', label: 'Skala horizontal' }
-    ],
-    defs: [
-      { id: 'd-hierarkis', label: 'Struktur pohon; setiap record anak hanya punya satu induk.' },
-      { id: 'd-jaringan', label: 'Record boleh punya banyak induk yang dihubungkan dengan pointer.' },
-      { id: 'd-relasional', label: 'Tabel baris-kolom yang dihubungkan dengan kunci dan dikueri dengan SQL.' },
-      { id: 'd-objek', label: 'Menyimpan data sebagai objek beserta atribut dan perilakunya, seperti di pemrograman berorientasi objek.' },
-      { id: 'd-dokumen', label: 'Menyimpan data sebagai dokumen mirip JSON yang isiannya boleh berbeda-beda.' },
-      { id: 'd-kv', label: 'Pasangan kunci → nilai yang sangat cepat diambil bila kuncinya diketahui.' },
-      { id: 'd-kolom', label: 'Keluarga kolom untuk data raksasa yang ditulis cepat di banyak server.' },
-      { id: 'd-graf', label: 'Simpul dan garis hubungan untuk menelusuri relasi berlapis.' },
-      { id: 'd-acid', label: 'Jaminan transaksi selalu utuh dan konsisten: berhasil semua atau batal semua.' },
-      { id: 'd-horizontal', label: 'Menambah kapasitas dengan menambah banyak server, bukan memperkuat satu server.' }
-    ],
-    key: {
-      't-hierarkis': 'd-hierarkis',
-      't-jaringan': 'd-jaringan',
-      't-relasional': 'd-relasional',
-      't-objek': 'd-objek',
-      't-dokumen': 'd-dokumen',
-      't-kv': 'd-kv',
-      't-kolom': 'd-kolom',
-      't-graf': 'd-graf',
-      't-acid': 'd-acid',
-      't-horizontal': 'd-horizontal'
+    tipe: {
+      pengantar: 'Pilih tipe data yang paling tepat untuk setiap keterangan kamus data.',
+      kategori: [
+        { id: 'int', label: 'INT' },
+        { id: 'decimal', label: 'DECIMAL(p,s)' },
+        { id: 'varchar', label: 'VARCHAR(n)' },
+        { id: 'char', label: 'CHAR(n)' },
+        { id: 'date', label: 'DATE' },
+      ],
+      items: [
+        {
+          id: 't1',
+          teks: 'Harga per kg dalam rupiah, tanpa sen (mis. 3000)',
+          correct: 'int',
+          explanation: 'Bilangan bulat tanpa koma cukup disimpan sebagai INT.',
+        },
+        {
+          id: 't2',
+          teks: 'Berat sampah dalam kg, bisa berkoma (mis. 2.75)',
+          correct: 'decimal',
+          explanation: 'Nilai berkoma memakai DECIMAL; DECIMAL(5,2) muat sampai 999.99.',
+        },
+        {
+          id: 't3',
+          teks: 'Nama nasabah, panjangnya berbeda-beda, paling banyak 50 karakter',
+          correct: 'varchar',
+          explanation: 'Panjang teks berubah-ubah → VARCHAR(50), hemat tempat untuk nama pendek.',
+        },
+        {
+          id: 't4',
+          teks: 'Kode jenis sampah, selalu tepat 4 karakter (mis. PL01)',
+          correct: 'char',
+          explanation: 'Teks yang panjangnya selalu sama cocok dengan CHAR(4).',
+        },
+        {
+          id: 't5',
+          teks: 'Tanggal setoran',
+          correct: 'date',
+          explanation: 'Tanggal disimpan dengan DATE agar bisa diurutkan dan dihitung selisihnya.',
+        },
+        {
+          id: 't6',
+          teks: 'Nomor HP nasabah (mis. 081234567890)',
+          correct: 'varchar',
+          explanation:
+            'Nomor HP bukan untuk dihitung dan diawali 0 — sebagai INT angka 0 di depan hilang. Simpan sebagai VARCHAR(15).',
+        },
+        {
+          id: 't7',
+          teks: 'Nomor urut setoran: 1, 2, 3, …',
+          correct: 'int',
+          explanation: 'Nomor urut adalah bilangan bulat → INT.',
+        },
+      ],
     },
-    cekLabel: 'Periksa pasangan',
-    ulangLabel: 'Kosongkan pasangan',
-    lanjutLabel: 'Lanjut ke Pengolahan Data →'
-  },
-
-  /* ==========================================================
-     TAHAP 5 — Pengolahan Data
-     ========================================================== */
-  olah: {
-    kicker: 'Tahap 5 · Pengolahan Data',
-    title: 'Lemari Arsip DBMS',
-    goal: 'Mengolah informasi dengan mengelompokkan produk DBMS dan membandingkan karakteristik tiap jenis.',
-    intro:
-      'Laboratorium RPL sedang menyusun <strong>lemari arsip DBMS</strong>. Bantu merapikannya: ' +
-      'kelompokkan produk DBMS ke laci jenisnya, lalu bandingkan karakteristik tiap kelompok.',
-    produkLabel: 'Misi A · Kelompokkan produk DBMS ke jenisnya',
-    produkInstruction: 'Ketuk satu kartu produk, lalu ketuk laci jenis yang tepat. Pada keyboard, fokuskan kartu lalu tekan angka 1–6.',
-    produkColumns: [
-      { id: 'relasional', name: 'Relasional', desc: 'tabel + SQL', colorKey: 'blue' },
-      { id: 'dokumen', name: 'Dokumen', desc: 'dokumen mirip JSON', colorKey: 'green' },
-      { id: 'kv', name: 'Key-Value', desc: 'kunci → nilai', colorKey: 'purple' },
-      { id: 'kolom', name: 'Kolom Lebar', desc: 'keluarga kolom', colorKey: 'orange' },
-      { id: 'graf', name: 'Graf', desc: 'simpul & hubungan', colorKey: 'teal' },
-      { id: 'lama', name: 'Hierarkis / Jaringan', desc: 'model generasi awal', colorKey: 'rose' }
-    ],
-    /* entityId = id kolom yang benar (nama properti mengikuti
-       pembantu chipBoard di app-core.js). */
-    produkChips: [
-      { id: 'pr-mysql', label: 'MySQL', entityId: 'relasional' },
-      { id: 'pr-postgres', label: 'PostgreSQL', entityId: 'relasional' },
-      { id: 'pr-oracle', label: 'Oracle Database', entityId: 'relasional' },
-      { id: 'pr-sqlite', label: 'SQLite', entityId: 'relasional' },
-      { id: 'pr-mongo', label: 'MongoDB', entityId: 'dokumen' },
-      { id: 'pr-couch', label: 'CouchDB', entityId: 'dokumen' },
-      { id: 'pr-redis', label: 'Redis', entityId: 'kv' },
-      { id: 'pr-riak', label: 'Riak KV', entityId: 'kv' },
-      { id: 'pr-cassandra', label: 'Apache Cassandra', entityId: 'kolom' },
-      { id: 'pr-hbase', label: 'Apache HBase', entityId: 'kolom' },
-      { id: 'pr-neo4j', label: 'Neo4j', entityId: 'graf' },
-      { id: 'pr-neptune', label: 'Amazon Neptune', entityId: 'graf' },
-      { id: 'pr-ims', label: 'IBM IMS', entityId: 'lama' },
-      { id: 'pr-idms', label: 'IDMS', entityId: 'lama' }
-    ],
-    produkLabels: {
-      pool: 'Kartu produk',
-      poolEmpty: 'Semua produk sudah masuk laci',
-      empty: 'Laci masih kosong'
+    constraint: {
+      pengantar: 'Constraint apa yang mewujudkan aturan kamus data berikut?',
+      kategori: [
+        { id: 'pk', label: 'PRIMARY KEY' },
+        { id: 'nn', label: 'NOT NULL' },
+        { id: 'fk', label: 'FOREIGN KEY … REFERENCES' },
+      ],
+      items: [
+        {
+          id: 'c1',
+          teks: 'no_setoran membedakan setiap setoran dan tidak boleh ganda',
+          correct: 'pk',
+          explanation: 'Penanda unik setiap baris adalah kunci primer.',
+        },
+        {
+          id: 'c2',
+          teks: 'nama_jenis harus selalu diisi',
+          correct: 'nn',
+          explanation: '"Wajib diisi" di kamus data diterjemahkan menjadi NOT NULL.',
+        },
+        {
+          id: 'c3',
+          teks: 'id_nasabah pada setoran harus merujuk nasabah yang terdaftar',
+          correct: 'fk',
+          explanation: 'Kolom yang merujuk kunci primer tabel lain adalah kunci tamu.',
+        },
+        {
+          id: 'c4',
+          teks: 'Setiap setoran wajib mencatat berat_kg',
+          correct: 'nn',
+          explanation: 'Kolom wajib → tambahkan NOT NULL setelah tipe datanya.',
+        },
+        {
+          id: 'c5',
+          teks: 'kode_jenis pada setoran harus ada di tabel jenis_sampah',
+          correct: 'fk',
+          explanation:
+            'Merujuk tabel jenis_sampah → FOREIGN KEY (kode_jenis) REFERENCES jenis_sampah(kode_jenis).',
+        },
+        {
+          id: 'c6',
+          teks: 'id_petugas menandai setiap petugas secara unik',
+          correct: 'pk',
+          explanation: 'Penanda unik di tabel petugas sendiri adalah kunci primernya.',
+        },
+      ],
     },
-    ciriLabel: 'Misi B · Bandingkan karakteristiknya',
-    ciriInstruction: 'Setiap kartu berisi satu karakteristik. Tempatkan ke kelompok DBMS yang paling sesuai.',
-    ciriColumns: [
-      { id: 'sql', name: 'Relasional (SQL)', desc: 'MySQL, PostgreSQL, …', colorKey: 'blue' },
-      { id: 'nosql', name: 'NoSQL', desc: 'dokumen, key-value, kolom lebar, graf', colorKey: 'green' },
-      { id: 'awal', name: 'Hierarkis & Jaringan', desc: 'IMS, IDMS', colorKey: 'rose' }
+    pertanyaan: [
+      soalPilih(
+        'k1',
+        'Kamus data: <code>nama_nasabah</code>, teks maks 50 karakter, wajib diisi. Definisi kolom yang benar adalah …',
+        'b',
+        [
+          [
+            'a',
+            '<code>nama_nasabah VARCHAR NOT NULL</code>',
+            'VARCHAR wajib diberi panjang di dalam kurung, mis. VARCHAR(50).',
+          ],
+          [
+            'b',
+            '<code>nama_nasabah VARCHAR(50) NOT NULL</code>',
+            'Tepat: nama kolom, tipe beserta panjangnya, lalu constraint.',
+          ],
+          [
+            'c',
+            '<code>VARCHAR(50) nama_nasabah NOT NULL</code>',
+            'Urutannya terbalik — nama kolom selalu ditulis lebih dulu, baru tipe datanya.',
+          ],
+          [
+            'd',
+            '<code>nama_nasabah VARCHAR(50) NULL</code>',
+            'NULL justru berarti boleh kosong. Kolom wajib memakai NOT NULL.',
+          ],
+        ]
+      ),
+      soalPilih(
+        'k2',
+        'Di dalam kurung <code>CREATE TABLE ( … )</code>, definisi kolom yang satu dengan berikutnya dipisahkan oleh …',
+        'a',
+        [
+          [
+            'a',
+            'Tanda koma ( , )',
+            'Benar. Baris terakhir sebelum kurung tutup tidak diberi koma.',
+          ],
+          [
+            'b',
+            'Tanda titik koma ( ; )',
+            'Titik koma mengakhiri seluruh <em>pernyataan</em>, bukan memisahkan kolom.',
+          ],
+          ['c', 'Cukup baris baru', 'Baris baru hanya merapikan tampilan; DBMS butuh tanda koma.'],
+          [
+            'd',
+            'Tanda titik ( . )',
+            'Titik dipakai untuk tabel.kolom, bukan pemisah definisi kolom.',
+          ],
+        ]
+      ),
+      soalPilih(
+        'k3',
+        'Kunci tamu <code>id_nasabah</code> di tabel setoran merujuk <code>nasabah(id_nasabah)</code> yang bertipe INT. Tipe kolom kunci tamu itu harus …',
+        'c',
+        [
+          [
+            'a',
+            'VARCHAR(10) agar lebih fleksibel',
+            'Tipe berbeda membuat DBMS menolak kunci tamu.',
+          ],
+          [
+            'b',
+            'Bebas, asal namanya sama',
+            'Nama boleh berbeda; yang wajib sama justru tipe datanya.',
+          ],
+          [
+            'c',
+            'INT, sama dengan kolom yang dirujuk',
+            'Tepat: kunci tamu dan kunci primer rujukannya harus bertipe sama.',
+          ],
+          [
+            'd',
+            'DECIMAL agar muat angka besar',
+            'Tipe harus sama persis dengan kolom yang dirujuk, yaitu INT.',
+          ],
+        ]
+      ),
     ],
-    ciriChips: [
-      { id: 'ci-tabel', label: 'Data disimpan dalam tabel yang dihubungkan dengan kunci', entityId: 'sql' },
-      { id: 'ci-skema-tetap', label: 'Skema tetap: struktur dibuat dulu sebelum data diisi', entityId: 'sql' },
-      { id: 'ci-sql', label: 'Memakai bahasa kueri standar SQL', entityId: 'sql' },
-      { id: 'ci-acid', label: 'Mengutamakan transaksi ACID (konsistensi ketat)', entityId: 'sql' },
-      { id: 'ci-vertikal', label: 'Umumnya ditingkatkan dengan memperkuat satu server (skala vertikal)', entityId: 'sql' },
-      { id: 'ci-fleksibel', label: 'Skema fleksibel: tiap data boleh punya isian berbeda', entityId: 'nosql' },
-      { id: 'ci-ragam', label: 'Model datanya beragam: dokumen, kunci-nilai, kolom, graf', entityId: 'nosql' },
-      { id: 'ci-horizontal', label: 'Dirancang untuk menambah banyak server (skala horizontal)', entityId: 'nosql' },
-      { id: 'ci-base', label: 'Banyak yang memakai konsistensi akhir (BASE) demi kecepatan', entityId: 'nosql' },
-      { id: 'ci-bahasa', label: 'Bahasa kuerinya berbeda-beda di setiap produk', entityId: 'nosql' },
-      { id: 'ci-pointer', label: 'Data diakses dengan menelusuri jalur/pointer dari record ke record', entityId: 'awal' },
-      { id: 'ci-mainframe', label: 'Model generasi awal, kini banyak tersisa di sistem mainframe lama', entityId: 'awal' },
-      { id: 'ci-kaku', label: 'Mengubah struktur sulit karena program terikat pada jalur data', entityId: 'awal' }
+  },
+
+  basisData: {
+    kicker: 'Tahap 5 · Membimbing Penyelidikan',
+    title: 'Menyiapkan Wadah: CREATE DATABASE dan USE',
+    goal: 'Menyelidiki perilaku CREATE DATABASE dan USE, lalu menulis sendiri perintah untuk basis data bank_sampah.',
+    guru: 'Biarkan tim menjalankan konsol langkah demi langkah dan berdebat mengapa langkah tertentu ditolak. Penguji membacakan pesan DBMS keras-keras. Setelah pertanyaan penuntun, Penulis Skrip mengetik perintah sendiri — jangan didikte.',
+    pengantar:
+      'Di konsol latihan berikut ada langkah yang <strong>sengaja ditolak</strong> DBMS. Jalankan satu per satu dan baca pesannya: kapan tabel boleh dibuat?',
+    langkah: [
+      {
+        id: 'l1',
+        sql: SQL_NASABAH_MINI,
+        amati: 'Ditolak! Tabel ini akan disimpan di basis data yang mana?',
+      },
+      {
+        id: 'l2',
+        sql: 'CREATE DATABASE latihan;',
+        amati: 'Basis data latihan muncul di panel DBMS, tetapi belum aktif.',
+      },
+      {
+        id: 'l3',
+        sql: SQL_NASABAH_MINI,
+        amati: 'Masih ditolak, padahal basis datanya sudah ada. Apa yang kurang?',
+      },
+      {
+        id: 'l4',
+        sql: 'USE latihan;',
+        amati: 'Basis data latihan sekarang aktif (dicetak tebal).',
+      },
+      {
+        id: 'l5',
+        sql: SQL_NASABAH_MINI,
+        amati: 'Berhasil! Tabel dibuat di basis data yang aktif.',
+      },
+      {
+        id: 'l6',
+        sql: 'CREATE DATABASE latihan;',
+        amati: 'Ditolak: nama basis data tidak boleh kembar.',
+      },
+      {
+        id: 'l7',
+        sql: 'CREATE DATABASE IF NOT EXISTS latihan;',
+        amati: 'Tidak galat — perintah dilewati karena basis datanya sudah ada.',
+      },
     ],
-    ciriLabels: {
-      pool: 'Kartu karakteristik',
-      poolEmpty: 'Semua karakteristik sudah dibandingkan',
-      empty: 'Belum ada karakteristik'
+    pertanyaan: [
+      soalPilih('bd1', 'Mengapa langkah 1 ditolak DBMS?', 'b', [
+        [
+          'a',
+          'Nama tabel nasabah tidak boleh dipakai',
+          'Nama nasabah sah — di langkah 5 perintah yang sama berhasil.',
+        ],
+        [
+          'b',
+          'Belum ada basis data yang dipilih sebagai tempat tabel',
+          'Tepat: tabel selalu dibuat di dalam basis data yang sedang aktif.',
+        ],
+        [
+          'c',
+          'Tipe INT tidak boleh menjadi kunci primer',
+          'INT justru lazim dipakai untuk kunci primer.',
+        ],
+        [
+          'd',
+          'CREATE TABLE harus ditulis huruf kecil',
+          'Kata kunci SQL tidak membedakan huruf besar-kecil.',
+        ],
+      ]),
+      soalPilih(
+        'bd2',
+        'Langkah 2 berhasil membuat basis data latihan, tetapi langkah 3 tetap ditolak. Kesimpulannya …',
+        'c',
+        [
+          [
+            'a',
+            'CREATE DATABASE gagal tanpa pesan galat',
+            'Panel DBMS menunjukkan basis data latihan sudah ada, jadi langkah 2 berhasil.',
+          ],
+          [
+            'b',
+            'Tabel hanya bisa dibuat sekali seumur DBMS',
+            'Langkah 5 membuktikan tabel bisa dibuat.',
+          ],
+          [
+            'c',
+            'Membuat basis data tidak otomatis memilihnya; perlu USE',
+            'Benar: setelah CREATE DATABASE, jalankan USE agar basis data itu aktif.',
+          ],
+          [
+            'd',
+            'Perlu menunggu beberapa detik sebelum membuat tabel',
+            'DBMS tidak butuh jeda; yang kurang adalah USE.',
+          ],
+        ]
+      ),
+      soalPilih('bd3', 'Apa fungsi <code>IF NOT EXISTS</code> pada langkah 7?', 'a', [
+        [
+          'a',
+          'Membuat basis data hanya bila belum ada, tanpa galat bila sudah ada',
+          'Tepat — berguna agar skrip aman dijalankan ulang.',
+        ],
+        [
+          'b',
+          'Menghapus basis data lama lalu membuat yang baru',
+          'Itu tugas DROP DATABASE; IF NOT EXISTS tidak menghapus apa pun.',
+        ],
+        ['c', 'Mengganti nama basis data yang kembar', 'Nama tetap; perintah hanya dilewati.'],
+        [
+          'd',
+          'Memilih basis data seperti USE',
+          'IF NOT EXISTS tidak mengaktifkan basis data — tetap perlu USE.',
+        ],
+      ]),
+    ],
+    editor: {
+      judul: '✍️ Giliranmu: siapkan basis data Bank Sampah',
+      tugas:
+        'Tulis perintah untuk <strong>membuat</strong> basis data sesuai nama di rancangan, lalu <strong>memilihnya</strong>. DBMS dimulai dalam keadaan kosong.',
+      label: 'Skrip basis data bank_sampah',
+      placeholder: '-- tulis dua perintah di sini, masing-masing diakhiri ;',
+      kerangka: '-- 1) buat basis data sesuai nama di kamus data\n\n-- 2) pilih basis data itu\n',
+      petunjuk: [
+        'Nama basis data ada di atas kamus data: <code>bank_sampah</code>.',
+        'Pola perintahnya: <code>CREATE DATABASE nama;</code> lalu <code>USE nama;</code>',
+      ],
+      sukses:
+        '<strong>Basis data bank_sampah siap dan aktif!</strong> Pesan pertama di log aplikasi sudah teratasi. Sekarang wadah itu butuh tabel.',
     },
-    cekLabel: 'Periksa',
-    produkBenar: 'Semua produk tepat! Kini kamu bisa mengenali jenis DBMS dari nama produknya.',
-    ciriBenar: 'Semua karakteristik tepat! Relasional unggul di konsistensi, NoSQL di fleksibilitas dan skala, model awal di penelusuran jalur.',
-    salahPesan: 'Kartu bertanda ✗ perlu dipindah. Ketuk kartu itu untuk mengembalikannya, lalu tempatkan lagi.',
-    lanjutLabel: 'Lanjut ke Verifikasi →'
+  },
+
+  tabelInduk: {
+    kicker: 'Tahap 6 · Membimbing Penyelidikan',
+    title: 'Membuat Tabel Induk dengan CREATE TABLE',
+    goal: 'Menulis CREATE TABLE lengkap dengan tipe data, NOT NULL, dan PRIMARY KEY sesuai kamus data.',
+    guru: 'Tabel jenis_sampah dikerjakan bersama sebagai contoh terbimbing (isian rumpang). Untuk nasabah dan petugas, Pembaca Rancangan membacakan kamus data baris demi baris sementara Penulis Skrip mengetik. Bila tim buntu lebih dari 3 menit, arahkan ke petunjuk bertingkat, bukan ke jawaban.',
+    rumpangPengantar:
+      'Mulai dari tabel induk paling sederhana: <code>jenis_sampah</code>. Lengkapi empat bagian yang kosong berdasarkan kamus data di atas.',
+    rumpangSql: RUMPANG_JENIS,
+    isian: { r1: 'CHAR(4)', r2: 'NOT NULL', r3: 'INT', r4: 'PRIMARY KEY' },
+    rumpang: [
+      soalPilih('r1', 'Isian ① — tipe data <code>kode_jenis</code>:', 'b', [
+        ['a', '<code>INT</code>', 'Kode PL01 berisi huruf; INT hanya menyimpan bilangan.'],
+        ['b', '<code>CHAR(4)</code>', 'Tepat: kode selalu tepat 4 karakter.'],
+        [
+          'c',
+          '<code>VARCHAR</code>',
+          'Kamus data menulis CHAR(4); lagi pula VARCHAR wajib diberi panjang.',
+        ],
+        ['d', '<code>DATE</code>', 'DATE untuk tanggal, bukan kode.'],
+      ]),
+      soalPilih('r2', 'Isian ② — aturan <code>nama_jenis</code> yang wajib diisi:', 'c', [
+        [
+          'a',
+          '<code>PRIMARY KEY</code>',
+          'Kunci primer tabel ini adalah kode_jenis, bukan nama_jenis.',
+        ],
+        ['b', '<code>NULL</code>', 'NULL berarti boleh kosong — kebalikan dari wajib.'],
+        ['c', '<code>NOT NULL</code>', 'Tepat: wajib diisi → NOT NULL.'],
+        ['d', '<code>UNIQUE</code>', 'UNIQUE melarang nilai kembar, bukan memaksa kolom terisi.'],
+      ]),
+      soalPilih('r3', 'Isian ③ — tipe data <code>harga_per_kg</code> (rupiah tanpa sen):', 'a', [
+        ['a', '<code>INT</code>', 'Tepat: bilangan bulat.'],
+        [
+          'b',
+          '<code>VARCHAR(10)</code>',
+          'Harga akan dihitung (dikali berat); simpan sebagai angka, bukan teks.',
+        ],
+        ['c', '<code>CHAR(4)</code>', 'CHAR untuk teks berpanjang tetap, bukan nilai uang.'],
+        ['d', '<code>DATE</code>', 'DATE untuk tanggal, bukan harga.'],
+      ]),
+      soalPilih('r4', 'Isian ④ — baris penutup yang menjadikan kode_jenis kunci primer:', 'd', [
+        [
+          'a',
+          '<code>FOREIGN KEY</code>',
+          'Kunci tamu merujuk tabel lain; kode_jenis adalah penanda tabel ini sendiri.',
+        ],
+        [
+          'b',
+          '<code>NOT NULL</code>',
+          'NOT NULL hanya memaksa kolom terisi, tidak menjadikannya kunci.',
+        ],
+        [
+          'c',
+          '<code>UNIQUE KEY</code>',
+          'Kamus data menandai kode_jenis 🔑 kunci primer, bukan sekadar unik.',
+        ],
+        ['d', '<code>PRIMARY KEY</code>', 'Tepat: PRIMARY KEY (kode_jenis).'],
+      ]),
+    ],
+    rumpangSukses:
+      'Pernyataan <code>jenis_sampah</code> lengkap dan langsung dijalankan di basis data timmu. Sekarang tulis sendiri dua tabel induk berikutnya.',
+    editor: {
+      judul: '✍️ Giliranmu: tabel nasabah dan petugas',
+      tugas:
+        'Tulis <strong>dua</strong> pernyataan CREATE TABLE untuk <code>nasabah</code> dan <code>petugas</code> persis sesuai kamus data: nama kolom, tipe data, NOT NULL untuk kolom wajib, dan PRIMARY KEY. Basis data bank_sampah sudah aktif dan sudah berisi tabel jenis_sampah.',
+      label: 'Skrip tabel nasabah & petugas',
+      placeholder: 'CREATE TABLE nasabah (\n  …\n);',
+      kerangka:
+        'CREATE TABLE nasabah (\n  -- satu baris per kolom: nama_kolom TIPE [NOT NULL],\n  -- baris terakhir: PRIMARY KEY (kolom_kunci)\n);\n\nCREATE TABLE petugas (\n  -- …\n);\n',
+      petunjuk: [
+        'Tabel <code>nasabah</code> punya 4 kolom dan <code>petugas</code> 2 kolom. Kolom bertanda "Wajib diisi" diberi <code>NOT NULL</code>; <code>no_hp</code> boleh kosong.',
+        'Contoh baris kolom: <code>nama_nasabah VARCHAR(50) NOT NULL,</code> — jangan lupa koma di akhir setiap baris kecuali baris terakhir.',
+        'Kerangka lengkap petugas:<br /><code>CREATE TABLE petugas (<br />&nbsp;&nbsp;id_petugas INT,<br />&nbsp;&nbsp;nama_petugas VARCHAR(50) NOT NULL,<br />&nbsp;&nbsp;PRIMARY KEY (id_petugas)<br />);</code>',
+      ],
+      sukses:
+        '<strong>Tiga tabel induk berdiri!</strong> nasabah dan petugas sesuai kamus data. Tinggal tabel yang paling penting: setoran.',
+    },
   },
 
   /* ==========================================================
-     TAHAP 6 — Verifikasi
+     SINTAKS 4 — Mengembangkan & menyajikan hasil karya
      ========================================================== */
-  uji: {
-    kicker: 'Tahap 6 · Verifikasi',
-    title: 'Konsultan DBMS',
-    goal: 'Membuktikan pemahamanmu dengan memilih jenis DBMS yang tepat untuk kebutuhan nyata.',
-    instruction:
-      'RPL Mart makin besar dan punya kebutuhan baru. Kamu menjadi konsultan DBMS. Pilih jenis DBMS yang ' +
-      'paling cocok untuk setiap kebutuhan, lalu buka buktinya.',
-    prediksiLabel: 'Rekomendasimu: jenis DBMS apa?',
-    bukaLabel: 'Buka bukti',
-    benarPrediksi: 'Rekomendasimu tepat!',
-    salahPrediksi: 'Rekomendasimu belum tepat — pelajari buktinya untuk tahu jenis yang paling cocok.',
-    butuhLabel: 'Kebutuhan kunci',
-    cocokLabel: 'Karakteristik yang cocok',
-    bukanLabel: 'Mengapa bukan yang lain?',
-    konsolLabel: 'Contoh perintah',
-    /* Id pilihan pada setiap kasus memakai id jenis DBMS yang sama,
-       sehingga label opsi diambil dari daftar jenis di bawah. */
-    jenis: [
-      { id: 'relasional', label: 'Relasional (mis. MySQL)' },
-      { id: 'dokumen', label: 'NoSQL Dokumen (mis. MongoDB)' },
-      { id: 'kv', label: 'NoSQL Key-Value (mis. Redis)' },
-      { id: 'kolom', label: 'NoSQL Kolom Lebar (mis. Cassandra)' },
-      { id: 'graf', label: 'NoSQL Graf (mis. Neo4j)' },
-      { id: 'hierarkis', label: 'Hierarkis (mis. Windows Registry)' }
+  tabelAnak: {
+    kicker: 'Tahap 7 · Mengembangkan Hasil Karya',
+    title: 'Tabel Berelasi: setoran dan FOREIGN KEY',
+    goal: 'Menentukan urutan pembuatan tabel dan menulis CREATE TABLE berkunci tamu sesuai rancangan.',
+    guru: 'Tanyakan: "Mengapa setoran tidak bisa dibuat pertama?" sebelum murid mengurutkan. Saat menulis setoran, minta Penguji mengecek tiga kunci tamu satu per satu di kamus data. Galat "tabel rujukan belum ada" atau "tipe berbeda" adalah bahan diskusi yang berharga.',
+    urutan: {
+      pengantar:
+        'Andaikan seluruh skrip ditulis ulang dari nol. Susun urutan CREATE TABLE yang <strong>pasti diterima</strong> DBMS.',
+      sukses:
+        '<strong>Urutan sah!</strong> Tabel induk (nasabah, jenis_sampah, petugas) bebas urutannya, tetapi setoran harus terakhir karena merujuk ketiganya.',
+      salah:
+        'Periksa tabel yang memiliki kunci tamu 🔗: tabel yang dirujuknya harus sudah dibuat lebih dulu.',
+    },
+    pertanyaan: [
+      soalPilih(
+        'a1',
+        'Baris <code>FOREIGN KEY (id_nasabah) REFERENCES nasabah(id_nasabah)</code> berarti …',
+        'b',
+        [
+          [
+            'a',
+            'Membuat tabel nasabah baru',
+            'REFERENCES hanya menunjuk tabel yang sudah ada, tidak membuatnya.',
+          ],
+          [
+            'b',
+            'Kolom id_nasabah di setoran hanya boleh berisi id yang ada di tabel nasabah',
+            'Tepat: kunci tamu menjaga setiap setoran milik nasabah yang terdaftar.',
+          ],
+          [
+            'c',
+            'id_nasabah menjadi kunci primer tabel setoran',
+            'Kunci primer setoran adalah no_setoran.',
+          ],
+          [
+            'd',
+            'Menyalin semua kolom nasabah ke setoran',
+            'Hanya satu kolom (id_nasabah) yang menghubungkan kedua tabel.',
+          ],
+        ]
+      ),
+      soalPilih(
+        'a2',
+        'Kamus data: <code>kode_jenis</code> di setoran bertipe CHAR(4) dan merujuk jenis_sampah. Bila ditulis <code>kode_jenis INT</code>, apa yang terjadi?',
+        'd',
+        [
+          [
+            'a',
+            'Diterima, DBMS mengubah tipenya otomatis',
+            'Simulator (dan DBMS sungguhan) tidak menebak maksudmu.',
+          ],
+          [
+            'b',
+            'Diterima, tetapi kodenya jadi angka',
+            'Kunci tamu bertipe beda dengan rujukannya ditolak sejak awal.',
+          ],
+          [
+            'c',
+            'Tabel jenis_sampah ikut berubah menjadi INT',
+            'CREATE TABLE tidak pernah mengubah tabel lain.',
+          ],
+          [
+            'd',
+            'Ditolak, karena tipe kunci tamu harus sama dengan kolom yang dirujuk',
+            'Tepat — samakan dengan CHAR(4).',
+          ],
+        ]
+      ),
     ],
-    cases: [
-      {
-        id: 'u-saldo',
-        icon: '💳',
-        title: 'Dompet digital koperasi',
-        scenario: 'Siswa bisa mentransfer saldo koperasi ke temannya. Saldo tidak boleh berkurang di pengirim tanpa bertambah di penerima, walaupun server mati di tengah proses.',
-        options: ['relasional', 'dokumen', 'kv', 'kolom'],
-        correct: 'relasional',
-        butuh: 'Setiap transfer harus utuh: berhasil semua atau batal semua. Konsistensi lebih penting daripada kecepatan.',
-        cocok: 'RDBMS menjamin transaksi ACID dan menjaga relasi antartabel dengan kunci.',
-        bukan: 'Key-value dan kolom lebar sering memakai konsistensi akhir (BASE), sehingga saldo bisa sempat tampil berbeda. Dokumen bisa, tetapi tabel saldo yang terstruktur dan transaksi ACID adalah keahlian utama RDBMS.',
-        konsol: "BEGIN;\nUPDATE saldo SET jumlah = jumlah - 20000 WHERE nis = '2301';\nUPDATE saldo SET jumlah = jumlah + 20000 WHERE nis = '2302';\nCOMMIT;   -- bila gagal di tengah → ROLLBACK, saldo kembali utuh"
-      },
-      {
-        id: 'u-katalog',
-        icon: '👕',
-        title: 'Katalog produk yang beragam',
-        scenario: 'Kaos punya ukuran dan warna, tumbler punya kapasitas, stiker punya dimensi, dan tiap bulan muncul jenis produk baru dengan atribut baru.',
-        options: ['dokumen', 'relasional', 'kv', 'hierarkis'],
-        correct: 'dokumen',
-        butuh: 'Atribut setiap produk berbeda-beda dan sering bertambah tanpa harus mengubah struktur.',
-        cocok: 'Basis data dokumen berskema fleksibel: tiap dokumen boleh punya field sendiri.',
-        bukan: 'Relasional mengharuskan kolom tetap, sehingga setiap atribut baru memerlukan ALTER TABLE atau banyak kolom kosong. Key-value tidak bisa mencari berdasarkan isi (mis. "kaos ukuran L").',
-        konsol: 'db.produk.insertOne({ nama: "Kaos RPL", ukuran: ["M","L"], warna: "navy" })\ndb.produk.insertOne({ nama: "Tumbler", kapasitas_ml: 500 })\ndb.produk.find({ ukuran: "L" })'
-      },
-      {
-        id: 'u-sesi',
-        icon: '⚡',
-        title: 'Flash sale 2.000 siswa',
-        scenario: 'Saat flash sale, 2.000 siswa login bersamaan. Sesi login dan isi keranjang tiap siswa harus dibaca dalam hitungan milidetik berdasarkan ID sesinya.',
-        options: ['kv', 'relasional', 'graf', 'hierarkis'],
-        correct: 'kv',
-        butuh: 'Membaca dan menulis data sederhana sangat cepat, dan kuncinya (ID sesi) selalu diketahui.',
-        cocok: 'Basis data key-value menyimpan pasangan kunci → nilai, umumnya di memori, sehingga sangat cepat.',
-        bukan: 'Relasional bisa, tetapi lebih lambat untuk beban baca-tulis sesaat sebesar ini. Graf dan hierarkis tidak dirancang untuk kebutuhan ini.',
-        konsol: 'SET sesi:8f2a "nis=2301" EX 1800   -- kedaluwarsa 30 menit\nGET sesi:8f2a\n→ "nis=2301"   (0,3 milidetik)'
-      },
-      {
-        id: 'u-rekom',
-        icon: '🤝',
-        title: '"Temanmu juga membeli…"',
-        scenario: 'RPL Mart ingin menampilkan rekomendasi: barang yang dibeli oleh teman-temanmu, dan teman dari temanmu.',
-        options: ['graf', 'relasional', 'kolom', 'kv'],
-        correct: 'graf',
-        butuh: 'Menelusuri hubungan berlapis (teman → teman → barang) dengan cepat.',
-        cocok: 'Basis data graf menyimpan hubungan secara langsung sebagai garis (edge), sehingga penelusurannya cepat.',
-        bukan: 'Relasional membutuhkan JOIN berulang yang makin lambat di setiap lapisan. Kolom lebar dan key-value tidak menyimpan hubungan.',
-        konsol: 'MATCH (s:Siswa {nama:"Dewi"})-[:BERTEMAN*1..2]->(t)-[:MEMBELI]->(b)\nRETURN b.nama, count(*) AS jumlah ORDER BY jumlah DESC'
-      },
-      {
-        id: 'u-log',
-        icon: '📡',
-        title: 'Jutaan data klik dan sensor',
-        scenario: 'Setiap klik pengunjung dan data sensor suhu gudang dicatat. Jumlahnya jutaan baris per hari, terus ditulis tanpa henti, dan disebar ke banyak server.',
-        options: ['kolom', 'relasional', 'hierarkis', 'graf'],
-        correct: 'kolom',
-        butuh: 'Menulis data berukuran raksasa dengan sangat cepat dan menambah server dengan mudah.',
-        cocok: 'Basis data kolom lebar dirancang untuk penulisan masif dan skala horizontal.',
-        bukan: 'Relasional pada satu server akan kewalahan dan mahal diperkuat (skala vertikal). Hierarkis dan graf tidak cocok untuk aliran data catatan waktu (time series).',
-        konsol: "INSERT INTO klik (hari, waktu, halaman, id_sesi)\n  VALUES ('2026-09-23', toTimestamp(now()), '/produk/kaos', '8f2a');\n-- disebar otomatis ke 12 node cluster"
-      },
-      {
-        id: 'u-registry',
-        icon: '🗂️',
-        title: 'Pengaturan aplikasi kasir',
-        scenario: 'Aplikasi kasir di komputer Windows menyimpan pengaturannya berjenjang: HKEY → Software → RPLMart → Printer. Setiap kunci punya tepat satu induk dan dibaca dengan menelusuri dari akar.',
-        options: ['hierarkis', 'graf', 'dokumen', 'relasional'],
-        correct: 'hierarkis',
-        butuh: 'Data berjenjang tetap, satu anak satu induk, dibaca dari atas ke bawah.',
-        cocok: 'Windows Registry adalah basis data hierarkis: strukturnya berupa pohon kunci dan subkunci.',
-        bukan: 'Graf dan dokumen bisa menyimpan pohon, tetapi Registry memang dibangun dengan model hierarkis. Relasional terlalu berat untuk pengaturan lokal sederhana.',
-        konsol: 'HKEY_CURRENT_USER\n└── Software\n    └── RPLMart\n        └── Printer\n            ├── Nama   = "Thermal-58"\n            └── Lebar  = 58'
-      }
-    ],
-    penutup: 'Semua kasus sudah dibuktikan. Tidak ada jenis DBMS yang terbaik untuk segalanya — yang ada adalah jenis yang paling cocok dengan kebutuhan.',
-    lanjutLabel: 'Lanjut ke Generalisasi →'
+    editor: {
+      judul: '✍️ Giliranmu: tabel setoran',
+      tugas:
+        'Tulis CREATE TABLE <code>setoran</code> sesuai kamus data, termasuk <strong>tiga</strong> FOREIGN KEY. Tabel nasabah, jenis_sampah, dan petugas sudah ada di DBMS timmu.',
+      label: 'Skrip tabel setoran',
+      placeholder: 'CREATE TABLE setoran (\n  …\n);',
+      kerangka:
+        'CREATE TABLE setoran (\n  -- enam kolom: nama_kolom TIPE [NOT NULL],\n  -- PRIMARY KEY (…),\n  -- FOREIGN KEY (kolom) REFERENCES tabel_induk(kolom)\n);\n',
+      petunjuk: [
+        'Enam kolom: no_setoran, tgl_setor, id_nasabah, kode_jenis, id_petugas, berat_kg. Semua kecuali kunci primer bertanda "Wajib diisi".',
+        'Tipe kunci tamu harus sama dengan kolom rujukannya: id_nasabah INT, kode_jenis CHAR(4), id_petugas INT. Berat memakai <code>DECIMAL(5,2)</code>.',
+        'Tiga baris terakhir:<br /><code>FOREIGN KEY (id_nasabah) REFERENCES nasabah(id_nasabah),<br />FOREIGN KEY (kode_jenis) REFERENCES jenis_sampah(kode_jenis),<br />FOREIGN KEY (id_petugas) REFERENCES petugas(id_petugas)</code>',
+      ],
+      sukses:
+        '<strong>Tabel setoran berdiri dengan tiga kunci tamu!</strong> Semua tabel rancangan sudah dibuat. Saatnya membuktikan hasil kerja tim.',
+    },
+  },
+
+  sajikan: {
+    kicker: 'Tahap 8 · Menyajikan Hasil Karya',
+    title: 'Sajikan Bukti ke Klien',
+    goal: 'Menjalankan skrip tim dari DBMS kosong, membandingkannya dengan kamus data, dan menyusun klaim presentasi berbasis bukti.',
+    guru: 'Setiap tim menayangkan skripnya dan menjalankannya dari DBMS kosong di depan kelas. Ketua menyampaikan klaim, Penguji menunjukkan buktinya di panel DBMS. Tim lain boleh bertanya "Di mana buktinya?" untuk setiap klaim.',
+    pengantar:
+      'Ini <strong>skrip tim</strong> gabungan dari semua yang kalian tulis. Jalankan dari DBMS yang benar-benar kosong — seperti saat dipasang di laptop pos Bank Sampah.',
+    lulus:
+      '<strong>Skrip tim lolos uji!</strong> Basis data bank_sampah dan keempat tabelnya sesuai kamus data. Aplikasi Bank Sampah kini punya wadah untuk menyimpan setoran.',
+    klaim: {
+      tanya:
+        'Pilih SEMUA klaim yang <strong>didukung bukti</strong> di panel DBMS untuk presentasi ke Bu Rina.',
+      opsi: [
+        {
+          id: 'empat',
+          label: 'Basis data bank_sampah berisi empat tabel sesuai kamus data',
+          benar: true,
+          alasan: 'Panel DBMS menampilkan nasabah, jenis_sampah, petugas, dan setoran.',
+        },
+        {
+          id: 'pk',
+          label: 'Setiap tabel memiliki kunci primer 🔑',
+          benar: true,
+          alasan: 'Setiap kartu tabel menandai satu kolom 🔑.',
+        },
+        {
+          id: 'fk',
+          label: 'Setoran terhubung ke nasabah, jenis_sampah, dan petugas lewat kunci tamu',
+          benar: true,
+          alasan: 'Tiga kolom setoran bertanda 🔗 dengan rujukan ke ketiga tabel induk.',
+        },
+        {
+          id: 'isi',
+          label: 'Tabel-tabel sudah berisi data setoran siswa',
+          benar: false,
+          alasan:
+            'Setiap tabel masih 0 baris. CREATE hanya membangun struktur; isinya diisi dengan INSERT (DML).',
+        },
+        {
+          id: 'bebas',
+          label: 'Urutan CREATE TABLE bebas, DBMS selalu menerima',
+          benar: false,
+          alasan: 'Setoran ditolak bila dibuat sebelum tabel yang dirujuknya.',
+        },
+        {
+          id: 'hp',
+          label: 'Kolom no_hp wajib diisi',
+          benar: false,
+          alasan: 'no_hp sengaja dibuat tanpa NOT NULL karena tidak semua siswa punya HP.',
+        },
+      ],
+      done: '<strong>Klaim presentasi kuat!</strong> Setiap klaim dapat ditunjuk buktinya di DBMS.',
+    },
   },
 
   /* ==========================================================
-     TAHAP 7 — Generalisasi
+     SINTAKS 5 — Menganalisis & mengevaluasi
      ========================================================== */
-  simpulan: {
-    kicker: 'Tahap 7 · Generalisasi',
-    title: 'Menyimpulkan Perbandingan Jenis DBMS',
-    goal: 'Merumuskan kesimpulan umum tentang jenis-jenis DBMS dan menguji pemahaman pada kasus baru.',
-    instruction: 'Pilih <strong>semua</strong> pernyataan yang benar berdasarkan hasil penyelidikanmu.',
-    statements: [
-      { id: 's-model', valid: true, text: 'Jenis DBMS dibedakan berdasarkan model datanya, yaitu cara data disusun dan dihubungkan.', feedback: 'Benar. Keenam gudang RPL Mart menyimpan data yang sama dengan model berbeda.' },
-      { id: 's-relasional', valid: true, text: 'DBMS relasional menyimpan data dalam tabel berskema tetap, memakai SQL, dan menjamin transaksi ACID.', feedback: 'Benar. Terbukti pada kasus dompet digital koperasi.' },
-      { id: 's-nosql', valid: true, text: 'NoSQL terdiri atas jenis dokumen, key-value, kolom lebar, dan graf; umumnya berskema fleksibel dan mudah diskalakan horizontal.', feedback: 'Benar. Terbukti pada kasus katalog, flash sale, rekomendasi, dan data sensor.' },
-      { id: 's-awal', valid: true, text: 'Model hierarkis (satu induk) dan jaringan (banyak induk lewat pointer) adalah model awal yang aksesnya menelusuri jalur.', feedback: 'Benar. Seperti Gudang Pohon, Gudang Jaring, dan Windows Registry.' },
-      { id: 's-pilih', valid: true, text: 'Jenis DBMS dipilih sesuai kebutuhan: bentuk data, tingkat konsistensi, kecepatan, dan skala.', feedback: 'Benar. Setiap kasus di tahap Verifikasi punya jawaban yang berbeda.' },
-      { id: 's-tanpa', valid: false, text: 'NoSQL berarti tidak punya aturan sama sekali dan datanya tidak bisa dikueri.', feedback: 'Keliru. NoSQL = Not Only SQL. Datanya tetap bisa dikueri, hanya bahasanya berbeda (find, GET, MATCH, …).' },
-      { id: 's-usang', valid: false, text: 'DBMS relasional sudah usang dan tidak dipakai lagi karena ada NoSQL.', feedback: 'Keliru. RDBMS masih menjadi jenis yang paling banyak dipakai, terutama untuk data transaksi.' },
-      { id: 's-satu', valid: false, text: 'Satu jenis DBMS pasti paling baik untuk semua aplikasi.', feedback: 'Keliru. Banyak aplikasi besar bahkan memakai beberapa jenis DBMS sekaligus (polyglot persistence).' }
+  evaluasi: {
+    kicker: 'Tahap 9 · Evaluasi',
+    title: 'Kasus Baru: Servis Laptop TEFA',
+    goal: 'Menerapkan CREATE DATABASE dan CREATE TABLE pada rancangan baru dan mengevaluasi skrip tim lain.',
+    guru: 'Kuis dikerjakan individu dan hanya sekali jawab. Uji silang dikerjakan berpasangan: minta murid menjalankan skrip Tim Biru, lalu memperbaiki kesalahannya satu per satu secara lisan sebelum memilih jawaban.',
+    pengantarKuis:
+      'Teaching Factory RPL juga melayani servis laptop. Rancangan hasil normalisasi di MPI 1.4 sudah menjadi kamus data berikut. Jawab setiap soal — <strong>hanya satu kesempatan</strong>.',
+    kamusJudul: 'Kamus data Servis Laptop TEFA',
+    soal: [
+      soalPilih('e1', 'Perintah pertama yang harus dijalankan untuk kasus ini adalah …', 'c', [
+        ['a', '<code>USE tefa_servis;</code>', 'USE gagal bila basis datanya belum dibuat.'],
+        [
+          'b',
+          '<code>CREATE TABLE servis (…);</code>',
+          'Belum ada basis data yang aktif untuk menampung tabel.',
+        ],
+        [
+          'c',
+          '<code>CREATE DATABASE tefa_servis;</code>',
+          'Benar: wadahnya dibuat lebih dulu, lalu dipilih dengan USE.',
+        ],
+        [
+          'd',
+          '<code>INSERT INTO servis …;</code>',
+          'INSERT mengisi data, padahal tabelnya pun belum ada.',
+        ],
+      ]),
+      soalPilih('e2', 'Definisi kolom <code>biaya</code> yang sesuai kamus data adalah …', 'b', [
+        [
+          'a',
+          '<code>biaya INT NOT NULL</code>',
+          'Kamus data menetapkan DECIMAL(10,2) agar bisa menyimpan nilai berkoma.',
+        ],
+        [
+          'b',
+          '<code>biaya DECIMAL(10,2) NOT NULL</code>',
+          'Benar: tipe dan aturan wajib sesuai kamus data.',
+        ],
+        ['c', '<code>biaya DECIMAL(10,2)</code>', 'Biaya wajib diisi — NOT NULL tertinggal.'],
+        [
+          'd',
+          '<code>biaya VARCHAR(10) NOT NULL</code>',
+          'Biaya akan dihitung; jangan disimpan sebagai teks.',
+        ],
+      ]),
+      soalPilih('e3', 'Tabel mana yang harus dibuat paling akhir?', 'd', [
+        [
+          'a',
+          '<code>pelanggan</code>',
+          'pelanggan tidak merujuk tabel lain, jadi bisa dibuat lebih dulu.',
+        ],
+        ['b', '<code>servis</code>', 'servis masih dirujuk oleh detail_servis.'],
+        ['c', '<code>layanan</code>', 'layanan adalah tabel induk tanpa kunci tamu.'],
+        [
+          'd',
+          '<code>detail_servis</code>',
+          'Benar: ia merujuk servis dan layanan, dan servis sendiri merujuk pelanggan & teknisi.',
+        ],
+      ]),
+      soalPilih(
+        'e4',
+        'Baris kunci tamu yang benar di tabel servis untuk kolom kode_tek adalah …',
+        'a',
+        [
+          [
+            'a',
+            '<code>FOREIGN KEY (kode_tek) REFERENCES teknisi(kode_tek)</code>',
+            'Benar: kolom di tabel ini, lalu tabel dan kolom rujukannya.',
+          ],
+          [
+            'b',
+            '<code>FOREIGN KEY teknisi(kode_tek) REFERENCES (kode_tek)</code>',
+            'Posisinya tertukar: kolom lokal di FOREIGN KEY, rujukan di REFERENCES.',
+          ],
+          [
+            'c',
+            '<code>PRIMARY KEY (kode_tek) REFERENCES teknisi</code>',
+            'kode_tek bukan kunci primer servis, dan REFERENCES milik FOREIGN KEY.',
+          ],
+          [
+            'd',
+            '<code>REFERENCES teknisi(kode_tek) FOREIGN KEY</code>',
+            'Urutan kata kunci terbalik.',
+          ],
+        ]
+      ),
+      soalPilih(
+        'e5',
+        'Kunci primer <code>detail_servis</code> adalah gabungan no_servis dan kode_lay. Penulisannya …',
+        'c',
+        [
+          [
+            'a',
+            '<code>PRIMARY KEY (no_servis), PRIMARY KEY (kode_lay)</code>',
+            'Satu tabel hanya punya satu PRIMARY KEY; gabungkan kolomnya.',
+          ],
+          [
+            'b',
+            '<code>PRIMARY KEY no_servis + kode_lay</code>',
+            'Daftar kolom ditulis di dalam kurung, dipisah koma.',
+          ],
+          [
+            'c',
+            '<code>PRIMARY KEY (no_servis, kode_lay)</code>',
+            'Benar: kunci gabungan ditulis dalam satu PRIMARY KEY.',
+          ],
+          [
+            'd',
+            '<code>PRIMARY KEY (detail_servis)</code>',
+            'Yang ditulis adalah nama kolom, bukan nama tabel.',
+          ],
+        ]
+      ),
+      soalPilih(
+        'e6',
+        'Saat menjalankan CREATE TABLE, DBMS menjawab "Belum ada basis data yang dipilih". Perbaikannya …',
+        'b',
+        [
+          ['a', 'Mengganti nama tabel', 'Masalahnya bukan nama tabel.'],
+          [
+            'b',
+            'Menjalankan <code>USE tefa_servis;</code> sebelum CREATE TABLE',
+            'Benar: pilih basis datanya lebih dulu.',
+          ],
+          [
+            'c',
+            'Menghapus semua NOT NULL',
+            'Constraint tidak berhubungan dengan basis data aktif.',
+          ],
+          ['d', 'Menjalankan CREATE TABLE dua kali', 'Hasilnya tetap sama selama belum ada USE.'],
+        ]
+      ),
     ],
-    cekLabel: 'Periksa pernyataan',
-    kesimpulanLabel: 'Kesimpulanmu',
-    kesimpulanPrompt: 'Dengan kata-katamu sendiri: sebutkan jenis-jenis DBMS dan bandingkan karakteristik utamanya.',
-    kesimpulanPlaceholder: 'Jenis-jenis DBMS antara lain … Perbedaannya, DBMS relasional … sedangkan NoSQL …',
-    kesimpulanMin: 80,
-    kuisLabel: 'Uji pemahaman: Aplikasi OSIS',
-    kuisIntro:
-      'OSIS membangun aplikasi sekolah: data anggota, iuran kas, forum pertemanan, dan papan pengumuman. ' +
-      'Jawab soal berikut.',
-    questions: [
-      {
-        id: 'q-mongo',
-        prompt: 'OSIS menyimpan data pengumuman dengan MongoDB. MongoDB termasuk jenis DBMS…',
-        options: [
-          { id: 'a', label: 'NoSQL dokumen' },
-          { id: 'b', label: 'Relasional' },
-          { id: 'c', label: 'Hierarkis' },
-          { id: 'd', label: 'NoSQL graf' }
-        ],
-        correct: 'a',
-        explanation: 'MongoDB menyimpan data sebagai dokumen mirip JSON (BSON) yang skemanya fleksibel.'
-      },
-      {
-        id: 'q-kas',
-        prompt: 'Pencatatan iuran kas OSIS tidak boleh salah hitung walaupun dua bendahara menyimpan bersamaan. Jenis yang paling cocok adalah…',
-        options: [
-          { id: 'a', label: 'Relasional, karena menjamin transaksi ACID' },
-          { id: 'b', label: 'Key-value, karena paling cepat' },
-          { id: 'c', label: 'Kolom lebar, karena mudah menambah server' },
-          { id: 'd', label: 'Hierarkis, karena berbentuk pohon' }
-        ],
-        correct: 'a',
-        explanation: 'Data keuangan membutuhkan konsistensi ketat. Jaminan ACID adalah kekuatan utama RDBMS.'
-      },
-      {
-        id: 'q-teman',
-        prompt: 'Fitur "Kenalan yang mungkin kamu kenal" (teman dari teman) paling tepat memakai…',
-        options: [
-          { id: 'a', label: 'NoSQL graf' },
-          { id: 'b', label: 'NoSQL key-value' },
-          { id: 'c', label: 'Hierarkis' },
-          { id: 'd', label: 'NoSQL kolom lebar' }
-        ],
-        correct: 'a',
-        explanation: 'Basis data graf menyimpan hubungan sebagai garis sehingga penelusuran berlapis menjadi cepat.'
-      },
-      {
-        id: 'q-induk',
-        prompt: 'Model DBMS yang setiap record anaknya hanya boleh memiliki SATU induk adalah…',
-        options: [
-          { id: 'a', label: 'Hierarkis' },
-          { id: 'b', label: 'Jaringan' },
-          { id: 'c', label: 'Relasional' },
-          { id: 'd', label: 'Graf' }
-        ],
-        correct: 'a',
-        explanation: 'Model hierarkis berbentuk pohon (satu induk). Model jaringan membolehkan banyak induk.'
-      },
-      {
-        id: 'q-skala',
-        prompt: 'Pengguna aplikasi OSIS melonjak. Tim memilih menambah banyak server murah daripada membeli satu server super. Cara ini disebut…',
-        options: [
-          { id: 'a', label: 'Skala horizontal, ciri umum NoSQL' },
-          { id: 'b', label: 'Skala vertikal, ciri umum NoSQL' },
-          { id: 'c', label: 'Normalisasi' },
-          { id: 'd', label: 'Transaksi ACID' }
-        ],
-        correct: 'a',
-        explanation: 'Menambah banyak server = skala horizontal. Memperkuat satu server = skala vertikal.'
-      },
-      {
-        id: 'q-ciri',
-        prompt: 'Manakah pernyataan yang BENAR tentang perbandingan relasional dan NoSQL?',
-        options: [
-          { id: 'a', label: 'Relasional berskema tetap dan memakai SQL; NoSQL umumnya berskema fleksibel dengan bahasa kueri yang beragam.' },
-          { id: 'b', label: 'Relasional berskema fleksibel; NoSQL wajib memakai tabel.' },
-          { id: 'c', label: 'Keduanya sama persis, hanya berbeda nama produk.' },
-          { id: 'd', label: 'NoSQL tidak dapat menyimpan data dalam jumlah besar.' }
-        ],
-        correct: 'a',
-        explanation: 'Skema dan bahasa kueri adalah dua pembeda utama relasional dan NoSQL.'
-      }
-    ],
-    kuisCekLabel: 'Periksa jawaban',
-    kuisUlangLabel: 'Kerjakan ulang',
-    lanjutLabel: 'Lanjut ke Refleksi →'
+    ujiSilang: {
+      judul: 'Skrip Tim Biru',
+      pengantar:
+        'Tim Biru mengklaim skrip berikut membangun sebagian basis data servis laptop. Jalankan skripnya, baca pesan DBMS, lalu telusuri: kesalahan apa saja yang ada di skrip itu (termasuk yang belum terlihat karena DBMS berhenti di galat pertama)?',
+      tanya: 'Pilih SEMUA kesalahan dalam skrip Tim Biru.',
+      opsi: [
+        {
+          id: 'use',
+          label: 'Tidak ada <code>USE tefa_servis;</code> setelah CREATE DATABASE',
+          benar: true,
+          alasan: 'Inilah galat pertama: tabel tidak tahu harus dibuat di basis data mana.',
+        },
+        {
+          id: 'urutan',
+          label: 'Tabel servis dibuat sebelum pelanggan dan teknisi yang dirujuknya',
+          benar: true,
+          alasan: 'Setelah USE ditambahkan, DBMS menolak kunci tamu ke tabel yang belum ada.',
+        },
+        {
+          id: 'varchar',
+          label: '<code>nama_plg VARCHAR</code> tidak diberi panjang',
+          benar: true,
+          alasan: 'VARCHAR wajib diberi panjang sesuai kamus data: VARCHAR(50).',
+        },
+        {
+          id: 'akhir',
+          label: 'PRIMARY KEY tidak boleh ditulis di baris akhir',
+          benar: false,
+          alasan:
+            'Menulis PRIMARY KEY (kolom) di akhir daftar kolom justru cara yang sah dan rapi.',
+        },
+        {
+          id: 'kapital',
+          label: 'Kata kunci SQL harus ditulis huruf kecil',
+          benar: false,
+          alasan: 'Kata kunci SQL tidak membedakan huruf besar dan kecil.',
+        },
+        {
+          id: 'tanggal',
+          label: '<code>tgl_masuk</code> seharusnya bertipe INT',
+          benar: false,
+          alasan: 'Tanggal disimpan dengan DATE, sesuai kamus data.',
+        },
+      ],
+      skrip: SKRIP_TIM_BIRU,
+      done: '<strong>Uji silang tuntas!</strong> Kamu menemukan galat yang terlihat dan yang tersembunyi di balik galat pertama.',
+    },
   },
 
-  /* ==========================================================
-     TAHAP 8 — Refleksi
-     ========================================================== */
   refleksi: {
-    kicker: 'Tahap 8 · Refleksi',
-    title: 'Melihat Kembali Perjalanan Belajarmu',
-    goal: 'Menilai pemahaman diri dan cara belajarmu.',
-    note: 'Tidak ada jawaban benar atau salah di tahap ini. Jawablah dengan jujur.',
-    recallLabel: 'Rekomendasimu saat menjadi konsultan',
-    recallKosong: 'Belum ada rekomendasi yang tersimpan.',
-    skalaLabel: 'Seberapa yakin kamu sekarang?',
+    kicker: 'Tahap 10 · Refleksi',
+    title: 'Refleksi Pemecahan Masalah',
+    goal: 'Menilai kemampuan diri dan proses tim dalam membangun basis data dari rancangan.',
+    guru: 'Beri 5 menit refleksi mandiri. Baca jawaban terbuka untuk menemukan galat yang paling sering muncul (biasanya lupa USE, lupa koma, atau tipe kunci tamu berbeda) sebagai bahan pertemuan berikutnya: ALTER TABLE dan DML.',
     skala: [
-      { value: 1, label: 'Belum' },
-      { value: 2, label: 'Sedikit' },
-      { value: 3, label: 'Cukup' },
-      { value: 4, label: 'Yakin' },
-      { value: 5, label: 'Sangat' }
+      { value: 1, label: 'Belum bisa' },
+      { value: 2, label: 'Masih ragu' },
+      { value: 3, label: 'Cukup bisa' },
+      { value: 4, label: 'Bisa' },
+      { value: 5, label: 'Sangat bisa' },
     ],
-    skalaItems: [
-      { id: 'l-jenis', text: 'Saya dapat menyebutkan jenis-jenis DBMS berdasarkan model datanya.' },
-      { id: 'l-produk', text: 'Saya dapat mengelompokkan contoh produk DBMS ke dalam jenisnya.' },
-      { id: 'l-banding', text: 'Saya dapat membandingkan karakteristik DBMS relasional dan NoSQL.' },
-      { id: 'l-pilih', text: 'Saya dapat memilih jenis DBMS yang tepat untuk suatu kebutuhan beserta alasannya.' }
+    pernyataan: [
+      { id: 'p1', teks: 'Aku bisa membaca kamus data: tabel, kolom, tipe data, dan kunci.' },
+      { id: 'p2', teks: 'Aku bisa menulis CREATE DATABASE dan USE tanpa melihat contoh.' },
+      {
+        id: 'p3',
+        teks: 'Aku bisa menulis CREATE TABLE dengan tipe data, NOT NULL, dan PRIMARY KEY.',
+      },
+      { id: 'p4', teks: 'Aku bisa menulis FOREIGN KEY dan menentukan urutan pembuatan tabel.' },
+      { id: 'p5', teks: 'Aku bisa membaca pesan galat DBMS lalu memperbaiki skripku sendiri.' },
     ],
-    prompts: [
-      { id: 'p-kejut', question: 'Gudang mana yang paling menarik bagimu? Mengapa?', placeholder: 'Gudang yang paling menarik bagiku adalah …' },
-      { id: 'p-terap', question: 'Jika kamu membuat aplikasi impianmu, jenis DBMS apa yang akan kamu pakai dan apa alasannya?', placeholder: 'Aplikasiku adalah … aku akan memakai … karena …' }
-    ],
-    simpanLabel: 'Simpan refleksi',
-    tersimpan: 'Refleksi tersimpan.',
-    lanjutLabel: 'Lihat hasil akhir →'
+    tanyaTerbuka:
+      'Galat apa yang paling sering kamu temui hari ini, dan bagaimana kamu memperbaikinya?',
   },
 
-  /* ==========================================================
-     TAHAP 9 — Selesai
-     ========================================================== */
   selesai: {
-    kicker: 'Tahap 9 · Selesai',
-    title: 'Penyelidikan Selesai!',
-    skorLabel: 'Rincian skor',
-    bandingLabel: 'Tabel perbandingan jenis DBMS',
-    bandingHeaders: ['Jenis', 'Struktur data', 'Skema', 'Bahasa kueri', 'Contoh produk', 'Cocok untuk'],
-    banding: [
-      ['Hierarkis', 'Pohon, satu induk', 'Tetap', 'Navigasi jalur', 'IBM IMS, Windows Registry', 'Data berjenjang, sistem mainframe lama'],
-      ['Jaringan', 'Record + pointer, banyak induk', 'Tetap', 'Navigasi pointer', 'IDMS', 'Sistem lama dengan relasi banyak-ke-banyak'],
-      ['Relasional', 'Tabel baris-kolom + kunci', 'Tetap', 'SQL', 'MySQL, PostgreSQL, Oracle, SQLite', 'Transaksi & data terstruktur (ACID)'],
-      ['Berorientasi objek', 'Objek + atribut + perilaku', 'Mengikuti class', 'OQL / bahasa pemrograman', 'ObjectDB, db4o', 'Data kompleks (CAD, multimedia)'],
-      ['NoSQL dokumen', 'Dokumen mirip JSON', 'Fleksibel', 'API/kueri dokumen', 'MongoDB, CouchDB, Firestore', 'Katalog, konten, profil pengguna'],
-      ['NoSQL key-value', 'Pasangan kunci → nilai', 'Fleksibel', 'GET/SET', 'Redis, Riak KV', 'Cache, sesi, keranjang belanja'],
-      ['NoSQL kolom lebar', 'Keluarga kolom', 'Fleksibel', 'CQL, API', 'Cassandra, HBase', 'Log, data sensor, big data'],
-      ['NoSQL graf', 'Simpul + garis hubungan', 'Fleksibel', 'Cypher, Gremlin', 'Neo4j, Amazon Neptune', 'Media sosial, rekomendasi']
+    kicker: 'Tahap 11 · Selesai',
+    title: 'Bank Sampah Siap Mencatat Setoran!',
+    goal: 'Melihat rekap skor dan skrip DDL hasil kerja tim.',
+    pesan:
+      'Aplikasi Bank Sampah kini terhubung ke basis data bank_sampah yang sesuai rancangan. Pertemuan berikutnya: mengubah struktur dengan ALTER TABLE dan mengisi data dengan DML.',
+    rangkuman: [
+      '<code>CREATE DATABASE nama;</code> membuat wadah; <code>USE nama;</code> memilihnya sebelum membuat tabel.',
+      '<code>CREATE TABLE nama ( … );</code> berisi definisi kolom <em>nama TIPE [NOT NULL]</em> yang dipisah koma.',
+      'Terjemahan kamus data: tipe → INT, DECIMAL(p,s), VARCHAR(n), CHAR(n), DATE; wajib diisi → NOT NULL; 🔑 → PRIMARY KEY; 🔗 → FOREIGN KEY … REFERENCES.',
+      'Tabel induk dibuat lebih dulu; kunci tamu harus bertipe sama dengan kolom yang dirujuk.',
+      'Pesan galat DBMS adalah petunjuk: baca, temukan barisnya, perbaiki, jalankan lagi.',
     ],
-    kesimpulanLabel: 'Kesimpulanmu',
-    konsepKunci: [
-      'Jenis DBMS dibedakan berdasarkan model data: hierarkis, jaringan, relasional, berorientasi objek, dan NoSQL.',
-      'NoSQL terbagi menjadi empat: dokumen, key-value, kolom lebar, dan graf.',
-      'Relasional: tabel, skema tetap, SQL, ACID, umumnya skala vertikal.',
-      'NoSQL: skema fleksibel, model beragam, skala horizontal, banyak yang memakai BASE.',
-      'Hierarkis & jaringan: model awal yang aksesnya menelusuri jalur/pointer.',
-      'Tidak ada DBMS terbaik untuk semua hal — pilih sesuai kebutuhan data dan aplikasinya.'
-    ],
-    lanjutLabel: 'Langkah berikutnya',
-    lanjut: [
-      'Coba MySQL/MariaDB (lewat XAMPP) dan MongoDB (lewat MongoDB Atlas versi gratis), lalu bandingkan cara menyimpan data yang sama.',
-      'Cari tahu jenis DBMS yang dipakai aplikasi favoritmu (misalnya dari blog teknik perusahaannya).'
-    ],
-    ulangLabel: 'Ulangi dari awal',
-    ulangKonfirmasi: 'Reset seluruh progres materi ini? Semua jawaban akan dihapus dan pilihan jawaban diacak ulang.',
-    berandaLabel: 'Kembali ke beranda'
-  }
+  },
 };

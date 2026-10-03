@@ -4,8 +4,8 @@
  * Tes seksi "SQL DDL" pada shared/engine.js: klasifikasi perintah SQL,
  * pengurai pernyataan DDL mini, simulasi DBMS (jalankanDdl) beserta
  * pesan galatnya, struktur tabel dari ERD, urutan pembuatan tabel,
- * pemeriksaan struktur, pembangkit CREATE TABLE, penyorot sintaks, dan
- * konsol DDL berlangkah.
+ * pemeriksaan struktur, pembangkit CREATE TABLE, penyorot sintaks,
+ * konsol DDL berlangkah, kamus data, dan editor DDL berpemeriksa.
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -446,4 +446,158 @@ test('buildSkemaDdl menampilkan basis data aktif, kolom, PK, FK, dan jumlah bari
   assert.match(html, /🔗/);
   assert.match(html, /→ buku\.kode_buku/);
   assert.match(E.buildSkemaDdl(E.skemaKosong()), /Belum ada basis data/);
+});
+
+test('periksaStruktur: opsi ketat (NOT NULL, kolom berlebih) dan subset tabel', () => {
+  const st = E.strukturDariErd(ERD);
+  const skema = E.jalankanDdl(
+    E.skemaKosong(),
+    AWAL +
+      ' CREATE TABLE anggota (nis VARCHAR(10) PRIMARY KEY, nama_anggota VARCHAR(50), hobi TEXT);' +
+      ' CREATE TABLE peminjaman (id_pinjam INT PRIMARY KEY, tgl_pinjam DATE, nis VARCHAR(10),' +
+      ' FOREIGN KEY (nis) REFERENCES anggota(nis));'
+  ).skema;
+  const longgar = E.periksaStruktur(skema, st, { tabel: ['anggota', 'PEMINJAMAN'] });
+  assert.deepEqual(plain(longgar), [], 'tanpa ketat: NOT NULL & kolom lebih diabaikan');
+  const ketat = E.periksaStruktur(skema, st, { tabel: ['anggota', 'peminjaman'], ketat: true });
+  const teks = ketat.join('\n');
+  assert.match(teks, /peminjaman\.tgl_pinjam wajib diisi/);
+  assert.match(teks, /peminjaman\.nis wajib diisi/);
+  assert.match(teks, /anggota\.hobi tidak ada di rancangan/);
+  assert.ok(!/buku/.test(teks), 'tabel di luar subset tidak diperiksa');
+  assert.ok(E.periksaStruktur(skema, st).length > 0, 'tanpa subset: tabel lain belum ada');
+});
+
+test('strukturDariErd membawa keterangan kolom bila ada', () => {
+  const erd = {
+    entitas: [
+      {
+        id: 'x',
+        label: 'X',
+        atribut: [{ id: 'a', teks: 'a', pk: true, tipe: 'INT', ket: 'Nomor urut' }],
+      },
+    ],
+    relasi: [],
+  };
+  assert.equal(E.strukturDariErd(erd)[0].kolom[0].ket, 'Nomor urut');
+  assert.ok(!('ket' in E.strukturDariErd(ERD)[0].kolom[0]));
+});
+
+test('periksaSkripDdl: lulus, nama basis data, urutan induk, NOT NULL, skema awal', () => {
+  const st = E.strukturDariErd(ERD);
+  const opts = { namaDb: 'db_perpus' };
+  const benar = E.periksaSkripDdl(E.ddlSkripErd(ERD, 'db_perpus'), st, opts);
+  assert.equal(benar.lulus, true, benar.salah.join('; '));
+
+  const tanpaUse = E.periksaSkripDdl('CREATE DATABASE db_perpus;', [], opts);
+  assert.equal(tanpaUse.ok, true);
+  assert.equal(tanpaUse.lulus, false);
+  assert.match(tanpaUse.salah[0], /USE/);
+  const salahNama = E.periksaSkripDdl('CREATE DATABASE perpus; USE perpus;', [], opts);
+  assert.match(salahNama.salah[0], /db_perpus belum dibuat/);
+  assert.equal(E.periksaSkripDdl(AWAL, [], opts).lulus, true);
+
+  const anakDulu = E.periksaSkripDdl(
+    AWAL +
+      ' CREATE TABLE peminjaman (id_pinjam INT PRIMARY KEY, tgl_pinjam DATE NOT NULL,' +
+      ' nis VARCHAR(10) NOT NULL, FOREIGN KEY (nis) REFERENCES anggota(nis));',
+    st,
+    opts
+  );
+  assert.equal(anakDulu.ok, false, 'tabel rujukan belum ada → DBMS menolak');
+  assert.equal(anakDulu.lulus, false);
+
+  const awal = E.jalankanDdl(E.skemaKosong(), AWAL).skema;
+  const anggota =
+    'CREATE TABLE anggota (nis VARCHAR(10), nama_anggota VARCHAR(50), PRIMARY KEY (nis));';
+  const sub = E.periksaSkripDdl(anggota, st, {
+    awal: awal,
+    namaDb: 'db_perpus',
+    tabel: ['anggota'],
+  });
+  assert.equal(sub.lulus, true, sub.salah.join('; '));
+  assert.equal(awal.basisData[0].tabel.length, 0, 'skema awal tidak berubah');
+  const kosong = E.periksaSkripDdl('  ', st, opts);
+  assert.equal(kosong.ok, false);
+});
+
+test('buildKamusData menampilkan tabel, tipe, aturan, keterangan, dan meng-escape teks', () => {
+  const st = E.strukturDariErd(ERD);
+  st[0].kolom[0].ket = '<b>nomor</b>';
+  const html = E.buildKamusData(st, { judul: 'Rancangan', namaDb: 'db_perpus' });
+  assert.match(html, /db_perpus/);
+  assert.match(html, /Tabel <code>detail_pinjam<\/code>/);
+  assert.match(html, /🔑 Kunci primer \(gabungan\)/);
+  assert.match(html, /🔗 Kunci tamu → anggota\.nis/);
+  assert.match(html, /Wajib diisi/);
+  assert.match(html, /Boleh kosong/);
+  assert.match(html, /&lt;b&gt;nomor/);
+  assert.ok(!html.includes('<b>nomor'));
+  const satu = E.buildKamusData(st, { tabel: ['buku'] });
+  assert.match(satu, /buku/);
+  assert.ok(!satu.includes('detail_pinjam'));
+  assert.ok(!satu.includes('Keterangan'), 'kolom keterangan hanya bila ada isinya');
+});
+
+test('ensureEditorState idempoten dan memperbaiki state rusak', () => {
+  const s = {};
+  const st = E.ensureEditorState(s, 'ed');
+  assert.deepEqual(plain(st), {
+    draf: '',
+    jalan: null,
+    percobaan: 0,
+    lulus: false,
+    lulusPertama: null,
+    petunjuk: 0,
+  });
+  st.draf = 'USE x;';
+  st.percobaan = 2;
+  assert.equal(E.ensureEditorState(s, 'ed'), st);
+  assert.equal(s.ed.draf, 'USE x;');
+  s.rusak = { percobaan: 1, draf: 5, jalan: 3 };
+  const r = E.ensureEditorState(s, 'rusak');
+  assert.equal(r.draf, '');
+  assert.equal(r.jalan, null);
+  assert.equal(r.petunjuk, 0);
+});
+
+test('buildEditorDdl: tombol, petunjuk, hasil lulus/belum, dan readonly setelah lulus', () => {
+  const st = E.strukturDariErd(ERD);
+  const opts = {
+    harapan: st,
+    namaDb: 'db_perpus',
+    tabel: [],
+    kerangka: 'CREATE DATABASE …;',
+    petunjuk: ['P1', 'P2'],
+  };
+  const ed = E.ensureEditorState({}, 'e');
+  let html = E.buildEditorDdl('ed', ed, opts);
+  assert.match(html, /id="edInput"/);
+  assert.match(html, /id="edRun" disabled/);
+  assert.match(html, /id="edKerangka"/);
+  assert.match(html, /Petunjuk \(1\/2\)/);
+  assert.ok(!html.includes('ddl-editor__hasil'));
+
+  ed.draf = 'CREATE DATABASE db_perpus;';
+  ed.jalan = ed.draf;
+  ed.percobaan = 1;
+  ed.petunjuk = 1;
+  html = E.buildEditorDdl('ed', ed, opts);
+  assert.ok(!html.includes('id="edKerangka"'));
+  assert.match(html, /id="edClear"/);
+  assert.match(html, /P1/);
+  assert.match(html, /belum sesuai rancangan/);
+  assert.match(html, /belum dipilih dengan USE/);
+
+  ed.jalan = 'CREATE DATABSE db_perpus;';
+  assert.match(E.buildEditorDdl('ed', ed, opts), /DBMS menolak skripmu/);
+
+  ed.draf = AWAL;
+  ed.jalan = AWAL;
+  ed.lulus = true;
+  html = E.buildEditorDdl('ed', ed, Object.assign({ sukses: 'MANTAP' }, opts));
+  assert.match(html, /MANTAP/);
+  assert.match(html, / readonly>/);
+  assert.ok(!html.includes('id="edRun"'));
+  assert.ok(!html.includes('P1'), 'petunjuk disembunyikan setelah lulus');
 });

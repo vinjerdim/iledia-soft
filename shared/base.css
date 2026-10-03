@@ -3220,6 +3220,86 @@ strong {
   font-size: 0.78rem;
 }
 
+/* Kamus data rancangan (buildKamusData) */
+.kamus-data {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.kamus-data__judul {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.kamus-data__db {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.kamus-data__tabel {
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.kamus-data__grid {
+  min-width: 420px;
+}
+
+.kamus-data__grid td {
+  vertical-align: top;
+}
+
+.kamus-data__nama {
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-blue-soft);
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-align: left;
+}
+
+/* Editor DDL berpemeriksa (buildEditorDdl) */
+.ddl-editor {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.ddl-editor__input {
+  min-height: 9rem;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  tab-size: 2;
+}
+
+.ddl-editor--lulus .ddl-editor__input {
+  border-color: var(--color-success);
+}
+
+.ddl-editor__info {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: 0.82rem;
+}
+
+.ddl-editor__hasil {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.ddl-editor__log {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
 @media (max-width: 760px) {
   .ddl-console__grid {
     grid-template-columns: minmax(0, 1fr);
@@ -3227,5 +3307,9 @@ strong {
 
   .ddl-console__skema {
     position: static;
+  }
+
+  .ddl-editor__hasil {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
