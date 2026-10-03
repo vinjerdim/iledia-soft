@@ -29,8 +29,14 @@
        diagram relasi, pemilih kardinalitas teracak
    14. Kerja kelompok kooperatif — kartu peran, kuis sekali-jawab,
        poin peningkatan & predikat tim (STAD)
-   15. Modal reset
-   16. Kompatibilitas: Engine.createLesson (modul lama)
+   15. ERD lengkap — letak kunci tamu, kunci primer, pemeriksaan
+       ERD, diagram ERD lengkap
+   16. Normalisasi basis data — sel atomik, grup berulang, closure,
+       ketergantungan penuh/parsial/transitif, bentuk normal 0–3,
+       pemeriksaan dekomposisi, hitungan redundansi, tabel data
+       bersel ketuk, skema relasi
+   17. Modal reset
+   18. Kompatibilitas: Engine.createLesson (modul lama)
 
    ATURAN PENGACAKAN: setiap daftar pilihan yang ditampilkan ke
    murid WAJIB diacak. Acak SEKALI saat State disiapkan (pakai
@@ -1940,7 +1946,488 @@ function buildErdLengkap(erd, opts) {
 }
 
 /* ============================================================
-   16. MODAL RESET
+   16. NORMALISASI BASIS DATA (1NF, 2NF, 3NF)
+   Komponen RPL untuk menganalisis tabel dan memecahnya menjadi
+   bentuk normal. Kunci kandidat dianggap sama dengan kunci
+   primer `pk` (cukup untuk kasus belajar di SMK).
+     tabel = {
+       id, label, ikon?,
+       kolom: [{ id, teks, fk? }],   // fk: id tabel yang dirujuk
+       pk:    [idKolom],             // kunci primer (boleh gabungan)
+       fd:    [{ id?, dari: [idKolom], ke: [idKolom] }],
+       baris: [{ <idKolom>: nilai | [nilai, …] }]   // opsional
+     }
+   Sel berupa array berisi lebih dari satu nilai menandai nilai
+   tidak atomik / grup berulang (bentuk tidak normal).
+   Dekomposisi = [tabel tanpa fd]; ketergantungannya diambil dari
+   tabel asal.
+   ============================================================ */
+
+function selAtomik(nilai) {
+  return !Array.isArray(nilai) || nilai.length <= 1;
+}
+
+/* Kunci sebuah sel: "<indeks baris>:<id kolom>". */
+function kunciSel(i, kolomId) {
+  return i + ':' + kolomId;
+}
+
+function kolomIds(tabel) {
+  return tabel.kolom.map(function (k) {
+    return k.id;
+  });
+}
+
+/* Apakah semua isi `a` ada di `b`? */
+function termuat(a, b) {
+  return a.every(function (x) {
+    return b.indexOf(x) !== -1;
+  });
+}
+
+function teksKolom(tabel, id) {
+  for (var i = 0; i < tabel.kolom.length; i++) {
+    if (tabel.kolom[i].id === id) return tabel.kolom[i].teks;
+  }
+  return id;
+}
+
+/* Kunci sel yang tidak atomik, urut baris lalu kolom. */
+function selTakAtomik(tabel) {
+  var out = [];
+  (tabel.baris || []).forEach(function (b, i) {
+    tabel.kolom.forEach(function (k) {
+      if (!selAtomik(b[k.id])) out.push(kunciSel(i, k.id));
+    });
+  });
+  return out;
+}
+
+/*
+ * Bentuk 1NF dari baris bergrup berulang: setiap array (sejajar) dipecah
+ * menjadi baris tersendiri; nilai tunggal disalin ke setiap baris
+ * pecahan. Mengembalikan baris BARU; masukan tidak diubah.
+ */
+function ratakanBaris(baris) {
+  var out = [];
+  baris.forEach(function (b) {
+    var n = 1;
+    Object.keys(b).forEach(function (k) {
+      if (Array.isArray(b[k])) n = Math.max(n, b[k].length);
+    });
+    for (var i = 0; i < n; i++) {
+      var r = {};
+      Object.keys(b).forEach(function (k) {
+        var v = b[k];
+        r[k] = Array.isArray(v) ? (v.length > 1 ? v[i] : v[0]) : v;
+      });
+      out.push(r);
+    }
+  });
+  return out;
+}
+
+/* Closure atribut: semua kolom yang ditentukan oleh `attrs`. */
+function tutupAtribut(attrs, fds) {
+  var hasil = attrs.slice();
+  var berubah = true;
+  while (berubah) {
+    berubah = false;
+    fds.forEach(function (fd) {
+      if (!termuat(fd.dari, hasil)) return;
+      fd.ke.forEach(function (k) {
+        if (hasil.indexOf(k) === -1) {
+          hasil.push(k);
+          berubah = true;
+        }
+      });
+    });
+  }
+  return hasil;
+}
+
+/*
+ * Ketergantungan yang berlaku di dalam sekumpulan kolom: untuk setiap
+ * ruas kiri yang seluruhnya ada di `kolom`, ruas kanannya = closure ∩
+ * kolom (urut `kolom`). → [{ dari, ke }]
+ */
+function proyeksiFd(fds, kolom) {
+  var out = [];
+  fds.forEach(function (fd) {
+    if (!termuat(fd.dari, kolom)) return;
+    var tutup = tutupAtribut(fd.dari, fds);
+    var ke = kolom.filter(function (k) {
+      return tutup.indexOf(k) !== -1 && fd.dari.indexOf(k) === -1;
+    });
+    if (ke.length) out.push({ dari: fd.dari.slice(), ke: ke });
+  });
+  return out;
+}
+
+/*
+ * Jenis ketergantungan fungsional terhadap kunci primer tabel:
+ *   'penuh'     ruas kiri memuat seluruh kunci primer
+ *   'parsial'   ruas kiri hanya sebagian kunci primer (gabungan)
+ *   'transitif' ruas kiri bukan (bagian) kunci — lewat atribut lain
+ */
+function jenisKetergantungan(fd, tabel) {
+  if (termuat(tabel.pk, fd.dari)) return 'penuh';
+  if (termuat(fd.dari, tabel.pk)) return 'parsial';
+  return 'transitif';
+}
+
+/* "No Nota, Kode Barang → Jumlah" */
+function fdTeks(fd, tabel) {
+  function nama(ids) {
+    return ids
+      .map(function (id) {
+        return teksKolom(tabel, id);
+      })
+      .join(', ');
+  }
+  return nama(fd.dari) + ' → ' + nama(fd.ke);
+}
+
+/*
+ * Bentuk normal tertinggi sebuah tabel (0–3):
+ *   0  ada sel tidak atomik, tidak berkunci, atau kunci primernya tidak
+ *      menentukan semua kolom (baris kembar mungkin terjadi)
+ *   1  ada atribut bukan kunci yang bergantung parsial pada kunci
+ *   2  tidak ada parsial, tetapi ada ketergantungan transitif
+ *   3  setiap atribut bukan kunci bergantung penuh & langsung pada kunci
+ */
+function bentukNormal(tabel) {
+  var kolom = kolomIds(tabel);
+  var pk = tabel.pk || [];
+  if (tabel.baris && selTakAtomik(tabel).length) return 0;
+  if (!pk.length || !termuat(kolom, tutupAtribut(pk, tabel.fd))) return 0;
+  var nf = 3;
+  proyeksiFd(tabel.fd, kolom).forEach(function (fd) {
+    var bukanKunci = fd.ke.filter(function (k) {
+      return pk.indexOf(k) === -1;
+    });
+    if (!bukanKunci.length) return;
+    var j = jenisKetergantungan(fd, tabel);
+    if (j === 'parsial') nf = Math.min(nf, 1);
+    else if (j === 'transitif') nf = Math.min(nf, 2);
+  });
+  return nf;
+}
+
+function labelNf(nf) {
+  return nf ? nf + 'NF' : 'bentuk tidak normal';
+}
+
+/*
+ * Memeriksa rancangan hasil normalisasi terhadap tabel asal.
+ * `target` bentuk normal yang dituju (bawaan 3). → [pesan kesalahan]
+ */
+function periksaDekomposisi(asal, hasil, target) {
+  target = target || 3;
+  var salah = [];
+  var semua = kolomIds(asal);
+  function nama(ids) {
+    return ids
+      .map(function (id) {
+        return teksKolom(asal, id);
+      })
+      .join(', ');
+  }
+
+  semua.forEach(function (c) {
+    var di = hasil.filter(function (t) {
+      return kolomIds(t).indexOf(c) !== -1;
+    });
+    if (!di.length) {
+      salah.push('Atribut "' + teksKolom(asal, c) + '" hilang dari rancangan.');
+    } else if (
+      di.length > 1 &&
+      !di.some(function (t) {
+        return t.pk.indexOf(c) !== -1;
+      })
+    ) {
+      salah.push(
+        'Atribut "' +
+          teksKolom(asal, c) +
+          '" disimpan di lebih dari satu tabel (' +
+          di
+            .map(function (t) {
+              return t.label;
+            })
+            .join(', ') +
+          ') padahal bukan kunci.'
+      );
+    }
+  });
+
+  hasil.forEach(function (t) {
+    var kol = kolomIds(t);
+    if (!t.pk.length || !termuat(kol, tutupAtribut(t.pk, asal.fd))) {
+      salah.push('Kunci primer tabel ' + t.label + ' tidak menentukan semua kolomnya.');
+      return;
+    }
+    var nf = bentukNormal({ kolom: t.kolom, pk: t.pk, fd: asal.fd });
+    if (nf < target) {
+      salah.push(
+        'Tabel ' + t.label + ' baru memenuhi ' + labelNf(nf) + ', belum ' + target + 'NF.'
+      );
+    }
+  });
+
+  if (
+    !hasil.some(function (t) {
+      return termuat(asal.pk, kolomIds(t));
+    })
+  ) {
+    salah.push(
+      'Tidak ada tabel yang menyimpan kunci asal (' +
+        nama(asal.pk) +
+        '), sehingga data asal tidak bisa disusun kembali.'
+    );
+  }
+
+  asal.fd.forEach(function (fd) {
+    var perlu = fd.dari.concat(fd.ke);
+    var terjaga = hasil.some(function (t) {
+      return termuat(perlu, kolomIds(t));
+    });
+    if (!terjaga) {
+      salah.push('Ketergantungan "' + fdTeks(fd, asal) + '" tidak terjaga di satu tabel pun.');
+    }
+  });
+
+  return salah;
+}
+
+/* Baris unik setelah diproyeksikan ke `kolom`. */
+function proyeksiBaris(baris, kolom) {
+  var lihat = {};
+  var out = [];
+  baris.forEach(function (b) {
+    var r = {};
+    kolom.forEach(function (k) {
+      r[k] = b[k];
+    });
+    var kunci = JSON.stringify(
+      kolom.map(function (k) {
+        return b[k];
+      })
+    );
+    if (!lihat[kunci]) {
+      lihat[kunci] = true;
+      out.push(r);
+    }
+  });
+  return out;
+}
+
+/*
+ * Banyak sel tabel dan sel yang hanya mengulang fakta yang sudah
+ * tercatat di baris sebelumnya (karena ketergantungan pada atribut
+ * yang bukan kunci utuh). Baris harus sudah atomik. → { sel, berulang }
+ */
+function hitungRedundansi(tabel) {
+  var kolom = kolomIds(tabel);
+  var baris = tabel.baris || [];
+  var berulang = {};
+  proyeksiFd(tabel.fd, kolom).forEach(function (fd) {
+    if (termuat(tabel.pk, fd.dari)) return;
+    var sudah = {};
+    baris.forEach(function (b, i) {
+      var kunci = JSON.stringify(
+        fd.dari.map(function (k) {
+          return b[k];
+        })
+      );
+      if (!sudah[kunci]) {
+        sudah[kunci] = true;
+        return;
+      }
+      fd.ke.forEach(function (k) {
+        berulang[kunciSel(i, k)] = true;
+      });
+    });
+  });
+  return { sel: baris.length * kolom.length, berulang: Object.keys(berulang).length };
+}
+
+/* Total sel & sel berulang setelah tabel asal dipecah menjadi `hasil`. */
+function hitungDekomposisi(asal, hasil) {
+  var total = { sel: 0, berulang: 0 };
+  hasil.forEach(function (t) {
+    var kol = kolomIds(t);
+    var r = hitungRedundansi({
+      kolom: t.kolom,
+      pk: t.pk,
+      fd: asal.fd,
+      baris: proyeksiBaris(asal.baris || [], kol),
+    });
+    total.sel += r.sel;
+    total.berulang += r.berulang;
+  });
+  return total;
+}
+
+/* Pemeriksa murni sel ketuk → { semuaBenar, tepat, total, salah, terlewat }. */
+function periksaSel(benar, pilih) {
+  var salah = Object.keys(pilih || {}).filter(function (k) {
+    return pilih[k] && benar.indexOf(k) === -1;
+  });
+  var terlewat = benar.filter(function (k) {
+    return !pilih[k];
+  });
+  return {
+    semuaBenar: !salah.length && !terlewat.length,
+    tepat: benar.length - terlewat.length,
+    total: benar.length,
+    salah: salah,
+    terlewat: terlewat,
+  };
+}
+
+function nilaiSel(v) {
+  return Array.isArray(v) ? v.join(', ') : v;
+}
+
+function tandaKolom(tabel, k) {
+  var pk = tabel.pk || [];
+  return (
+    (pk.indexOf(k.id) !== -1 ? '<span aria-label="kunci primer">🔑</span> ' : '') +
+    (k.fk ? '<span aria-label="kunci tamu">🔗</span> ' : '')
+  );
+}
+
+/*
+ * Tabel data responsif (bergulir mendatar di dalam wadahnya sendiri).
+ *   opts.judul   caption tabel
+ *   opts.baris   baris yang ditampilkan (bawaan tabel.baris)
+ *   opts.ketuk   true → setiap sel menjadi tombol yang bisa ditandai
+ *   opts.id      id tabel untuk bindTabelSel (wajib bila ketuk)
+ *   opts.pilih   { <kunciSel>: true } sel yang ditandai murid
+ *   opts.tanda   { <kunciSel>: 'benar' | 'salah' | 'terlewat' }
+ *   opts.kunci   false → sembunyikan penanda kunci di kepala kolom
+ */
+function buildTabelData(tabel, opts) {
+  opts = opts || {};
+  var baris = opts.baris || tabel.baris || [];
+  var pilih = opts.pilih || {};
+  var tanda = opts.tanda || {};
+  var kelasTanda = { benar: ' is-correct', salah: ' is-incorrect', terlewat: ' is-missed' };
+  var label = opts.judul || tabel.label || 'Tabel data';
+  return (
+    '<div class="nf-table-wrap" tabindex="0" role="region" aria-label="' +
+    esc(label) +
+    '">' +
+    '<table class="nf-table' +
+    (opts.ketuk ? ' nf-table--ketuk' : '') +
+    '">' +
+    (opts.judul ? '<caption class="nf-table__caption">' + esc(opts.judul) + '</caption>' : '') +
+    '<thead><tr>' +
+    tabel.kolom
+      .map(function (k) {
+        return (
+          '<th scope="col">' +
+          (opts.kunci === false ? '' : tandaKolom(tabel, k)) +
+          esc(k.teks) +
+          '</th>'
+        );
+      })
+      .join('') +
+    '</tr></thead><tbody>' +
+    baris
+      .map(function (b, i) {
+        return (
+          '<tr>' +
+          tabel.kolom
+            .map(function (k) {
+              var v = b[k.id];
+              var majemuk = !selAtomik(v);
+              if (!opts.ketuk) {
+                return (
+                  '<td' +
+                  (majemuk ? ' class="nf-cell--majemuk"' : '') +
+                  '>' +
+                  esc(nilaiSel(v)) +
+                  '</td>'
+                );
+              }
+              var key = kunciSel(i, k.id);
+              var on = !!pilih[key];
+              return (
+                '<td><button type="button" class="nf-cell-btn' +
+                (on ? ' is-selected' : '') +
+                (kelasTanda[tanda[key]] || '') +
+                '" data-sel="' +
+                esc(key) +
+                '" data-tabel="' +
+                esc(opts.id || '') +
+                '" aria-pressed="' +
+                on +
+                '" aria-label="Baris ' +
+                (i + 1) +
+                ', ' +
+                esc(k.teks) +
+                ': ' +
+                esc(nilaiSel(v)) +
+                '">' +
+                esc(nilaiSel(v)) +
+                '</button></td>'
+              );
+            })
+            .join('') +
+          '</tr>'
+        );
+      })
+      .join('') +
+    '</tbody></table></div>'
+  );
+}
+
+/* Memasang ketukan sel buildTabelData({ketuk:true}); pilih dimutasi. */
+function bindTabelSel(root, id, pilih, save, rerender) {
+  root.querySelectorAll('[data-tabel="' + id + '"][data-sel]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var key = btn.dataset.sel;
+      if (pilih[key]) delete pilih[key];
+      else pilih[key] = true;
+      save();
+      rerender();
+    });
+  });
+}
+
+/* Skema relasi ringkas: Nama(🔑 pk, kolom, 🔗 fk). */
+function buildSkemaRelasi(tabel) {
+  var pk = tabel.pk || [];
+  return (
+    '<div class="nf-schema">' +
+    '<span class="nf-schema__nama">' +
+    (tabel.ikon ? '<span aria-hidden="true">' + tabel.ikon + '</span> ' : '') +
+    esc(tabel.label) +
+    '</span>' +
+    '<ul class="nf-schema__kolom" aria-label="Kolom tabel ' +
+    esc(tabel.label) +
+    '">' +
+    tabel.kolom
+      .map(function (k) {
+        var key = pk.indexOf(k.id) !== -1;
+        return (
+          '<li class="nf-schema__kol' +
+          (key ? ' nf-schema__kol--pk' : '') +
+          (k.fk ? ' nf-schema__kol--fk' : '') +
+          '">' +
+          tandaKolom(tabel, k) +
+          esc(k.teks) +
+          '</li>'
+        );
+      })
+      .join('') +
+    '</ul></div>'
+  );
+}
+
+/* ============================================================
+   17. MODAL RESET
    Halaman modul menyertakan shared/partials/reset-modal.html.
    onConfirm dipanggil setelah murid menekan "Ya, Reset".
    ============================================================ */
@@ -1977,8 +2464,8 @@ function bindResetModal(onConfirm) {
 }
 
 /* ============================================================
-   17. KOMPATIBILITAS: Engine.createLesson (MODUL LAMA)
-   Modul fase-f/mpi-1.4 … 2.2 masih memakai API ini. Bagian ini
+   18. KOMPATIBILITAS: Engine.createLesson (MODUL LAMA)
+   Modul fase-f/mpi-2.1 … 2.2 masih memakai API ini. Bagian ini
    dipertahankan apa adanya sampai modul-modul itu dimigrasikan ke
    pola mesin tahap + store di atas.
    ============================================================ */
