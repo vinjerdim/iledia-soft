@@ -11,7 +11,7 @@ Kumpulan media pembelajaran interaktif untuk mata pelajaran Rekayasa Perangkat L
 | 1 | 1.3 | Merancang ERD Lengkap dari Hasil Analisis Kebutuhan Data | Cooperative Learning | [`fase-f/mpi-1.3/`](fase-f/mpi-1.3/index.html) |
 | 1 | 1.4 | Menganalisis Normalisasi Basis Data (1NF, 2NF, 3NF) untuk Mengatasi Redundansi Data | Problem Based Learning | [`fase-f/mpi-1.4/`](fase-f/mpi-1.4/index.html) |
 | 2 | 2.1 | Perintah SQL DDL untuk Membangun Basis Data dari ERD | Inquiry Learning | [`fase-f/mpi-2.1/`](fase-f/mpi-2.1/index.html) |
-| 2 | 2.2 | Jenis-jenis DBMS dan Karakteristiknya | Discovery Learning | [`fase-f/mpi-2.2/`](fase-f/mpi-2.2/index.html) |
+| 2 | 2.2 | Membuat Basis Data dan Tabel dengan CREATE DATABASE dan CREATE TABLE | Problem Based Learning | [`fase-f/mpi-2.2/`](fase-f/mpi-2.2/index.html) |
 
 Halaman utama ([`index.html`](index.html)) menampilkan daftar materi dengan navigasi **Fase → Kelas → Topik** (sama seperti iledia-math). Setiap card memakai `data-kelas` dan `data-topik`, yang wajib terdaftar pada objek `HIERARKI` di skrip halaman. Kelas tanpa topik ditampilkan berlabel "segera". Pilihan terakhir diingat di `localStorage` (`iledia-soft:nav`).
 
@@ -56,43 +56,23 @@ Pre-commit hook (husky + lint-staged) memformat berkas yang di-stage dengan Pret
 └── fase-f/mpi-X.Y/             # satu folder per materi
 ```
 
-### Modul gaya iledia-math (mpi-1.1 – 1.4, 2.1)
+### Modul gaya iledia-math (semua modul: mpi-1.1 – 1.4, 2.1 – 2.2)
 
 Satu modul = `index.html` (dihasilkan `npm run build:pages`), `data.js` (konten), `app.js` (State, `createStore`, `createStageMachine`, renderer per tahap), dan `styles.css`. Urutan muat: `tokens.css` → `base.css` → `styles.css`; `engine.js` → `data.js` → `app.js`.
 
-Komponen bersama di `shared/engine.js`: mesin tahap & store, kepala tahap bersintaks, catatan guru, panel tujuan belajar, pilihan ganda, pemilahan kategori, urut-ketuk, pertanyaan penuntun bertingkat, multi-pilih berdiagnosa, skala Likert, modal reset, seksi **analisis kebutuhan data** (dokumen kebutuhan bertanda frasa `[[id|teks]]`, `cakupanKebutuhan`, kartu entitas), seksi **relasi & kardinalitas ERD** (notasi `min..maks`, `jenisDariKardinalitas`, `buildRelasiDiagram`, pemilih kardinalitas teracak `ensureKardinalitasState` / `buildKardinalitasPicker`), seksi **kerja kelompok kooperatif** (kartu peran, kuis sekali-jawab `buildKuisSekali` / `skorKuis`, `poinPeningkatan` STAD, `rataPoinTim`, `predikatTim`), dan seksi **ERD lengkap** (`letakKunciTamu` — 1:N di sisi banyak, 1:1 di sisi wajib, M:N lewat entitas penghubung —, `kunciPrimer` termasuk kunci gabungan, validasi `periksaErd`, diagram `buildErdLengkap`; `buildEntityCard` menandai PK 🔑, FK 🔗, dan entitas penghubung), dan seksi **normalisasi basis data** (`selAtomik` / `selTakAtomik`, `ratakanBaris` untuk 1NF, `tutupAtribut`, `jenisKetergantungan` — penuh, parsial, transitif —, `bentukNormal` 0–3, `periksaDekomposisi`, `hitungRedundansi` / `hitungDekomposisi`, tabel data bersel ketuk `buildTabelData` / `bindTabelSel` / `periksaSel`, dan `buildSkemaRelasi`), dan seksi **SQL DDL** (`klasifikasiPerintah` DDL/DML/DCL/TCL, pengurai `uraiDdl`, simulator DBMS `jalankanDdl` dengan galat ramah murid, `strukturDariErd`, `urutanBuatTabel` / `urutanValid` — tabel induk dahulu —, `periksaStruktur`, `ddlBuatTabel` / `ddlSkripErd`, penyorot `sorotSql` / `buildSqlKode`, panel `buildSkemaDdl`, dan konsol berlangkah `ensureKonsolState` / `buildKonsolDdl` / `bindKonsolDdl`).
+Komponen bersama di `shared/engine.js`: mesin tahap & store, kepala tahap bersintaks, catatan guru, panel tujuan belajar, pilihan ganda, pemilahan kategori, urut-ketuk, pertanyaan penuntun bertingkat, multi-pilih berdiagnosa, skala Likert, modal reset, seksi **analisis kebutuhan data** (dokumen kebutuhan bertanda frasa `[[id|teks]]`, `cakupanKebutuhan`, kartu entitas), seksi **relasi & kardinalitas ERD** (notasi `min..maks`, `jenisDariKardinalitas`, `buildRelasiDiagram`, pemilih kardinalitas teracak `ensureKardinalitasState` / `buildKardinalitasPicker`), seksi **kerja kelompok kooperatif** (kartu peran, kuis sekali-jawab `buildKuisSekali` / `skorKuis`, `poinPeningkatan` STAD, `rataPoinTim`, `predikatTim`), dan seksi **ERD lengkap** (`letakKunciTamu` — 1:N di sisi banyak, 1:1 di sisi wajib, M:N lewat entitas penghubung —, `kunciPrimer` termasuk kunci gabungan, validasi `periksaErd`, diagram `buildErdLengkap`; `buildEntityCard` menandai PK 🔑, FK 🔗, dan entitas penghubung), dan seksi **normalisasi basis data** (`selAtomik` / `selTakAtomik`, `ratakanBaris` untuk 1NF, `tutupAtribut`, `jenisKetergantungan` — penuh, parsial, transitif —, `bentukNormal` 0–3, `periksaDekomposisi`, `hitungRedundansi` / `hitungDekomposisi`, tabel data bersel ketuk `buildTabelData` / `bindTabelSel` / `periksaSel`, dan `buildSkemaRelasi`), dan seksi **SQL DDL** (`klasifikasiPerintah` DDL/DML/DCL/TCL, pengurai `uraiDdl`, simulator DBMS `jalankanDdl` dengan galat ramah murid, `strukturDariErd`, `urutanBuatTabel` / `urutanValid` — tabel induk dahulu —, `periksaStruktur`, `ddlBuatTabel` / `ddlSkripErd`, penyorot `sorotSql` / `buildSqlKode`, panel `buildSkemaDdl`, konsol berlangkah `ensureKonsolState` / `buildKonsolDdl` / `bindKonsolDdl`, kamus data rancangan `buildKamusData` — atribut ERD boleh membawa `ket` —, dan editor DDL berpemeriksa `ensureEditorState` / `buildEditorDdl` / `bindEditorDdl`: murid menulis skrip sendiri, `periksaSkripDdl` menjalankannya di atas skema awal lalu mencocokkan nama basis data aktif dan struktur tabel — `periksaStruktur(skema, harapan, { tabel, ketat })` dengan opsi ketat untuk NOT NULL dan kolom berlebih).
 
-**Pengacakan:** setiap daftar pilihan diacak sekali di `initOrders()` lewat `ensureShuffledOrder` / `ensureSortStates` / `ensureTapOrderState` / `ensureMultiState` / `ensureKardinalitasState`, disimpan di State, dan teracak ulang saat Reset. Jangan memanggil `shuffleArray()` dari renderer. Tes `tests/mpi-f-1.1-data.test.js` – `tests/mpi-f-1.4-data.test.js` dan `tests/mpi-f-2.1-data.test.js` memastikan semua daftar pilihan teracak.
+**Pengacakan:** setiap daftar pilihan diacak sekali di `initOrders()` lewat `ensureShuffledOrder` / `ensureSortStates` / `ensureTapOrderState` / `ensureMultiState` / `ensureKardinalitasState`, disimpan di State, dan teracak ulang saat Reset. Jangan memanggil `shuffleArray()` dari renderer. Tes `tests/mpi-f-1.1-data.test.js` – `tests/mpi-f-1.4-data.test.js` dan `tests/mpi-f-2.1-data.test.js` – `tests/mpi-f-2.2-data.test.js` memastikan semua daftar pilihan teracak.
 
-### Modul lama (mpi-2.2)
+### Kompatibilitas `Engine.createLesson`
 
-Masih memakai `Engine.createLesson()` (bagian 18 `shared/engine.js`, dipertahankan untuk kompatibilitas) dengan berkas `data.js`, `app-core.js`, `app-stage-*.js`, `app.js`, `styles.css`. Tes `tests/engine-legacy.test.js` menjaga agar global engine baru tidak bertabrakan dengan nama global modul lama.
-
-```
-fase-f/mpi-X.Y/
-├── index.html          # kerangka halaman
-├── data.js             # konten materi (teks, tabel, soal, kunci, umpan balik)
-├── app-core.js         # pembantu render yang dipakai bersama antar tahap
-├── app-stage-*.js      # renderer per kelompok tahap
-├── app.js              # perakitan: createLesson + init (dimuat TERAKHIR)
-└── styles.css          # gaya khusus materi
-```
-
-Konten materi dipisahkan di `data.js`, sehingga teks dan soal dapat diubah tanpa menyentuh logika.
-
-### Urutan muat
-
-Gaya: `../../shared/tokens.css` → `../../shared/base.css` → `styles.css`.
-
-Skrip: `../../shared/engine.js` → `data.js` → `app-core.js` → `app-stage-*.js` → `app.js`.
-
-`app.js` wajib dimuat **terakhir** karena ia merujuk fungsi `render*` dari berkas tahap saat menyusun daftar tahap. Bila ada berkas tahap yang lupa didaftarkan di `index.html`, `app.js` berhenti dengan pesan yang menyebut nama fungsi yang hilang — tidak gagal diam-diam.
+`Engine.createLesson()` (bagian 19 `shared/engine.js`) masih dipertahankan untuk kompatibilitas, tetapi sejak mpi-2.2 ditulis ulang tidak ada lagi modul yang memakainya. Tes `tests/engine-legacy.test.js` menjaga API-nya tetap utuh dan memastikan tidak ada modul yang kembali memakai berkas `app-core.js` / `app-stage-*.js`.
 
 ## Komponen Bersama (`shared/`)
 
 `shared/engine.js` menyediakan `Engine.createLesson()` sehingga penyimpanan progres, penguncian tahap, dan progress bar tidak perlu ditulis ulang per materi. Kerangka halaman tiap materi wajib menyediakan id berikut: `#stageNavList`, `#stageContainer`, `#progressFill`, `#progressLabel`, `#appNotice`, dan `#resetAppBtn`.
 
-`shared/base.css` memuat komponen yang dipakai lintas materi: tombol, panel, kotak umpan balik, input, kuis pilihan (`.choice-option` beserta state benar/salah), kolam chip (`.attr-pool` / `.attr-chip`) beserta kolom sasarannya (`.entity-column`), kartu konsep (`.concept-card`), papan menjodohkan (`.match-grid`), daftar penjelasan (`.explain-item`), penghitung temuan (`.find-counter`), skala Likert (`.likert`), panel skor penutup (`.done-panel` / `.score-list`), petunjuk yang dapat dibuka (`.hint-reveal`), dan tabel data (`.mini-table`). Pakai komponen ini lebih dulu sebelum menulis gaya baru di `styles.css` materi.
+`shared/base.css` memuat komponen yang dipakai lintas materi: tombol, panel, kotak umpan balik, input, kuis pilihan (`.choice-option` beserta state benar/salah), kolam chip (`.attr-pool` / `.attr-chip`) beserta kolom sasarannya (`.entity-column`), kartu konsep (`.concept-card`), papan menjodohkan (`.match-grid`), daftar penjelasan (`.explain-item`), penghitung temuan (`.find-counter`), skala Likert (`.likert`), panel skor penutup (`.done-panel` / `.score-list`), petunjuk yang dapat dibuka (`.hint-reveal`), tabel data (`.mini-table`), serta komponen SQL DDL (`.sql-code`, `.ddl-console`, `.ddl-schema`, kamus data `.kamus-data`, editor `.ddl-editor`). Pakai komponen ini lebih dulu sebelum menulis gaya baru di `styles.css` materi.
 
 Jumlah kolom pada `.entity-column` mengikuti `--entity-columns-count` (bawaan 3); materi dengan empat entitas cukup menyetel variabel itu pada elemennya.
 

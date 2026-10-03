@@ -38,5 +38,13 @@
     "h1": "Perintah SQL DDL untuk Membangun Basis Data dari ERD",
     "stageCount": 12,
     "extraBody": "partials/reset-modal.html"
+  },
+  "fase-f/mpi-2.2": {
+    "title": "Membuat Basis Data dan Tabel dengan CREATE DATABASE dan CREATE TABLE — Rekayasa Perangkat Lunak Fase F",
+    "description": "Media pembelajaran interaktif berbasis Problem Based Learning untuk membuat basis data dan tabel menggunakan perintah CREATE DATABASE dan CREATE TABLE sesuai rancangan basis data: laporan galat aplikasi Bank Sampah Sekolah, kamus data, akar masalah dan rumusan masalah, peran tim dan rencana langkah, terjemahan kamus data ke tipe data dan constraint, konsol CREATE DATABASE & USE, editor DDL untuk menulis sendiri skrip tabel induk dan tabel berkunci tamu, penyajian bukti hasil skrip, evaluasi kasus Servis Laptop TEFA dan uji silang skrip tim lain.",
+    "kicker": "Rekayasa Perangkat Lunak — Fase F (SMK)",
+    "h1": "Membuat Basis Data dan Tabel dengan CREATE DATABASE dan CREATE TABLE",
+    "stageCount": 11,
+    "extraBody": "partials/reset-modal.html"
   }
 }
