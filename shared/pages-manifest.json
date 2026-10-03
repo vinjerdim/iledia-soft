@@ -22,5 +22,13 @@
     "h1": "Merancang ERD Lengkap dari Hasil Analisis Kebutuhan Data",
     "stageCount": 12,
     "extraBody": "partials/reset-modal.html"
+  },
+  "fase-f/mpi-1.4": {
+    "title": "Menganalisis Normalisasi Basis Data (1NF, 2NF, 3NF) — Rekayasa Perangkat Lunak Fase F",
+    "description": "Media pembelajaran interaktif berbasis Problem Based Learning untuk menganalisis konsep normalisasi basis data (1NF, 2NF, 3NF) guna mengatasi redundansi data: masalah spreadsheet Koperasi Siswa, pilah anomali sisip/ubah/hapus, rumusan masalah, peran tim, kartu konsep, selidiki sel tak atomik, pilah ketergantungan penuh/parsial/transitif, pecah tabel ke 2NF dan 3NF, sajikan bukti redundansi turun, evaluasi kasus servis laptop TEFA dan uji silang rancangan tim lain.",
+    "kicker": "Rekayasa Perangkat Lunak — Fase F (SMK)",
+    "h1": "Menganalisis Normalisasi Basis Data (1NF, 2NF, 3NF)",
+    "stageCount": 11,
+    "extraBody": "partials/reset-modal.html"
   }
 }

@@ -4,7 +4,7 @@
  * Tes navigasi halaman utama (Fase → Kelas → Topik, meniru iledia-math):
  * hierarki memuat Fase F → Kelas XI → Topik 1 & 2, setiap card punya
  * data-kelas/data-topik yang terdaftar dan tautan yang ada, dan card
- * MPI 1.1, 1.2 & 1.3 berada di Kelas XI Topik 1.
+ * MPI 1.1 – 1.4 berada di Kelas XI Topik 1.
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -75,6 +75,17 @@ test('card MPI 1.3 ada di Kelas XI Topik 1 dengan TP ERD lengkap', () => {
   assert.match(c.tag, /ERD Lengkap/);
   assert.match(c.tag, /Analisis Kebutuhan Data/);
   assert.match(c.tag, /Cooperative Learning/);
+});
+
+test('card MPI 1.4 ada di Kelas XI Topik 1 dengan TP normalisasi', () => {
+  const c = cards().find((x) => x.href === 'fase-f/mpi-1.4/index.html');
+  assert.ok(c, 'card mpi-1.4 ada');
+  assert.equal(c.kelas, 'XI');
+  assert.equal(c.topik, '1');
+  assert.match(c.tag, /Normalisasi Basis Data/);
+  assert.match(c.tag, /1NF, 2NF, 3NF/);
+  assert.match(c.tag, /Redundansi Data/);
+  assert.match(c.tag, /Problem Based Learning/);
 });
 
 test('urutan card mengikuti nomor materi', () => {
