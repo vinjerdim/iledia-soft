@@ -6,5 +6,13 @@
     "h1": "Menganalisis Kebutuhan Data: Mengidentifikasi Entitas & Atribut",
     "stageCount": 11,
     "extraBody": "partials/reset-modal.html"
+  },
+  "fase-f/mpi-1.2": {
+    "title": "Menentukan Jenis Relasi & Kardinalitas Antar Entitas dalam ERD — Rekayasa Perangkat Lunak Fase F",
+    "description": "Media pembelajaran interaktif berbasis Cooperative Learning (Jigsaw dan poin peningkatan STAD) untuk menentukan jenis relasi dan kardinalitas antar entitas dalam rancangan ERD: kuis awal, info kunci 1:1, 1:N, M:N dan notasi min..maks, pembagian peran tim, meja ahli, diskusi tim asal, perancangan kardinalitas ERD Sistem Ekskul, evaluasi individu dan uji silang, serta penghargaan tim.",
+    "kicker": "Rekayasa Perangkat Lunak — Fase F (SMK)",
+    "h1": "Menentukan Jenis Relasi & Kardinalitas Antar Entitas dalam ERD",
+    "stageCount": 11,
+    "extraBody": "partials/reset-modal.html"
   }
 }

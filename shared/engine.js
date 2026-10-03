@@ -25,14 +25,18 @@
    11. Skala Likert (refleksi diri)
    12. Analisis kebutuhan data — dokumen kebutuhan bertanda frasa,
        skor pemilahan, cakupan kebutuhan, kartu entitas
-   13. Modal reset
-   14. Kompatibilitas: Engine.createLesson (modul lama)
+   13. Relasi & kardinalitas ERD — notasi min..maks, jenis relasi,
+       diagram relasi, pemilih kardinalitas teracak
+   14. Kerja kelompok kooperatif — kartu peran, kuis sekali-jawab,
+       poin peningkatan & predikat tim (STAD)
+   15. Modal reset
+   16. Kompatibilitas: Engine.createLesson (modul lama)
 
    ATURAN PENGACAKAN: setiap daftar pilihan yang ditampilkan ke
    murid WAJIB diacak. Acak SEKALI saat State disiapkan (pakai
    ensureShuffledOrder / ensureSortStates / ensureTapOrderState /
-   ensureMultiState), simpan urutannya di State, lalu render
-   menurut urutan tersimpan. Jangan memanggil shuffleArray() dari
+   ensureMultiState / ensureKardinalitasState), simpan urutannya
+   di State, lalu render menurut urutan tersimpan. Jangan memanggil shuffleArray() dari
    renderer — pilihan akan melompat setiap kali tahap dirender
    ulang. Jawaban murid disimpan per id opsi, bukan per indeks.
    ============================================================ */
@@ -1295,7 +1299,481 @@ function buildEntityCard(ent, attrs, opts) {
 }
 
 /* ============================================================
-   13. MODAL RESET
+   13. RELASI & KARDINALITAS ERD
+   Komponen RPL untuk menentukan jenis relasi dan kardinalitas
+   antar dua entitas. Sebuah relasi dibaca dari dua arah:
+     rel = { id, a: {id,label,ikon}, b: {id,label,ikon},
+             kerja,       // kata kerja A → B, mis. 'mengikuti'
+             kerjaBalik,  // kata kerja B → A, mis. 'diikuti oleh'
+             ab,          // kardinalitas: satu A punya berapa B
+             ba }         // kardinalitas: satu B punya berapa A
+   Notasi kardinalitas 'min..maks' (0..1, 1..1, 0..N, 1..N).
+   Pada diagram, notasi ditulis di dekat entitas yang dihitung
+   (konvensi look-across): `ab` di sisi B, `ba` di sisi A.
+   ============================================================ */
+
+var KARDINALITAS_OPSI = [
+  { id: '0..1', label: '<strong>0..1</strong> — boleh tidak ada, paling banyak satu' },
+  { id: '1..1', label: '<strong>1..1</strong> — wajib ada, tepat satu' },
+  { id: '0..N', label: '<strong>0..N</strong> — boleh tidak ada, bisa banyak' },
+  { id: '1..N', label: '<strong>1..N</strong> — wajib minimal satu, bisa banyak' },
+];
+
+/* '0..N' → { min: '0', maks: 'N' }; notasi asing → null. */
+function uraiKardinalitas(notasi) {
+  var m = /^([01])\.\.([1N])$/.exec(notasi || '');
+  return m ? { min: m[1], maks: m[2] } : null;
+}
+
+/* Jenis relasi dari batas maksimum dua arah:
+   maksAB = paling banyak B untuk satu A; maksBA sebaliknya. */
+function jenisRelasi(maksAB, maksBA) {
+  if (maksAB === 'N' && maksBA === 'N') return 'M:N';
+  if (maksAB === 'N') return '1:N';
+  if (maksBA === 'N') return 'N:1';
+  return '1:1';
+}
+
+/* Jenis relasi dari notasi ab & ba; null bila salah satu belum valid. */
+function jenisDariKardinalitas(ab, ba) {
+  var x = uraiKardinalitas(ab);
+  var y = uraiKardinalitas(ba);
+  return x && y ? jenisRelasi(x.maks, y.maks) : null;
+}
+
+/* Umpan balik terdiagnosa untuk satu sisi kardinalitas (HTML). */
+function umpanKardinalitas(benar, dipilih) {
+  var b = uraiKardinalitas(benar);
+  var p = uraiKardinalitas(dipilih);
+  if (!b || !p) return '';
+  if (benar === dipilih) {
+    return (
+      '<strong>Tepat!</strong> ' +
+      (b.min === '0' ? 'Boleh tidak punya pasangan' : 'Wajib punya pasangan') +
+      ' dan ' +
+      (b.maks === '1' ? 'paling banyak satu.' : 'bisa lebih dari satu.')
+    );
+  }
+  var bagian = [];
+  if (b.min !== p.min) {
+    bagian.push(
+      'Batas <strong>minimum</strong> belum tepat — ' +
+        (b.min === '0'
+          ? 'menurut aturan, pasangannya boleh <em>tidak ada</em> (opsional), jadi minimumnya 0.'
+          : 'menurut aturan, pasangannya <em>wajib ada</em>, jadi minimumnya 1.')
+    );
+  }
+  if (b.maks !== p.maks) {
+    bagian.push(
+      'Batas <strong>maksimum</strong> belum tepat — ' +
+        (b.maks === 'N'
+          ? 'baca lagi aturannya: apakah pasangannya bisa <em>lebih dari satu</em>?'
+          : 'baca lagi aturannya: pasangannya dibatasi <em>hanya satu</em>.')
+    );
+  }
+  return bagian.join(' ');
+}
+
+/* "Satu A <kerja> minimal x dan maksimal y B." untuk arah 'ab' / 'ba'.
+   `notasi` opsional (bawaan rel[arah]); tidak valid → '?'. */
+function kalimatRelasi(rel, arah, notasi) {
+  var balik = arah === 'ba';
+  var dari = balik ? rel.b : rel.a;
+  var ke = balik ? rel.a : rel.b;
+  var kerja = balik ? rel.kerjaBalik : rel.kerja;
+  var k = uraiKardinalitas(arguments.length > 2 ? notasi : rel[arah]);
+  var min = k ? k.min : '?';
+  var maks = k ? (k.maks === 'N' ? 'banyak' : k.maks) : '?';
+  return (
+    'Satu ' +
+    dari.label +
+    ' ' +
+    kerja +
+    ' minimal ' +
+    min +
+    ' dan maksimal ' +
+    maks +
+    ' ' +
+    ke.label +
+    '.'
+  );
+}
+
+var JENIS_RELASI_LABEL = {
+  '1:1': 'One-to-One (1:1)',
+  '1:N': 'One-to-Many (1:N)',
+  'N:1': 'Many-to-One (N:1)',
+  'M:N': 'Many-to-Many (M:N)',
+};
+
+/*
+ * Diagram relasi gaya Chen: [A] notasi-ba —◇kerja◇— notasi-ab [B].
+ *   opts.ab / opts.ba  notasi yang ditampilkan (bawaan rel.ab / rel.ba);
+ *                      null/tidak valid → '?'
+ *   opts.jenis         false → sembunyikan chip jenis relasi
+ * Chip jenis relasi hanya tampil bila kedua sisi sudah valid.
+ */
+function buildRelasiDiagram(rel, opts) {
+  opts = opts || {};
+  var ab = 'ab' in opts ? opts.ab : rel.ab;
+  var ba = 'ba' in opts ? opts.ba : rel.ba;
+  var jenis = jenisDariKardinalitas(ab, ba);
+  function ent(e) {
+    return (
+      '<span class="rel-diagram__ent"><span aria-hidden="true">' +
+      (e.ikon || '🧩') +
+      '</span> ' +
+      esc(e.label) +
+      '</span>'
+    );
+  }
+  function kard(sisi, notasi) {
+    var ok = !!uraiKardinalitas(notasi);
+    return (
+      '<span class="rel-diagram__card' +
+      (ok ? '' : ' rel-diagram__card--kosong') +
+      '" data-sisi="' +
+      sisi +
+      '">' +
+      (ok ? esc(notasi) : '?') +
+      '</span>'
+    );
+  }
+  var label = kalimatRelasi(rel, 'ab', ab) + ' ' + kalimatRelasi(rel, 'ba', ba);
+  return (
+    '<figure class="rel-diagram" role="img" aria-label="' +
+    esc(label) +
+    '">' +
+    '<div class="rel-diagram__row">' +
+    ent(rel.a) +
+    kard('ba', ba) +
+    '<span class="rel-diagram__line" aria-hidden="true"></span>' +
+    '<span class="rel-diagram__rel"><span>' +
+    esc(rel.kerja) +
+    '</span></span>' +
+    '<span class="rel-diagram__line" aria-hidden="true"></span>' +
+    kard('ab', ab) +
+    ent(rel.b) +
+    '</div>' +
+    (jenis && opts.jenis !== false
+      ? '<figcaption class="rel-diagram__jenis">Jenis relasi: <strong>' +
+        esc(JENIS_RELASI_LABEL[jenis]) +
+        '</strong></figcaption>'
+      : '') +
+    '</figure>'
+  );
+}
+
+/*
+ * Pemilih kardinalitas: untuk setiap relasi murid memilih notasi
+ * sisi `ab` dan `ba` dari KARDINALITAS_OPSI (urutan diacak sekali per
+ * sisi). Boleh dicoba lagi sampai tepat, lalu terkunci.
+ *   state[key] = { <relId>: { ab: {chosen, order, firstTry}, ba: {...} } }
+ */
+function ensureKardinalitasState(state, key, relasi) {
+  var map = state[key] && typeof state[key] === 'object' ? state[key] : {};
+  var next = {};
+  relasi.forEach(function (rel) {
+    var st = map[rel.id] && typeof map[rel.id] === 'object' ? map[rel.id] : {};
+    ['ab', 'ba'].forEach(function (s) {
+      var sisi = st[s] && typeof st[s] === 'object' ? st[s] : {};
+      if (sisi.chosen === undefined) sisi.chosen = null;
+      if (sisi.firstTry === undefined) sisi.firstTry = null;
+      ensureShuffledOrder(sisi, 'order', KARDINALITAS_OPSI);
+      st[s] = sisi;
+    });
+    next[rel.id] = st;
+  });
+  state[key] = next;
+  return next;
+}
+
+function kardinalitasSelesai(relasi, states) {
+  return relasi.every(function (rel) {
+    var st = states[rel.id];
+    return st && st.ab.chosen === rel.ab && st.ba.chosen === rel.ba;
+  });
+}
+
+/* Skor: banyaknya sisi yang tepat pada percobaan pertama. */
+function skorKardinalitas(relasi, states) {
+  var benar = 0;
+  relasi.forEach(function (rel) {
+    ['ab', 'ba'].forEach(function (s) {
+      if (states[rel.id] && states[rel.id][s].firstTry === true) benar++;
+    });
+  });
+  return { benar: benar, total: relasi.length * 2 };
+}
+
+function buildKardinalitasPicker(rel, st) {
+  function sisi(s) {
+    var balik = s === 'ba';
+    var dari = balik ? rel.b : rel.a;
+    var ke = balik ? rel.a : rel.b;
+    var chosen = st[s].chosen;
+    var tepat = chosen === rel[s];
+    return (
+      '<div class="kard-picker__side">' +
+      '<p class="exercise-label">Satu <strong>' +
+      esc(dari.label) +
+      '</strong> ' +
+      esc(balik ? rel.kerjaBalik : rel.kerja) +
+      ' berapa <strong>' +
+      esc(ke.label) +
+      '</strong>?</p>' +
+      buildChoiceGroup(KARDINALITAS_OPSI, st[s].order, {
+        chosen: chosen,
+        correctId: tepat ? rel[s] : null,
+        grade: true,
+        locked: tepat,
+        group: rel.id + ':' + s,
+        attr: 'data-kard',
+      }) +
+      (chosen
+        ? '<div style="margin-top:var(--space-2);">' +
+          buildFeedbackBox(
+            tepat ? 'success' : 'warning',
+            tepat ? '✓' : '💭',
+            umpanKardinalitas(rel[s], chosen)
+          ) +
+          '</div>'
+        : '') +
+      '</div>'
+    );
+  }
+  var tuntas = st.ab.chosen === rel.ab && st.ba.chosen === rel.ba;
+  return (
+    '<div class="kard-picker" data-relasi="' +
+    esc(rel.id) +
+    '">' +
+    (rel.aturan ? '<p class="kard-picker__rule">📜 ' + esc(rel.aturan) + '</p>' : '') +
+    buildRelasiDiagram(rel, { ab: st.ab.chosen, ba: st.ba.chosen, jenis: tuntas }) +
+    '<div class="kard-picker__sides">' +
+    sisi('ab') +
+    sisi('ba') +
+    '</div>' +
+    '</div>'
+  );
+}
+
+/* Memasang event semua pemilih kardinalitas di dalam `root`. */
+function bindKardinalitasPicker(root, relasi, states, save, rerender) {
+  var byId = {};
+  relasi.forEach(function (rel) {
+    byId[rel.id] = rel;
+  });
+  root.querySelectorAll('[data-kard]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var g = (btn.dataset.group || '').split(':');
+      var rel = byId[g[0]];
+      var s = g[1];
+      if (!rel || (s !== 'ab' && s !== 'ba')) return;
+      var st = states[rel.id][s];
+      if (st.chosen === rel[s]) return;
+      st.chosen = btn.dataset.kard;
+      if (st.firstTry === null) st.firstTry = st.chosen === rel[s];
+      save();
+      rerender();
+    });
+  });
+}
+
+/* ============================================================
+   14. KERJA KELOMPOK KOOPERATIF
+   Kartu peran anggota tim, kuis individu sekali-jawab (skor dasar
+   & evaluasi), poin peningkatan individu dan predikat tim (STAD).
+   ============================================================ */
+
+/* Kartu peran. peran = [{ id, ikon, label, tugas }], nama = { id: teks }. */
+function buildPeranKelompok(peran, nama) {
+  nama = nama || {};
+  return (
+    '<div class="role-grid">' +
+    peran
+      .map(function (p) {
+        var id = 'peran-' + p.id;
+        return (
+          '<div class="role-card">' +
+          '<span class="role-card__icon" aria-hidden="true">' +
+          (p.ikon || '👤') +
+          '</span>' +
+          '<label class="role-card__label" for="' +
+          esc(id) +
+          '">' +
+          esc(p.label) +
+          '</label>' +
+          '<p class="role-card__task">' +
+          esc(p.tugas) +
+          '</p>' +
+          '<input type="text" class="input-text" id="' +
+          esc(id) +
+          '" data-peran="' +
+          esc(p.id) +
+          '" maxlength="40" autocomplete="off" placeholder="Nama anggota" value="' +
+          esc(nama[p.id] || '') +
+          '" />' +
+          '</div>'
+        );
+      })
+      .join('') +
+    '</div>'
+  );
+}
+
+/* Isian nama disimpan tanpa render ulang agar fokus tidak hilang. */
+function bindPeranKelompok(root, nama, save) {
+  root.querySelectorAll('[data-peran]').forEach(function (input) {
+    input.addEventListener('input', function () {
+      nama[input.dataset.peran] = input.value;
+      save();
+    });
+  });
+}
+
+/*
+ * Kuis sekali-jawab: setiap soal terkunci setelah dipilih, lalu kunci
+ * dan umpan balik pilihan murid ditampilkan. Urutan opsi diambil dari
+ * orders[q.id] (diacak sekali dengan ensureShuffledOrder).
+ *   q = { id, tanya, opsi: [{id, label}], correct, umpan: { <idOpsi>: html } }
+ */
+function buildKuisSekali(list, orders, jawab) {
+  return list
+    .map(function (q, i) {
+      var chosen = jawab[q.id] || null;
+      var benar = chosen === q.correct;
+      return (
+        '<div class="quiz-item quiz-item--guided">' +
+        '<p class="exercise-label"><span class="dl-step__num">' +
+        (i + 1) +
+        '</span>' +
+        (q.tanya || q.teks) +
+        '</p>' +
+        buildChoiceGroup(q.opsi, orders[q.id], {
+          chosen: chosen,
+          correctId: q.correct,
+          grade: true,
+          locked: true,
+          group: q.id,
+          attr: 'data-kuis-opt',
+        }) +
+        (chosen
+          ? '<div style="margin-top:var(--space-3);">' +
+            buildFeedbackBox(
+              benar ? 'success' : 'error',
+              benar ? '✓' : '✗',
+              (benar ? '<strong>Benar.</strong> ' : '<strong>Belum tepat.</strong> ') +
+                (q.umpan[chosen] || '')
+            ) +
+            '</div>'
+          : '') +
+        '</div>'
+      );
+    })
+    .join('');
+}
+
+function bindKuisSekali(root, list, jawab, save, rerender) {
+  var byId = {};
+  list.forEach(function (q) {
+    byId[q.id] = q;
+  });
+  root.querySelectorAll('[data-kuis-opt]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var q = byId[btn.dataset.group];
+      if (!q || jawab[q.id]) return;
+      jawab[q.id] = btn.dataset.kuisOpt;
+      save();
+      rerender();
+    });
+  });
+}
+
+function kuisSelesai(list, jawab) {
+  return list.every(function (q) {
+    return !!jawab[q.id];
+  });
+}
+
+/* { benar, total, nilai } — nilai berskala 0–100 (dibulatkan). */
+function skorKuis(list, jawab) {
+  var benar = list.filter(function (q) {
+    return jawab[q.id] === q.correct;
+  }).length;
+  var total = list.length;
+  return { benar: benar, total: total, nilai: total ? Math.round((benar / total) * 100) : 0 };
+}
+
+/*
+ * Poin peningkatan individu model STAD (skor berskala 0–100):
+ *   kuis < dasar − 10          →  5
+ *   dasar − 10 ≤ kuis < dasar  → 10
+ *   dasar ≤ kuis ≤ dasar + 10  → 20
+ *   kuis > dasar + 10          → 30
+ *   nilai sempurna (100)       → 30
+ */
+function poinPeningkatan(dasar, kuis) {
+  if (kuis >= 100) return 30;
+  if (kuis > dasar + 10) return 30;
+  if (kuis >= dasar) return 20;
+  if (kuis >= dasar - 10) return 10;
+  return 5;
+}
+
+/* Rata-rata poin anggota; isian kosong/tidak valid diabaikan, [] → null. */
+function rataPoinTim(list) {
+  var nilai = (list || [])
+    .filter(function (v) {
+      return v !== null && v !== '' && !isNaN(Number(v));
+    })
+    .map(Number);
+  if (!nilai.length) return null;
+  var jumlah = nilai.reduce(function (a, b) {
+    return a + b;
+  }, 0);
+  return Math.round((jumlah / nilai.length) * 10) / 10;
+}
+
+var PREDIKAT_TIM = [
+  {
+    id: 'super',
+    min: 25,
+    ikon: '🏆',
+    label: 'Tim Super',
+    pesan: 'Luar biasa! Setiap anggota tumbuh pesat — terus saling mengajari.',
+  },
+  {
+    id: 'hebat',
+    min: 20,
+    ikon: '🥈',
+    label: 'Tim Hebat',
+    pesan: 'Hebat! Hampir semua anggota meningkat. Bantu teman yang masih ragu.',
+  },
+  {
+    id: 'baik',
+    min: 15,
+    ikon: '🥉',
+    label: 'Tim Baik',
+    pesan: 'Kerja bagus! Cari bagian yang paling sering keliru, lalu bahas bersama.',
+  },
+  {
+    id: 'berkembang',
+    min: -Infinity,
+    ikon: '🌱',
+    label: 'Tim Berkembang',
+    pesan: 'Tim kalian sedang tumbuh. Ulangi diskusi ahli dan saling uji dengan soal baru.',
+  },
+];
+
+function predikatTim(rata) {
+  for (var i = 0; i < PREDIKAT_TIM.length; i++) {
+    if (rata >= PREDIKAT_TIM[i].min) return PREDIKAT_TIM[i];
+  }
+  return PREDIKAT_TIM[PREDIKAT_TIM.length - 1];
+}
+
+/* ============================================================
+   15. MODAL RESET
    Halaman modul menyertakan shared/partials/reset-modal.html.
    onConfirm dipanggil setelah murid menekan "Ya, Reset".
    ============================================================ */
@@ -1332,8 +1810,8 @@ function bindResetModal(onConfirm) {
 }
 
 /* ============================================================
-   14. KOMPATIBILITAS: Engine.createLesson (MODUL LAMA)
-   Modul fase-f/mpi-1.2 … 2.2 masih memakai API ini. Bagian ini
+   16. KOMPATIBILITAS: Engine.createLesson (MODUL LAMA)
+   Modul fase-f/mpi-1.3 … 2.2 masih memakai API ini. Bagian ini
    dipertahankan apa adanya sampai modul-modul itu dimigrasikan ke
    pola mesin tahap + store di atas.
    ============================================================ */
