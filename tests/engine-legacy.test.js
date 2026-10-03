@@ -1,9 +1,9 @@
 'use strict';
 
 /*
- * Tes kompatibilitas: modul lama (mpi-2.1 … 2.2) masih memakai
+ * Tes kompatibilitas: modul lama (mpi-2.2) masih memakai
  * Engine.createLesson dan mendeklarasikan nama global sendiri. Engine
- * global gaya iledia-math tidak boleh mematahkan keduanya.
+ * global gaya iledia-math tidak boleh mematahkannya.
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -12,7 +12,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { loadEngine, ROOT } = require('./load-engine');
 
-const LEGACY = ['mpi-2.1', 'mpi-2.2'];
+const LEGACY = ['mpi-2.2'];
 
 /* Nama global lama yang sengaja ditimpa modul lama dengan versi
    Engine.* yang setara (var esc = Engine.esc, dst.). */

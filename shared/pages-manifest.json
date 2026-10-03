@@ -30,5 +30,13 @@
     "h1": "Menganalisis Normalisasi Basis Data (1NF, 2NF, 3NF)",
     "stageCount": 11,
     "extraBody": "partials/reset-modal.html"
+  },
+  "fase-f/mpi-2.1": {
+    "title": "Perintah SQL DDL untuk Membangun Basis Data dari ERD — Rekayasa Perangkat Lunak Fase F",
+    "description": "Media pembelajaran interaktif berbasis Inquiry Learning untuk menjelaskan konsep dan fungsi perintah SQL DDL dalam pembuatan basis data serta mengidentifikasi struktur basis data dari ERD: ERD Perpustakaan Sekolah vs DBMS kosong, rumusan masalah, hipotesis fungsi CREATE/ALTER/DROP/TRUNCATE/RENAME, Lab DDL di konsol DBMS tiruan, kartu konsep DDL/DML/DCL dan constraint, bedah ERD menjadi tabel–kolom–tipe data–PK–FK, rakit skrip CREATE TABLE, uji hipotesis terhadap bukti, kesimpulan, evaluasi kasus Lab RPL, dan uji silang skrip tim lain.",
+    "kicker": "Rekayasa Perangkat Lunak — Fase F (SMK)",
+    "h1": "Perintah SQL DDL untuk Membangun Basis Data dari ERD",
+    "stageCount": 12,
+    "extraBody": "partials/reset-modal.html"
   }
 }
