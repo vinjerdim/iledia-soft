@@ -2918,3 +2918,314 @@ strong {
   font-style: italic;
   border-style: dashed;
 }
+
+/* =========================================================================
+   SQL DDL — blok kode bersorot, konsol DDL berlangkah, skema DBMS
+   (engine.js seksi 17)
+   ========================================================================= */
+
+.sql-code {
+  margin: 0;
+  padding: var(--space-3);
+  max-width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  background: #1f2428;
+  color: #e8eaed;
+  font-family: var(--font-mono);
+  font-size: 0.86rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.sql-code--kecil {
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.8rem;
+}
+
+.sql-code code {
+  font: inherit;
+}
+
+.sql-kw {
+  color: #ffcb6b;
+  font-weight: 700;
+}
+
+.sql-type {
+  color: #82aaff;
+}
+
+.sql-str {
+  color: #c3e88d;
+}
+
+.sql-num {
+  color: #f78c6c;
+}
+
+.sql-com {
+  color: #9aa3ab;
+  font-style: italic;
+}
+
+.sql-blank {
+  display: inline-block;
+  min-width: 4.5em;
+  padding: 0 var(--space-1);
+  border-bottom: 2px dashed #ffcb6b;
+  color: #ffcb6b;
+  text-align: center;
+}
+
+.ddl-console__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.ddl-console__skema {
+  position: sticky;
+  top: calc(var(--header-height) + 64px);
+}
+
+.ddl-steps {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.ddl-step {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  gap: var(--space-2);
+  align-items: start;
+}
+
+.ddl-step__no {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 2px solid var(--color-border-strong);
+  background: var(--color-surface);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.ddl-step__body {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.ddl-step__body .btn {
+  justify-self: start;
+}
+
+.ddl-step--wait {
+  opacity: 0.55;
+}
+
+.ddl-step--next .ddl-step__no {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.ddl-step--ok .ddl-step__no {
+  border-color: var(--color-success);
+  background: var(--color-success-soft);
+  color: var(--color-success-strong);
+}
+
+.ddl-step--galat .ddl-step__no {
+  border-color: var(--color-error);
+  background: var(--color-error-soft);
+  color: var(--color-error-strong);
+}
+
+.ddl-step__amati {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--color-ink-muted);
+}
+
+.ddl-log {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ddl-log__item {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  font-size: 0.88rem;
+  overflow-wrap: anywhere;
+}
+
+.ddl-log__item--ok {
+  background: var(--color-success-soft);
+  color: var(--color-success-strong);
+}
+
+.ddl-log__item--galat {
+  background: var(--color-error-soft);
+  color: var(--color-error-strong);
+}
+
+.ddl-log__ikon {
+  font-weight: 700;
+}
+
+.ddl-log__kat {
+  display: inline-block;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.08);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.ddl-free {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding: var(--space-3);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+
+.ddl-free__input {
+  font-family: var(--font-mono);
+}
+
+.ddl-schema {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 2px solid var(--color-blue);
+  border-radius: var(--radius-md);
+  background: var(--color-blue-soft);
+}
+
+.ddl-schema--kosong {
+  border-style: dashed;
+}
+
+.ddl-schema__judul {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-blue-strong);
+}
+
+.ddl-schema__db,
+.ddl-schema__kosong {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.ddl-schema__kosong {
+  color: var(--color-ink-muted);
+  font-size: 0.9rem;
+}
+
+.ddl-schema__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr));
+  gap: var(--space-2);
+}
+
+.ddl-table {
+  min-width: 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.ddl-table__head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-blue);
+  color: #fff;
+}
+
+.ddl-table__nama {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.ddl-table__baris {
+  font-size: 0.78rem;
+  opacity: 0.9;
+}
+
+.ddl-table__kolom {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ddl-col {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-top: 1px solid var(--color-border);
+  font-size: 0.84rem;
+}
+
+.ddl-col__nama {
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+.ddl-col--pk .ddl-col__nama {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.ddl-col--fk .ddl-col__nama {
+  font-style: italic;
+}
+
+.ddl-col__tipe {
+  color: var(--color-ink-muted);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.ddl-col__ref {
+  width: 100%;
+  color: var(--color-blue-strong);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 760px) {
+  .ddl-console__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ddl-console__skema {
+    position: static;
+  }
+}
