@@ -1,0 +1,18 @@
+/* =========================================================================
+   fase-f/mpi-2.4/styles.css — gaya khas materi ini saja.
+   Dimuat setelah ../../shared/tokens.css dan ../../shared/base.css.
+   Komponen bersama (pilihan, pemilahan, urut-ketuk, multi-pilih, kartu
+   peran, blok kode SQL, konsol DDL, panel server & laporan dampak DROP,
+   editor DDL, skala Likert, panel selesai) serta komponen PBL (kutipan
+   masalah, log galat, panel berdampingan, kartu sintaks, daftar
+   permintaan) sudah ada di base.css.
+   ========================================================================= */
+
+/* Tahap 2 & 9 — keterangan pemilik/kegunaan tiap basis data di server */
+.drop-ket {
+  margin: var(--space-3) 0 0;
+  padding-left: var(--space-5);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}

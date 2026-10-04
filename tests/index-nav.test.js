@@ -125,6 +125,20 @@ test('card MPI 2.3 ada di Kelas XI Topik 2 dengan TP ALTER TABLE', () => {
   assert.match(isi, /Mengubah Struktur Tabel/);
 });
 
+test('card MPI 2.4 ada di Kelas XI Topik 2 dengan TP DROP DATABASE & DROP TABLE', () => {
+  const c = cards().find((x) => x.href === 'fase-f/mpi-2.4/index.html');
+  assert.ok(c, 'card mpi-2.4 ada');
+  assert.equal(c.kelas, 'XI');
+  assert.equal(c.topik, '2');
+  assert.match(c.tag, /DROP DATABASE/);
+  assert.match(c.tag, /DROP TABLE/);
+  assert.match(c.tag, /Problem Based Learning/);
+  const blok = HTML.slice(HTML.indexOf(c.tag));
+  const isi = blok.slice(0, blok.indexOf('</a>'));
+  assert.match(isi, /Materi 2\.4/);
+  assert.match(isi, /Menghapus Basis Data dan Tabel/);
+});
+
 test('urutan card mengikuti nomor materi', () => {
   const hrefs = cards().map((c) => c.href);
   assert.deepEqual(hrefs, [
@@ -135,5 +149,6 @@ test('urutan card mengikuti nomor materi', () => {
     'fase-f/mpi-2.1/index.html',
     'fase-f/mpi-2.2/index.html',
     'fase-f/mpi-2.3/index.html',
+    'fase-f/mpi-2.4/index.html',
   ]);
 });
