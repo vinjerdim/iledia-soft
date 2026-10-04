@@ -40,7 +40,9 @@
        tabel dari ERD, urutan pembuatan tabel, pemeriksaan struktur,
        pembangkit CREATE TABLE, penyorot sintaks, konsol berlangkah,
        kamus data rancangan, editor DDL berpemeriksa (murid menulis
-       skrip sendiri lalu dicek terhadap rancangan)
+       skrip sendiri lalu dicek terhadap rancangan), dan ALTER TABLE
+       pada tabel berisi data (CHANGE/FIRST/AFTER, catatan dampak
+       data, skema berisi data, jaga isi, beda skema sebelum–sesudah)
    18. Modal reset
    19. Kompatibilitas: Engine.createLesson (modul lama)
 
@@ -2439,16 +2441,22 @@ function buildSkemaRelasi(tabel) {
    tabel dari ERD (format seksi 15).
      skema = { basisData: [{ nama, tabel: [tabel] }], aktif }
      tabel = { nama, baris,
-               kolom: [{ nama, tipe, notNull, unique, autoInc, bawaan }],
+               kolom: [{ nama, tipe, notNull, unique, autoInc, bawaan, isi }],
                pk:    [namaKolom],
                fk:    [{ kolom, rujukTabel, rujukKolom }] }
    Atribut ERD boleh membawa `tipe` (mis. 'VARCHAR(50)') dan
-   `wajib: true` (NOT NULL) serta `ket` (keterangan di kamus data);
+   `wajib: true` (NOT NULL), `bawaan` (nilai DEFAULT), serta `ket`
+   (keterangan di kamus data);
    entitas boleh membawa `tabel` (nama tabel bila berbeda dari id
    entitas).
    Simulator menjalankan perintah DDL (CREATE/ALTER/DROP/TRUNCATE/
    RENAME, CREATE/DROP DATABASE, USE) dan INSERT sederhana — cukup
    untuk membandingkan "mengubah struktur" dengan "mengubah isi".
+   Isi data tidak disimpan per nilai: tabel mencatat `baris`, dan
+   kolom yang memuat data lama ditandai `isi: true` (INSERT,
+   skemaDariStruktur). ALTER ADD membuat kolom tanpa `isi`;
+   MODIFY/CHANGE/RENAME COLUMN mempertahankannya — sehingga DROP +
+   ADD dapat dibedakan dari ganti nama (opsi `jagaIsi`).
    Nama tabel & kolom dibandingkan tanpa membedakan huruf besar.
    ============================================================ */
 
@@ -2493,7 +2501,8 @@ var SQL_TIPE = {
 };
 
 var SQL_KATA_KUNCI = (
-  'CREATE DATABASE SCHEMA TABLE USE ALTER ADD COLUMN DROP MODIFY RENAME TO TRUNCATE ' +
+  'CREATE DATABASE SCHEMA TABLE USE ALTER ADD COLUMN DROP MODIFY CHANGE RENAME TO TRUNCATE ' +
+  'AFTER FIRST ' +
   'PRIMARY KEY FOREIGN REFERENCES CONSTRAINT NOT NULL UNIQUE DEFAULT AUTO_INCREMENT IF ' +
   'EXISTS INSERT INTO VALUES SELECT FROM WHERE UPDATE SET DELETE GRANT REVOKE ON COMMIT ROLLBACK'
 ).split(' ');
@@ -2791,36 +2800,53 @@ function uraiCreateTable(K) {
   return p;
 }
 
+/* [FIRST | AFTER kolom] setelah definisi kolom ADD / MODIFY / CHANGE. */
+function uraiPosisiKolom(K) {
+  if (K.ambilKata('FIRST')) return { pertama: true };
+  if (K.ambilKata('AFTER')) return { setelah: K.nama('kolom setelah AFTER') };
+  return null;
+}
+
 function uraiAlterTable(K) {
   var p = { jenis: 'alterTable', nama: K.nama('tabel'), aksi: [] };
   for (;;) {
+    var aksi;
     if (K.ambilKata('ADD')) {
       if (K.ambilKata('PRIMARY')) {
         K.harusKata('KEY', 'setelah PRIMARY');
-        p.aksi.push({ tipe: 'addPk', kolom: K.daftarNama('kolom kunci primer') });
+        aksi = { tipe: 'addPk', kolom: K.daftarNama('kolom kunci primer') };
       } else if (K.kata('CONSTRAINT') || K.kata('FOREIGN')) {
         if (K.ambilKata('CONSTRAINT')) K.nama('constraint');
         K.harusKata('FOREIGN');
-        p.aksi.push({ tipe: 'addFk', fk: uraiFkSql(K) });
+        aksi = { tipe: 'addFk', fk: uraiFkSql(K) };
       } else {
         K.ambilKata('COLUMN');
         var h = uraiKolomSql(K);
-        p.aksi.push({ tipe: 'add', kolom: h.kolom, pk: h.pk });
+        aksi = { tipe: 'add', kolom: h.kolom, pk: h.pk, posisi: uraiPosisiKolom(K) };
       }
     } else if (K.ambilKata('DROP')) {
       K.ambilKata('COLUMN');
-      p.aksi.push({ tipe: 'drop', nama: K.nama('kolom') });
+      aksi = { tipe: 'drop', nama: K.nama('kolom') };
     } else if (K.ambilKata('MODIFY')) {
       K.ambilKata('COLUMN');
-      p.aksi.push({ tipe: 'modify', kolom: uraiKolomSql(K).kolom });
+      aksi = { tipe: 'modify', kolom: uraiKolomSql(K).kolom, posisi: uraiPosisiKolom(K) };
+    } else if (K.ambilKata('CHANGE')) {
+      K.ambilKata('COLUMN');
+      var dari = K.nama('kolom lama');
+      aksi = {
+        tipe: 'change',
+        dari: dari,
+        kolom: uraiKolomSql(K).kolom,
+        posisi: uraiPosisiKolom(K),
+      };
     } else if (K.ambilKata('RENAME')) {
       if (K.ambilKata('COLUMN')) {
         var lama = K.nama('kolom');
         K.harusKata('TO', 'setelah RENAME COLUMN …');
-        p.aksi.push({ tipe: 'renameCol', dari: lama, ke: K.nama('kolom baru') });
+        aksi = { tipe: 'renameCol', dari: lama, ke: K.nama('kolom baru') };
       } else {
         if (!K.ambilKata('TO')) K.ambilKata('AS');
-        p.aksi.push({ tipe: 'renameTo', nama: K.nama('tabel baru') });
+        aksi = { tipe: 'renameTo', nama: K.nama('tabel baru') };
       }
     } else {
       var t = K.lihat();
@@ -2828,10 +2854,12 @@ function uraiAlterTable(K) {
         galat:
           'Setelah ALTER TABLE ' +
           p.nama +
-          ' tulis ADD, DROP, MODIFY, atau RENAME' +
+          ' tulis ADD, DROP, MODIFY, CHANGE, atau RENAME' +
           (t ? ' (tertulis "' + t.v + '").' : '.'),
       };
     }
+    if (aksi.posisi === null) delete aksi.posisi;
+    p.aksi.push(aksi);
     if (!K.simbol(',')) break;
     K.maju();
   }
@@ -3161,6 +3189,9 @@ function terapkanDdl(skema, p) {
         }
       });
       t.baris += p.baris;
+      t.kolom.forEach(function (k) {
+        if (!p.kolom || cariNama(p.kolom.map(namaObj), k.nama)) k.isi = true;
+      });
       return (
         p.baris +
         ' baris data ditambahkan ke tabel ' +
@@ -3171,15 +3202,122 @@ function terapkanDdl(skema, p) {
   throw { galat: 'Pernyataan tidak dikenali.' };
 }
 
+function namaObj(nama) {
+  return { nama: nama };
+}
+
+/* Panjang tipe (angka pertama di dalam kurung), null bila tanpa panjang. */
+function panjangTipe(tipe) {
+  var m = String(tipe || '').match(/\(\s*(\d+)/);
+  return m ? Number(m[1]) : null;
+}
+
+/* Menyisipkan kolom sesuai posisi (FIRST / AFTER kolom); default di akhir. */
+function sisipKolom(t, kol, posisi) {
+  if (posisi && posisi.pertama) {
+    t.kolom.unshift(kol);
+  } else if (posisi && posisi.setelah) {
+    var ref = cariNama(t.kolom, posisi.setelah);
+    if (!ref) {
+      throw { galat: 'Kolom ' + posisi.setelah + ' (AFTER) tidak ada di tabel ' + t.nama + '.' };
+    }
+    t.kolom.splice(t.kolom.indexOf(ref) + 1, 0, kol);
+  } else {
+    t.kolom.push(kol);
+  }
+}
+
+function kolomPk(t, nama) {
+  return t.pk.some(function (nm) {
+    return samaNama(nm, nama);
+  });
+}
+
+/* Catatan dampak MODIFY/CHANGE terhadap aturan & data lama. */
+function catatanUbahKolom(t, lama, baru) {
+  var catatan = '';
+  if (lama.notNull && !baru.notNull) {
+    catatan += ' Perhatian: NOT NULL tidak ditulis ulang, jadi kolom ini sekarang boleh kosong.';
+  }
+  if (t.baris > 0) {
+    var pl = panjangTipe(lama.tipe);
+    var pb = panjangTipe(baru.tipe);
+    var susut =
+      tipeDasar(lama.tipe) !== tipeDasar(baru.tipe) || (pl !== null && pb !== null && pb < pl);
+    if (susut) {
+      catatan +=
+        ' Perhatian: tabel berisi ' +
+        t.baris +
+        ' baris — data lama yang tidak muat di tipe ' +
+        baru.tipe +
+        ' bisa ditolak atau terpotong.';
+    }
+  }
+  return catatan;
+}
+
+/* Mengganti definisi kolom `k` (MODIFY/CHANGE); isi data lama dipertahankan. */
+function gantiDefinisiKolom(t, k, def, posisi) {
+  var baru = JSON.parse(JSON.stringify(def));
+  if (kolomPk(t, k.nama)) baru.notNull = true;
+  if (k.isi) baru.isi = true;
+  var catatan = catatanUbahKolom(t, k, baru);
+  var i = t.kolom.indexOf(k);
+  if (posisi) {
+    t.kolom.splice(i, 1);
+    try {
+      sisipKolom(t, baru, posisi);
+    } catch (e) {
+      t.kolom.splice(i, 0, k);
+      throw e;
+    }
+  } else {
+    t.kolom[i] = baru;
+  }
+  return { kolom: baru, catatan: catatan };
+}
+
+/* Mengganti nama kolom beserta kunci primer & rujukan kunci tamu. */
+function gantiNamaKolom(db, t, k, ke) {
+  var lama = k.nama;
+  t.pk = t.pk.map(function (nm) {
+    return samaNama(nm, lama) ? ke : nm;
+  });
+  t.fk.forEach(function (f) {
+    if (samaNama(f.kolom, lama)) f.kolom = ke;
+  });
+  db.tabel.forEach(function (o) {
+    o.fk.forEach(function (f) {
+      if (samaNama(f.rujukTabel, t.nama) && samaNama(f.rujukKolom, lama)) f.rujukKolom = ke;
+    });
+  });
+  k.nama = ke;
+}
+
 function terapkanAlter(db, t, a) {
-  var k;
+  var k, hasil;
   if (a.tipe === 'add') {
     if (cariNama(t.kolom, a.kolom.nama)) {
       throw { galat: 'Kolom ' + a.kolom.nama + ' sudah ada di tabel ' + t.nama + '.' };
     }
-    t.kolom.push(JSON.parse(JSON.stringify(a.kolom)));
+    var kol = JSON.parse(JSON.stringify(a.kolom));
+    delete kol.isi;
+    sisipKolom(t, kol, a.posisi);
     if (a.pk) t.pk = [a.kolom.nama];
-    return 'Kolom ' + a.kolom.nama + ' ditambahkan ke tabel ' + t.nama + '.';
+    var isiLama = '';
+    if (t.baris > 0) {
+      if (kol.bawaan !== undefined) {
+        isiLama = ' ' + t.baris + ' baris lama otomatis berisi nilai bawaan ' + kol.bawaan + '.';
+      } else if (kol.notNull) {
+        isiLama =
+          ' ' +
+          t.baris +
+          ' baris lama diisi nilai kosong bawaan tipe datanya (0 atau teks kosong) — lebih jelas bila diberi DEFAULT.';
+      } else {
+        isiLama = ' ' + t.baris + ' baris lama berisi NULL di kolom ini.';
+      }
+    }
+    return 'Kolom ' + a.kolom.nama + ' ditambahkan ke tabel ' + t.nama + '.' + isiLama;
   }
   if (a.tipe === 'drop') {
     k = cariNama(t.kolom, a.nama);
@@ -3207,21 +3345,44 @@ function terapkanAlter(db, t, a) {
     t.fk = t.fk.filter(function (f) {
       return !samaNama(f.kolom, k.nama);
     });
-    return 'Kolom ' + k.nama + ' dihapus dari tabel ' + t.nama + '.';
+    return (
+      'Kolom ' +
+      k.nama +
+      ' dihapus dari tabel ' +
+      t.nama +
+      '.' +
+      (t.baris > 0 ? ' Isi kolom itu pada ' + t.baris + ' baris ikut terhapus permanen.' : '')
+    );
   }
   if (a.tipe === 'modify') {
     k = cariNama(t.kolom, a.kolom.nama);
     if (!k) throw { galat: 'Kolom ' + a.kolom.nama + ' tidak ada di tabel ' + t.nama + '.' };
-    var baru = JSON.parse(JSON.stringify(a.kolom));
-    baru.nama = k.nama;
-    if (
-      t.pk.some(function (nm) {
-        return samaNama(nm, k.nama);
-      })
-    )
-      baru.notNull = true;
-    t.kolom[t.kolom.indexOf(k)] = baru;
-    return 'Definisi kolom ' + k.nama + ' diubah menjadi ' + baru.tipe + '.';
+    var namaK = k.nama;
+    var def = JSON.parse(JSON.stringify(a.kolom));
+    def.nama = namaK;
+    hasil = gantiDefinisiKolom(t, k, def, a.posisi);
+    return 'Definisi kolom ' + namaK + ' diubah menjadi ' + hasil.kolom.tipe + '.' + hasil.catatan;
+  }
+  if (a.tipe === 'change') {
+    k = cariNama(t.kolom, a.dari);
+    if (!k) throw { galat: 'Kolom ' + a.dari + ' tidak ada di tabel ' + t.nama + '.' };
+    var lain = cariNama(t.kolom, a.kolom.nama);
+    if (lain && lain !== k) {
+      throw { galat: 'Kolom ' + a.kolom.nama + ' sudah ada di tabel ' + t.nama + '.' };
+    }
+    var dariNama = k.nama;
+    gantiNamaKolom(db, t, k, a.kolom.nama);
+    hasil = gantiDefinisiKolom(t, k, a.kolom, a.posisi);
+    return (
+      'Kolom ' +
+      dariNama +
+      ' diganti menjadi ' +
+      hasil.kolom.nama +
+      ' ' +
+      hasil.kolom.tipe +
+      '. Isinya tetap.' +
+      hasil.catatan
+    );
   }
   if (a.tipe === 'renameCol') {
     k = cariNama(t.kolom, a.dari);
@@ -3229,18 +3390,7 @@ function terapkanAlter(db, t, a) {
     if (cariNama(t.kolom, a.ke))
       throw { galat: 'Kolom ' + a.ke + ' sudah ada di tabel ' + t.nama + '.' };
     var lama = k.nama;
-    t.pk = t.pk.map(function (nm) {
-      return samaNama(nm, lama) ? a.ke : nm;
-    });
-    t.fk.forEach(function (f) {
-      if (samaNama(f.kolom, lama)) f.kolom = a.ke;
-    });
-    db.tabel.forEach(function (o) {
-      o.fk.forEach(function (f) {
-        if (samaNama(f.rujukTabel, t.nama) && samaNama(f.rujukKolom, lama)) f.rujukKolom = a.ke;
-      });
-    });
-    k.nama = a.ke;
+    gantiNamaKolom(db, t, k, a.ke);
     return 'Kolom ' + lama + ' berganti nama menjadi ' + a.ke + '.';
   }
   if (a.tipe === 'renameTo') {
@@ -3321,6 +3471,7 @@ function strukturDariErd(erd) {
           notNull: !!(a.pk || a.wajib),
         };
         if (a.ket) k.ket = a.ket;
+        if (a.bawaan !== undefined) k.bawaan = String(a.bawaan);
         return k;
       }),
       pk: ent.atribut
@@ -3411,9 +3562,20 @@ function urutanValid(erd, urutan) {
  *   opts.tabel  daftar nama tabel yang diperiksa saja (subset harapan)
  *   opts.ketat  true → kolom wajib harus NOT NULL dan tidak boleh ada
  *               kolom di luar rancangan
+ *   opts.panjang  true → panjang tipe ikut dibandingkan
+ *   opts.jagaIsi  true → jumlah baris tidak boleh berkurang dari
+ *               `baris` harapan dan kolom harapan ber-`isi` harus tetap
+ *               memuat data lama (bukan kolom baru hasil DROP + ADD)
  */
 function periksaStruktur(skema, harapan, opts) {
   opts = opts || {};
+  var bedaTipe = opts.panjang
+    ? function (a, b) {
+        return tipeLengkap(a) !== tipeLengkap(b);
+      }
+    : function (a, b) {
+        return tipeDasar(a) !== tipeDasar(b);
+      };
   var db = ddlDbAktif(skema);
   if (!db) return ['Belum ada basis data yang aktif.'];
   var salah = [];
@@ -3430,15 +3592,49 @@ function periksaStruktur(skema, harapan, opts) {
       salah.push('Tabel ' + h.nama + ' belum ada.');
       return;
     }
+    var barisHilang = opts.jagaIsi && typeof h.baris === 'number' && t.baris < h.baris;
+    if (barisHilang) {
+      salah.push(
+        'Data tabel ' +
+          h.nama +
+          ' hilang: tadinya ' +
+          h.baris +
+          ' baris, sekarang ' +
+          t.baris +
+          '. Ubah strukturnya dengan ALTER TABLE — jangan DROP lalu CREATE ulang.'
+      );
+    }
     h.kolom.forEach(function (hk) {
       var k = cariNama(t.kolom, hk.nama);
       if (!k) salah.push('Tabel ' + h.nama + ' belum punya kolom ' + hk.nama + '.');
-      else if (tipeDasar(k.tipe) !== tipeDasar(hk.tipe)) {
+      else if (opts.jagaIsi && !barisHilang && hk.isi && !k.isi) {
+        salah.push(
+          'Kolom ' +
+            h.nama +
+            '.' +
+            hk.nama +
+            ' ada, tetapi isinya kosong — data lama hilang karena kolom dihapus lalu dibuat ulang. Ganti nama kolom dengan RENAME COLUMN atau CHANGE.'
+        );
+      } else if (bedaTipe(k.tipe, hk.tipe)) {
         salah.push(
           'Kolom ' + h.nama + '.' + hk.nama + ' bertipe ' + k.tipe + ', seharusnya ' + hk.tipe + '.'
         );
       } else if (opts.ketat && hk.notNull && !k.notNull) {
         salah.push('Kolom ' + h.nama + '.' + hk.nama + ' wajib diisi — tambahkan NOT NULL.');
+      } else if (
+        opts.ketat &&
+        hk.bawaan !== undefined &&
+        nilaiBawaan(k.bawaan) !== nilaiBawaan(hk.bawaan)
+      ) {
+        salah.push(
+          'Kolom ' +
+            h.nama +
+            '.' +
+            hk.nama +
+            ' perlu nilai bawaan — tambahkan DEFAULT ' +
+            hk.bawaan +
+            '.'
+        );
       }
     });
     if (opts.ketat) {
@@ -3479,6 +3675,341 @@ function periksaStruktur(skema, harapan, opts) {
     });
   });
   return salah;
+}
+
+/* Nilai DEFAULT tanpa tanda kutip, untuk dibandingkan; null bila tidak ada. */
+function nilaiBawaan(v) {
+  if (v === undefined || v === null) return null;
+  return String(v).replace(/^['"](.*)['"]$/, '$1');
+}
+
+/* Tipe lengkap ternormalisasi: huruf besar, tanpa spasi, INTEGER = INT. */
+function tipeLengkap(tipe) {
+  return String(tipe || '')
+    .toUpperCase()
+    .replace(/\s+/g, '')
+    .replace(/^INTEGER/, 'INT');
+}
+
+/*
+ * Skema DBMS yang SUDAH BERISI DATA dari struktur tabel (format
+ * strukturDariErd). `baris` = { namaTabel: jumlahBaris }. Kolom tabel
+ * berisi ditandai `isi: true` (memuat data lama) — dipakai opsi
+ * `jagaIsi` untuk mendeteksi data yang hilang setelah ALTER.
+ */
+function skemaDariStruktur(namaDb, struktur, baris) {
+  baris = baris || {};
+  var tabel = struktur.map(function (h) {
+    var n = baris[h.nama] || 0;
+    return {
+      nama: h.nama,
+      baris: n,
+      kolom: h.kolom.map(function (hk) {
+        var k = {
+          nama: hk.nama,
+          tipe: hk.tipe,
+          notNull: !!hk.notNull,
+          unique: !!hk.unique,
+          autoInc: !!hk.autoInc,
+        };
+        if (hk.bawaan !== undefined) k.bawaan = hk.bawaan;
+        if (n > 0) k.isi = true;
+        return k;
+      }),
+      pk: h.pk.slice(),
+      fk: h.fk.map(function (f) {
+        return { kolom: f.kolom, rujukTabel: f.rujukTabel, rujukKolom: f.rujukKolom };
+      }),
+    };
+  });
+  return { basisData: [{ nama: namaDb, tabel: tabel }], aktif: namaDb };
+}
+
+/* Kebalikannya: basis data aktif → struktur harapan (dengan baris & isi). */
+function strukturDariSkema(skema) {
+  var db = ddlDbAktif(skema);
+  if (!db) return [];
+  return db.tabel.map(function (t) {
+    return {
+      nama: t.nama,
+      baris: t.baris,
+      kolom: t.kolom.map(function (k) {
+        var hk = { nama: k.nama, tipe: k.tipe, notNull: !!k.notNull };
+        if (k.bawaan !== undefined) hk.bawaan = k.bawaan;
+        if (k.isi) hk.isi = true;
+        return hk;
+      }),
+      pk: t.pk.slice(),
+      fk: t.fk.map(function (f) {
+        return { kolom: f.kolom, rujukTabel: f.rujukTabel, rujukKolom: f.rujukKolom };
+      }),
+    };
+  });
+}
+
+/* Peta ganti nama dari pernyataan ALTER di `sql`:
+   { tabel: { tabelBaru: tabelLama }, kolom: { tabelBaru: { kolomBaru: kolomLama } } } */
+function petaGantiNama(sql) {
+  var peta = { tabel: {}, kolom: {} };
+  function kunci(n) {
+    return String(n).toLowerCase();
+  }
+  function asalTabel(n) {
+    return peta.tabel[kunci(n)] || n;
+  }
+  function gantiKolom(tabel, dari, ke) {
+    var m = peta.kolom[kunci(asalTabel(tabel))] || {};
+    var asal = m[kunci(dari)] || dari;
+    delete m[kunci(dari)];
+    m[kunci(ke)] = asal;
+    peta.kolom[kunci(asalTabel(tabel))] = m;
+  }
+  function gantiTabel(dari, ke) {
+    var asal = asalTabel(dari);
+    delete peta.tabel[kunci(dari)];
+    peta.tabel[kunci(ke)] = asal;
+  }
+  uraiDdl(sql || '').forEach(function (p) {
+    if (p.jenis === 'renameTable') gantiTabel(p.dari, p.ke);
+    if (p.jenis !== 'alterTable') return;
+    var nama = p.nama;
+    p.aksi.forEach(function (a) {
+      if (a.tipe === 'renameCol') gantiKolom(nama, a.dari, a.ke);
+      else if (a.tipe === 'change' && !samaNama(a.dari, a.kolom.nama))
+        gantiKolom(nama, a.dari, a.kolom.nama);
+      else if (a.tipe === 'renameTo') {
+        gantiTabel(nama, a.nama);
+        nama = a.nama;
+      }
+    });
+  });
+  return {
+    tabelLama: function (baru) {
+      return peta.tabel[kunci(baru)] || baru;
+    },
+    kolomLama: function (tabelLama, kolomBaru) {
+      var m = peta.kolom[kunci(tabelLama)] || {};
+      return m[kunci(kolomBaru)] || kolomBaru;
+    },
+  };
+}
+
+/*
+ * Perbedaan struktur basis data aktif sebelum (`awal`) dan sesudah
+ * (`akhir`). Ganti nama kolom/tabel dibaca dari pernyataan ALTER di
+ * `sql`; tanpa `sql`, ganti nama terbaca sebagai hapus + baru.
+ * → [{ nama, namaLama, status, baris, barisLama,
+ *      kolom: [{ nama, namaLama, status, tipe, tipeLama, notNull, notNullLama }] }]
+ * status: 'tetap' | 'baru' | 'ubah' | 'ganti' (kolom) | 'hapus'
+ */
+function bedaSkema(awal, akhir, sql) {
+  var dbA = ddlDbAktif(awal);
+  var dbB = ddlDbAktif(akhir);
+  var tA = dbA ? dbA.tabel : [];
+  var tB = dbB ? dbB.tabel : [];
+  var peta = petaGantiNama(sql);
+  var terpakai = [];
+  var hasil = tB.map(function (b) {
+    var a = cariNama(tA, peta.tabelLama(b.nama));
+    if (!a) {
+      return {
+        nama: b.nama,
+        namaLama: null,
+        status: 'baru',
+        baris: b.baris,
+        barisLama: null,
+        kolom: b.kolom.map(function (k) {
+          return {
+            nama: k.nama,
+            namaLama: null,
+            status: 'baru',
+            tipe: k.tipe,
+            notNull: !!k.notNull,
+          };
+        }),
+      };
+    }
+    terpakai.push(a);
+    var kolomDipakai = [];
+    var kolom = b.kolom.map(function (k) {
+      var lama = cariNama(a.kolom, peta.kolomLama(a.nama, k.nama));
+      if (!lama || kolomDipakai.indexOf(lama) !== -1) {
+        return { nama: k.nama, namaLama: null, status: 'baru', tipe: k.tipe, notNull: !!k.notNull };
+      }
+      kolomDipakai.push(lama);
+      var ganti = !samaNama(lama.nama, k.nama);
+      var ubah = tipeLengkap(lama.tipe) !== tipeLengkap(k.tipe) || !!lama.notNull !== !!k.notNull;
+      return {
+        nama: k.nama,
+        namaLama: lama.nama,
+        status: ganti ? 'ganti' : ubah ? 'ubah' : 'tetap',
+        tipe: k.tipe,
+        tipeLama: lama.tipe,
+        notNull: !!k.notNull,
+        notNullLama: !!lama.notNull,
+      };
+    });
+    a.kolom.forEach(function (lama) {
+      if (kolomDipakai.indexOf(lama) === -1) {
+        kolom.push({
+          nama: lama.nama,
+          namaLama: lama.nama,
+          status: 'hapus',
+          tipe: lama.tipe,
+          tipeLama: lama.tipe,
+          notNull: !!lama.notNull,
+          notNullLama: !!lama.notNull,
+        });
+      }
+    });
+    var berubah =
+      !samaNama(a.nama, b.nama) ||
+      kolom.some(function (k) {
+        return k.status !== 'tetap';
+      });
+    return {
+      nama: b.nama,
+      namaLama: a.nama,
+      status: berubah ? 'ubah' : 'tetap',
+      baris: b.baris,
+      barisLama: a.baris,
+      kolom: kolom,
+    };
+  });
+  tA.forEach(function (a) {
+    if (terpakai.indexOf(a) !== -1) return;
+    hasil.push({
+      nama: a.nama,
+      namaLama: a.nama,
+      status: 'hapus',
+      baris: null,
+      barisLama: a.baris,
+      kolom: a.kolom.map(function (k) {
+        return {
+          nama: k.nama,
+          namaLama: k.nama,
+          status: 'hapus',
+          tipe: k.tipe,
+          tipeLama: k.tipe,
+          notNull: !!k.notNull,
+        };
+      }),
+    });
+  });
+  return hasil;
+}
+
+var BEDA_LABEL = {
+  tetap: { ikon: '·', teks: 'tetap' },
+  baru: { ikon: '➕', teks: 'kolom baru' },
+  ubah: { ikon: '✏️', teks: 'definisi diubah' },
+  ganti: { ikon: '🔁', teks: 'ganti nama' },
+  hapus: { ikon: '➖', teks: 'dihapus' },
+};
+
+function tipeAturan(tipe, notNull) {
+  return tipe + (notNull ? ' NOT NULL' : '');
+}
+
+/*
+ * Kartu "sebelum → sesudah" dari hasil bedaSkema.
+ *   opts.judul         judul panel
+ *   opts.hanyaBerubah  sembunyikan tabel yang tidak berubah
+ */
+function buildBedaSkema(beda, opts) {
+  opts = opts || {};
+  var daftar = opts.hanyaBerubah
+    ? beda.filter(function (t) {
+        return t.status !== 'tetap';
+      })
+    : beda;
+  var legenda =
+    '<ul class="ddl-beda__legenda" aria-label="Keterangan tanda">' +
+    ['baru', 'ubah', 'ganti', 'hapus']
+      .map(function (s) {
+        return (
+          '<li class="ddl-beda__kolom--' +
+          s +
+          '"><span aria-hidden="true">' +
+          BEDA_LABEL[s].ikon +
+          '</span> ' +
+          BEDA_LABEL[s].teks +
+          '</li>'
+        );
+      })
+      .join('') +
+    '</ul>';
+  var kartu = daftar
+    .map(function (t) {
+      var baris = '';
+      if (t.status === 'hapus') {
+        baris =
+          '<span class="ddl-beda__baris ddl-beda__baris--hilang">tabel dihapus (' +
+          t.barisLama +
+          ' baris hilang)</span>';
+      } else if (t.barisLama === null) {
+        baris = '<span class="ddl-beda__baris">' + t.baris + ' baris</span>';
+      } else if (t.baris < t.barisLama) {
+        baris =
+          '<span class="ddl-beda__baris ddl-beda__baris--hilang">' +
+          t.barisLama +
+          ' → ' +
+          t.baris +
+          ' baris</span>';
+      } else {
+        baris = '<span class="ddl-beda__baris">' + t.baris + ' baris (utuh)</span>';
+      }
+      return (
+        '<div class="ddl-beda__tabel ddl-beda__tabel--' +
+        t.status +
+        '"><div class="ddl-table__head"><span class="ddl-table__nama">▦ ' +
+        esc(t.nama) +
+        (t.namaLama && !samaNama(t.namaLama, t.nama)
+          ? ' <small>(dulu ' + esc(t.namaLama) + ')</small>'
+          : '') +
+        (t.status === 'baru' ? ' <small>(tabel baru)</small>' : '') +
+        '</span>' +
+        baris +
+        '</div><ul class="ddl-beda__daftar">' +
+        t.kolom
+          .map(function (k) {
+            var lab = BEDA_LABEL[k.status];
+            var nama = k.status === 'ganti' ? esc(k.namaLama) + ' → ' + esc(k.nama) : esc(k.nama);
+            var tipe =
+              (k.status === 'ubah' || k.status === 'ganti') &&
+              tipeAturan(k.tipeLama, k.notNullLama) !== tipeAturan(k.tipe, k.notNull)
+                ? esc(tipeAturan(k.tipeLama, k.notNullLama)) +
+                  ' → ' +
+                  esc(tipeAturan(k.tipe, k.notNull))
+                : esc(tipeAturan(k.tipe, k.notNull));
+            return (
+              '<li class="ddl-beda__kolom ddl-beda__kolom--' +
+              k.status +
+              '"><span class="ddl-beda__ikon" aria-hidden="true">' +
+              lab.ikon +
+              '</span><span class="ddl-beda__nama">' +
+              nama +
+              '</span><span class="ddl-beda__tipe">' +
+              tipe +
+              '</span>' +
+              (k.status !== 'tetap' ? '<span class="sr-only"> — ' + lab.teks + '</span>' : '') +
+              '</li>'
+            );
+          })
+          .join('') +
+        '</ul></div>'
+      );
+    })
+    .join('');
+  return (
+    '<div class="ddl-beda">' +
+    (opts.judul ? '<p class="ddl-schema__judul">' + esc(opts.judul) + '</p>' : '') +
+    legenda +
+    (kartu
+      ? '<div class="ddl-schema__grid">' + kartu + '</div>'
+      : '<p class="ddl-schema__kosong">Belum ada perubahan struktur.</p>') +
+    '</div>'
+  );
 }
 
 /* Teks CREATE TABLE terformat untuk satu struktur tabel. */
@@ -3626,6 +4157,7 @@ function buildSkemaDdl(skema, opts) {
                   esc(k.tipe) +
                   (k.notNull && !pk ? ' · NOT NULL' : '') +
                   (k.unique ? ' · UNIQUE' : '') +
+                  (k.bawaan !== undefined ? ' · DEFAULT ' + esc(nilaiBawaan(k.bawaan)) : '') +
                   '</span>' +
                   (fk
                     ? '<span class="ddl-col__ref">→ ' +
@@ -3865,6 +4397,8 @@ function bindKonsolDdl(root, id, langkah, st, save, rerender) {
  *   opts.namaDb  basis data yang harus ada dan aktif
  *   opts.tabel   hanya tabel ini yang diperiksa ([] → tidak ada tabel)
  *   opts.ketat   default true (lihat periksaStruktur)
+ *   opts.panjang  bandingkan panjang tipe juga (VARCHAR(30) ≠ VARCHAR(60))
+ *   opts.jagaIsi  data lama (jumlah baris & kolom berisi) tidak boleh hilang
  * → { ok, lulus, log, skema, salah }
  */
 function periksaSkripDdl(sql, harapan, opts) {
@@ -3882,6 +4416,8 @@ function periksaSkripDdl(sql, harapan, opts) {
     salah = periksaStruktur(h.skema, harapan, {
       tabel: opts.tabel,
       ketat: opts.ketat !== false,
+      panjang: !!opts.panjang,
+      jagaIsi: !!opts.jagaIsi,
     });
   }
   return { ok: h.ok, lulus: h.ok && !salah.length, log: h.log, skema: h.skema, salah: salah };
@@ -3899,6 +4435,7 @@ function aturanKolom(t, k) {
   if (pk) aturan.push('🔑 Kunci primer' + (t.pk.length > 1 ? ' (gabungan)' : ''));
   if (fk) aturan.push('🔗 Kunci tamu → ' + fk.rujukTabel + '.' + fk.rujukKolom);
   if (!pk) aturan.push(k.notNull ? 'Wajib diisi' : 'Boleh kosong');
+  if (k.bawaan !== undefined) aturan.push('Nilai bawaan ' + nilaiBawaan(k.bawaan));
   return aturan;
 }
 
@@ -3990,6 +4527,7 @@ function hasilEditorDdl(st, opts) {
  *   opts.sukses      HTML umpan balik setelah lulus
  *   opts.rows        tinggi editor (default 8)
  *   opts.judulSkema  judul panel skema hasil
+ *   opts.beda        true → tampilkan beda struktur terhadap opts.awal
  */
 function buildEditorDdl(id, st, opts) {
   opts = opts || {};
@@ -4078,7 +4616,11 @@ function buildEditorDdl(id, st, opts) {
         '</ul>' +
         umpan +
         '</div>' +
-        buildSkemaDdl(hasil.skema, { judul: opts.judulSkema || 'Isi DBMS setelah skripmu' }) +
+        (opts.beda
+          ? buildBedaSkema(bedaSkema(opts.awal || skemaKosong(), hasil.skema, st.jalan), {
+              judul: opts.judulSkema || 'Struktur sebelum → sesudah skripmu',
+            })
+          : buildSkemaDdl(hasil.skema, { judul: opts.judulSkema || 'Isi DBMS setelah skripmu' })) +
         '</div>'
       : '') +
     '</div>'

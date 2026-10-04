@@ -3300,6 +3300,122 @@ strong {
   min-width: 0;
 }
 
+/* Beda struktur sebelum → sesudah ALTER TABLE (buildBedaSkema) */
+.ddl-beda {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3);
+  border: 2px solid var(--color-blue);
+  border-radius: var(--radius-md);
+  background: var(--color-blue-soft);
+}
+
+.ddl-beda__legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.78rem;
+}
+
+.ddl-beda__tabel {
+  min-width: 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.ddl-beda__tabel--hapus {
+  border-color: var(--color-error);
+  opacity: 0.8;
+}
+
+.ddl-beda__tabel small {
+  font-weight: 400;
+  opacity: 0.9;
+}
+
+.ddl-beda__baris {
+  font-size: 0.78rem;
+  opacity: 0.95;
+}
+
+.ddl-beda__baris--hilang {
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+  background: var(--color-error-soft);
+  color: var(--color-error-strong);
+  font-weight: 700;
+}
+
+.ddl-beda__daftar {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ddl-beda__kolom {
+  display: grid;
+  grid-template-columns: 1.5em minmax(0, 1fr);
+  gap: 0 var(--space-1);
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-2);
+  border-top: 1px solid var(--color-border);
+  border-left: 4px solid transparent;
+  font-size: 0.84rem;
+}
+
+.ddl-beda__ikon {
+  grid-row: span 2;
+  text-align: center;
+}
+
+.ddl-beda__nama {
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+.ddl-beda__tipe {
+  grid-column: 2;
+  color: var(--color-ink-muted);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+.ddl-beda__kolom--baru {
+  border-left-color: var(--color-success);
+  background: var(--color-success-soft);
+}
+
+.ddl-beda__kolom--ubah {
+  border-left-color: var(--color-warning);
+  background: var(--color-warning-soft);
+}
+
+.ddl-beda__kolom--ganti {
+  border-left-color: var(--color-purple);
+  background: var(--color-purple-soft);
+}
+
+.ddl-beda__kolom--hapus {
+  border-left-color: var(--color-error);
+  background: var(--color-error-soft);
+}
+
+.ddl-beda__kolom--hapus .ddl-beda__nama {
+  text-decoration: line-through;
+}
+
+.ddl-beda__legenda li {
+  padding: 0 var(--space-2);
+  border-left: 4px solid transparent;
+  border-radius: var(--radius-sm);
+}
+
 @media (max-width: 760px) {
   .ddl-console__grid {
     grid-template-columns: minmax(0, 1fr);
