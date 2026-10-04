@@ -3416,6 +3416,173 @@ strong {
   border-radius: var(--radius-sm);
 }
 
+/* Server DBMS: kartu per basis data (buildServerDdl) */
+.ddl-server {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3);
+  border: 2px solid var(--color-blue);
+  border-radius: var(--radius-md);
+  background: var(--color-blue-soft);
+}
+
+.ddl-server--kosong {
+  border-style: dashed;
+}
+
+.ddl-server__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  gap: var(--space-2);
+}
+
+.ddl-server__db {
+  min-width: 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.ddl-server__db--aktif {
+  border: 2px solid var(--color-blue-strong);
+}
+
+.ddl-server__db--hapus {
+  border: 2px dashed var(--color-error);
+  background: var(--color-error-soft);
+}
+
+.ddl-server__head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-blue);
+  color: #fff;
+}
+
+.ddl-server__db--hapus .ddl-server__head {
+  background: transparent;
+  color: var(--color-error-strong);
+}
+
+.ddl-server__db--hapus .ddl-server__head .ddl-server__nama {
+  text-decoration: line-through;
+}
+
+.ddl-server__nama {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.ddl-server__tag {
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-blue-strong);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.ddl-server__tag--hapus {
+  background: var(--color-error);
+  color: #fff;
+}
+
+.ddl-server__daftar {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ddl-server__tabel {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-top: 1px solid var(--color-border);
+  font-size: 0.84rem;
+}
+
+.ddl-server__tabel .ddl-server__nama {
+  font-weight: 400;
+}
+
+.ddl-server__baris {
+  color: var(--color-ink-muted);
+  font-size: 0.78rem;
+}
+
+.ddl-server__tabel--hapus {
+  border-left: 4px solid var(--color-error);
+  background: var(--color-error-soft);
+}
+
+.ddl-server__tabel--hapus .ddl-server__nama {
+  text-decoration: line-through;
+}
+
+.ddl-server__tabel--hapus .ddl-server__baris {
+  color: var(--color-error-strong);
+  font-weight: 700;
+}
+
+.ddl-server .ddl-schema__kosong {
+  padding: var(--space-2) var(--space-3);
+}
+
+/* Laporan dampak penghapusan (buildDampakHapus) */
+.ddl-dampak {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3);
+  border: 2px solid var(--color-error);
+  border-radius: var(--radius-md);
+  background: var(--color-error-soft);
+}
+
+.ddl-dampak--aman {
+  border-color: var(--color-success);
+  background: var(--color-success-soft);
+}
+
+.ddl-dampak .ddl-schema__judul {
+  color: var(--color-error-strong);
+}
+
+.ddl-dampak--aman .ddl-schema__judul {
+  color: var(--color-success-strong);
+}
+
+.ddl-dampak__total {
+  margin: 0;
+  font-weight: 700;
+}
+
+.ddl-dampak__daftar {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.88rem;
+  overflow-wrap: anywhere;
+}
+
+.ddl-editor__server {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
 @media (max-width: 760px) {
   .ddl-console__grid {
     grid-template-columns: minmax(0, 1fr);
