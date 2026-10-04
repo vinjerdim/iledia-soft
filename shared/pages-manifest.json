@@ -46,5 +46,13 @@
     "h1": "Membuat Basis Data dan Tabel dengan CREATE DATABASE dan CREATE TABLE",
     "stageCount": 11,
     "extraBody": "partials/reset-modal.html"
+  },
+  "fase-f/mpi-2.3": {
+    "title": "Mengubah Struktur Tabel dengan ALTER TABLE — Rekayasa Perangkat Lunak Fase F",
+    "description": "Media pembelajaran interaktif berbasis Problem Based Learning untuk mengubah struktur tabel menggunakan perintah ALTER TABLE (menambah, mengubah, dan menghapus kolom) sesuai kebutuhan perubahan rancangan basis data: permintaan perubahan Bank Sampah Sekolah yang basis datanya sudah berisi data, log galat dan kamus data v2, akar masalah dan rumusan masalah, peran tim dan rencana migrasi, kartu sintaks ADD/MODIFY/CHANGE/RENAME COLUMN/DROP COLUMN, pilah dampak terhadap data, konsol ALTER pada tabel berisi data, editor ALTER berpemeriksa yang menjaga data lama, bukti struktur sebelum–sesudah, evaluasi kasus Servis Laptop TEFA dan uji silang skrip migrasi tim lain.",
+    "kicker": "Rekayasa Perangkat Lunak — Fase F (SMK)",
+    "h1": "Mengubah Struktur Tabel dengan ALTER TABLE",
+    "stageCount": 11,
+    "extraBody": "partials/reset-modal.html"
   }
 }

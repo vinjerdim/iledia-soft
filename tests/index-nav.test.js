@@ -4,7 +4,7 @@
  * Tes navigasi halaman utama (Fase → Kelas → Topik, meniru iledia-math):
  * hierarki memuat Fase F → Kelas XI → Topik 1 & 2, setiap card punya
  * data-kelas/data-topik yang terdaftar dan tautan yang ada, dan card
- * MPI 1.1 – 1.4 berada di Kelas XI Topik 1, dan MPI 2.1 – 2.2 di Topik 2.
+ * MPI 1.1 – 1.4 berada di Kelas XI Topik 1, dan MPI 2.1 – 2.3 di Topik 2.
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -112,6 +112,19 @@ test('card MPI 2.2 ada di Kelas XI Topik 2 dengan TP CREATE DATABASE & CREATE TA
   assert.match(isi, /Membuat Basis Data dan Tabel/);
 });
 
+test('card MPI 2.3 ada di Kelas XI Topik 2 dengan TP ALTER TABLE', () => {
+  const c = cards().find((x) => x.href === 'fase-f/mpi-2.3/index.html');
+  assert.ok(c, 'card mpi-2.3 ada');
+  assert.equal(c.kelas, 'XI');
+  assert.equal(c.topik, '2');
+  assert.match(c.tag, /ALTER TABLE/);
+  assert.match(c.tag, /Problem Based Learning/);
+  const blok = HTML.slice(HTML.indexOf(c.tag));
+  const isi = blok.slice(0, blok.indexOf('</a>'));
+  assert.match(isi, /Materi 2\.3/);
+  assert.match(isi, /Mengubah Struktur Tabel/);
+});
+
 test('urutan card mengikuti nomor materi', () => {
   const hrefs = cards().map((c) => c.href);
   assert.deepEqual(hrefs, [
@@ -121,5 +134,6 @@ test('urutan card mengikuti nomor materi', () => {
     'fase-f/mpi-1.4/index.html',
     'fase-f/mpi-2.1/index.html',
     'fase-f/mpi-2.2/index.html',
+    'fase-f/mpi-2.3/index.html',
   ]);
 });
