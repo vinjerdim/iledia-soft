@@ -1,0 +1,108 @@
+/* =========================================================================
+   fase-f/mpi-2.3/styles.css — gaya khas materi ini saja.
+   Dimuat setelah ../../shared/tokens.css dan ../../shared/base.css.
+   Komponen bersama (pilihan, pemilahan, urut-ketuk, multi-pilih, kartu
+   peran, blok kode SQL, konsol DDL, skema DBMS, kamus data, editor DDL,
+   beda skema sebelum–sesudah, skala Likert, panel selesai) sudah ada di
+   base.css.
+   ========================================================================= */
+
+/* Tahap 2 — memo pembina, log galat aplikasi, perbandingan */
+.pbl-quote {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-left: 4px solid var(--color-primary);
+  background: var(--color-primary-soft);
+  border-radius: var(--radius-sm);
+  font-style: italic;
+  line-height: 1.6;
+}
+
+.app-log {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-3);
+  max-width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  background: #1f2428;
+  color: #ff8a80;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.pbl-banding {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+/* Tahap 8 — beda struktur dan kamus data sama lebar */
+.pbl-banding--rata {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.pbl-banding > .panel {
+  min-width: 0;
+}
+
+/* Tahap 4 — kartu sintaks yang dapat dibuka-tutup */
+.pbl-kartu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.pbl-kartu {
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.pbl-kartu[open] {
+  border-color: var(--color-primary);
+}
+
+.pbl-kartu summary {
+  min-height: 32px;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.pbl-kartu p {
+  margin: var(--space-2) 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+/* Tahap 6 — rumpang yang sudah terisi benar */
+.sql-blank--isi {
+  border-bottom-style: solid;
+  border-bottom-color: #c3e88d;
+  color: #c3e88d;
+}
+
+/* Tahap 9 — daftar permintaan perubahan TEFA */
+.alter-permintaan {
+  margin: 0 0 var(--space-4);
+  padding-left: var(--space-5);
+  line-height: 1.6;
+}
+
+.alter-permintaan li + li {
+  margin-top: var(--space-1);
+}
+
+@media (max-width: 760px) {
+  .pbl-banding,
+  .pbl-banding--rata {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
