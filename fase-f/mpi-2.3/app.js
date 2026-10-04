@@ -954,7 +954,7 @@ function renderEvaluasi(root) {
     buildDlPanel(
       '<p>' +
         d.pengantarKuis +
-        '</p><ol class="alter-permintaan">' +
+        '</p><ol class="pbl-permintaan">' +
         d.permintaan
           .map(function (p) {
             return '<li>' + p + '</li>';
