@@ -42,7 +42,11 @@
        kamus data rancangan, editor DDL berpemeriksa (murid menulis
        skrip sendiri lalu dicek terhadap rancangan), dan ALTER TABLE
        pada tabel berisi data (CHANGE/FIRST/AFTER, catatan dampak
-       data, skema berisi data, jaga isi, beda skema sebelum–sesudah)
+       data, skema berisi data, jaga isi, beda skema sebelum–sesudah),
+       serta DROP pada server berisi data (DROP TABLE banyak tabel,
+       SHOW DATABASES/TABLES & SELECT DATABASE(), server beberapa
+       basis data, laporan dampak, pemeriksa "hapus yang tepat saja",
+       panel server)
    18. Modal reset
    19. Kompatibilitas: Engine.createLesson (modul lama)
 
@@ -2457,6 +2461,9 @@ function buildSkemaRelasi(tabel) {
    skemaDariStruktur). ALTER ADD membuat kolom tanpa `isi`;
    MODIFY/CHANGE/RENAME COLUMN mempertahankannya — sehingga DROP +
    ADD dapat dibedakan dari ganti nama (opsi `jagaIsi`).
+   Perintah pengecekan SHOW DATABASES, SHOW TABLES, dan SELECT
+   DATABASE() hanya melaporkan isi server — tidak mengubah apa pun —
+   agar murid terbiasa memeriksa target sebelum menjalankan DROP.
    Nama tabel & kolom dibandingkan tanpa membedakan huruf besar.
    ============================================================ */
 
@@ -2502,7 +2509,7 @@ var SQL_TIPE = {
 
 var SQL_KATA_KUNCI = (
   'CREATE DATABASE SCHEMA TABLE USE ALTER ADD COLUMN DROP MODIFY CHANGE RENAME TO TRUNCATE ' +
-  'AFTER FIRST ' +
+  'AFTER FIRST SHOW DATABASES TABLES ' +
   'PRIMARY KEY FOREIGN REFERENCES CONSTRAINT NOT NULL UNIQUE DEFAULT AUTO_INCREMENT IF ' +
   'EXISTS INSERT INTO VALUES SELECT FROM WHERE UPDATE SET DELETE GRANT REVOKE ON COMMIT ROLLBACK'
 ).split(' ');
@@ -2917,6 +2924,26 @@ function uraiSatuDdl(sql) {
         p.ifExists = true;
       }
       p.nama = K.nama(db ? 'basis data' : 'tabel');
+      if (!db) {
+        /* MySQL: DROP TABLE a, b, … menghapus beberapa tabel sekaligus. */
+        p.daftar = [p.nama];
+        while (K.simbol(',')) {
+          K.maju();
+          p.daftar.push(K.nama('tabel setelah tanda koma'));
+        }
+      }
+    } else if (K.ambilKata('SHOW')) {
+      if (K.ambilKata('DATABASES') || K.ambilKata('SCHEMAS')) p = { jenis: 'showDatabases' };
+      else {
+        K.harusKata('TABLES', 'atau DATABASES setelah SHOW');
+        p = { jenis: 'showTables' };
+      }
+    } else if (K.kata('SELECT') && K.kata('DATABASE', 1)) {
+      K.maju();
+      K.maju();
+      K.harusSimbol('(', 'setelah DATABASE');
+      K.harusSimbol(')', 'setelah DATABASE(');
+      p = { jenis: 'selectDatabase' };
     } else if (K.ambilKata('USE')) {
       p = { jenis: 'use', nama: K.nama('basis data') };
     } else if (K.ambilKata('ALTER')) {
@@ -3061,6 +3088,77 @@ function gantiRujukan(db, lama, baru) {
   });
 }
 
+function jumlahBaris(tabel) {
+  return tabel.reduce(function (n, t) {
+    return n + t.baris;
+  }, 0);
+}
+
+/*
+ * DROP TABLE [IF EXISTS] a, b, … — semua atau tidak sama sekali: bila
+ * satu tabel ditolak, tidak ada tabel yang dihapus. Kunci tamu dari
+ * tabel yang ikut dihapus dalam pernyataan yang sama tidak menghalangi.
+ */
+function terapkanDropTable(db, p) {
+  var daftar = p.daftar || [p.nama];
+  var hapus = [];
+  var lewat = [];
+  daftar.forEach(function (nama) {
+    var t = cariNama(db.tabel, nama);
+    if (!t) {
+      if (!p.ifExists) throw { galat: 'Tabel ' + nama + ' tidak ada.' };
+      lewat.push(nama);
+    } else if (hapus.indexOf(t) === -1) hapus.push(t);
+  });
+  hapus.forEach(function (t) {
+    var ada = perujukTabel(db, t.nama).filter(function (r) {
+      return hapus.indexOf(r) === -1;
+    });
+    if (ada.length) {
+      throw {
+        galat:
+          'Tabel ' +
+          t.nama +
+          ' masih dirujuk kunci tamu tabel ' +
+          ada[0].nama +
+          '. Hapus tabel ' +
+          ada[0].nama +
+          ' lebih dulu.',
+      };
+    }
+  });
+  hapus.forEach(function (t) {
+    db.tabel.splice(db.tabel.indexOf(t), 1);
+  });
+  var pesan = [];
+  if (hapus.length === 1) {
+    pesan.push(
+      'Tabel ' +
+        hapus[0].nama +
+        ' beserta struktur dan seluruh isinya (' +
+        hapus[0].baris +
+        ' baris) dihapus.'
+    );
+  } else if (hapus.length > 1) {
+    pesan.push(
+      hapus.length +
+        ' tabel (' +
+        hapus
+          .map(function (t) {
+            return t.nama;
+          })
+          .join(', ') +
+        ') beserta struktur dan seluruh isinya (' +
+        jumlahBaris(hapus) +
+        ' baris) dihapus.'
+    );
+  }
+  if (lewat.length) {
+    pesan.push('Tabel ' + lewat.join(', ') + ' tidak ada — dilewati (IF EXISTS).');
+  }
+  return pesan.join(' ');
+}
+
 /* Menerapkan satu pernyataan pada skema (dimutasi). → pesan sukses. */
 function terapkanDdl(skema, p) {
   var db, t, ada;
@@ -3090,8 +3188,45 @@ function terapkanDdl(skema, p) {
         throw { galat: 'Basis data ' + p.nama + ' tidak ada.' };
       }
       skema.basisData.splice(skema.basisData.indexOf(db), 1);
-      if (skema.aktif && samaNama(skema.aktif, db.nama)) skema.aktif = null;
-      return 'Basis data ' + db.nama + ' beserta semua tabelnya dihapus.';
+      ada = skema.aktif && samaNama(skema.aktif, db.nama);
+      if (ada) skema.aktif = null;
+      return (
+        'Basis data ' +
+        db.nama +
+        ' beserta semua tabelnya dihapus (' +
+        db.tabel.length +
+        ' tabel, ' +
+        jumlahBaris(db.tabel) +
+        ' baris data).' +
+        (ada ? ' Tidak ada lagi basis data yang aktif — pilih dengan USE.' : '')
+      );
+    case 'showDatabases':
+      return skema.basisData.length
+        ? 'Basis data di server: ' +
+            skema.basisData
+              .map(function (b) {
+                return b.nama;
+              })
+              .join(', ') +
+            '.'
+        : 'Belum ada basis data di server.';
+    case 'showTables':
+      db = ddlPerluDb(skema);
+      return db.tabel.length
+        ? 'Tabel di ' +
+            db.nama +
+            ': ' +
+            db.tabel
+              .map(function (x) {
+                return x.nama + ' (' + x.baris + ' baris)';
+              })
+              .join(', ') +
+            '.'
+        : 'Basis data ' + db.nama + ' belum punya tabel.';
+    case 'selectDatabase':
+      return skema.aktif
+        ? 'Basis data aktif: ' + skema.aktif + '.'
+        : 'Basis data aktif: NULL — belum ada yang dipilih dengan USE.';
     case 'use':
       db = cariNama(skema.basisData, p.nama);
       if (!db) {
@@ -3130,27 +3265,7 @@ function terapkanDdl(skema, p) {
         })
         .join(' ');
     case 'dropTable':
-      db = ddlPerluDb(skema);
-      t = cariNama(db.tabel, p.nama);
-      if (!t) {
-        if (p.ifExists) return 'Tabel ' + p.nama + ' tidak ada — dilewati (IF EXISTS).';
-        throw { galat: 'Tabel ' + p.nama + ' tidak ada.' };
-      }
-      ada = perujukTabel(db, t.nama);
-      if (ada.length) {
-        throw {
-          galat:
-            'Tabel ' +
-            t.nama +
-            ' masih dirujuk kunci tamu tabel ' +
-            ada[0].nama +
-            '. Hapus tabel ' +
-            ada[0].nama +
-            ' lebih dulu.',
-        };
-      }
-      db.tabel.splice(db.tabel.indexOf(t), 1);
-      return 'Tabel ' + t.nama + ' beserta struktur dan seluruh isinya dihapus.';
+      return terapkanDropTable(ddlPerluDb(skema), p);
     case 'truncate':
       db = ddlPerluDb(skema);
       t = ddlPerluTabel(db, p.nama);
@@ -3747,6 +3862,128 @@ function strukturDariSkema(skema) {
   });
 }
 
+/*
+ * Server DBMS berisi beberapa basis data yang SUDAH BERISI DATA.
+ *   daftar = [{ nama, struktur, baris }]  (format skemaDariStruktur)
+ *   aktif  = nama basis data yang dipilih USE (null bila tidak ada)
+ */
+function skemaBanyakDb(daftar, aktif) {
+  var basisData = (daftar || []).map(function (d) {
+    return skemaDariStruktur(d.nama, d.struktur || [], d.baris).basisData[0];
+  });
+  var db = aktif ? cariNama(basisData, aktif) : null;
+  return { basisData: basisData, aktif: db ? db.nama : null };
+}
+
+/*
+ * Laporan dampak penghapusan lintas SEMUA basis data di server:
+ * basis data yang hilang, tabel yang hilang (di basis data yang masih
+ * ada), dan tabel yang barisnya berkurang (TRUNCATE).
+ * → { db: [{ nama, tabel, baris }], tabel: [{ db, nama, baris }],
+ *     dikosongkan: [{ db, nama, baris }], baris: total baris hilang }
+ */
+function dampakHapus(awal, akhir) {
+  var hasil = { db: [], tabel: [], dikosongkan: [], baris: 0 };
+  var dbAkhir = (akhir && akhir.basisData) || [];
+  ((awal && awal.basisData) || []).forEach(function (a) {
+    var b = cariNama(dbAkhir, a.nama);
+    if (!b) {
+      var n = jumlahBaris(a.tabel);
+      hasil.db.push({ nama: a.nama, tabel: a.tabel.length, baris: n });
+      hasil.baris += n;
+      return;
+    }
+    a.tabel.forEach(function (ta) {
+      var tb = cariNama(b.tabel, ta.nama);
+      if (!tb) {
+        hasil.tabel.push({ db: a.nama, nama: ta.nama, baris: ta.baris });
+        hasil.baris += ta.baris;
+      } else if (tb.baris < ta.baris) {
+        hasil.dikosongkan.push({ db: a.nama, nama: ta.nama, baris: ta.baris - tb.baris });
+        hasil.baris += ta.baris - tb.baris;
+      }
+    });
+  });
+  return hasil;
+}
+
+/*
+ * Memeriksa bahwa skrip menghapus TEPAT target dan tidak menyentuh
+ * yang lain. → [pesan].
+ *   target = { db: [namaDb], tabel: [{ db, nama }] }
+ * Objek di luar target harus utuh: basis data & tabel tetap ada,
+ * jumlah baris tidak berkurang, dan kolomnya tidak ikut terhapus.
+ */
+function periksaPenghapusan(awal, akhir, target) {
+  target = target || {};
+  var tDb = target.db || [];
+  var tTabel = target.tabel || [];
+  var salah = [];
+  function dbTarget(nama) {
+    return tDb.some(function (n) {
+      return samaNama(n, nama);
+    });
+  }
+  function tabelTarget(db, nama) {
+    return (
+      dbTarget(db) ||
+      tTabel.some(function (t) {
+        return samaNama(t.db, db) && samaNama(t.nama, nama);
+      })
+    );
+  }
+  tDb.forEach(function (nama) {
+    if (cariNama(akhir.basisData, nama)) {
+      salah.push('Basis data ' + nama + ' masih ada — belum dihapus.');
+    }
+  });
+  tTabel.forEach(function (t) {
+    var db = cariNama(akhir.basisData, t.db);
+    if (db && cariNama(db.tabel, t.nama)) {
+      salah.push('Tabel ' + t.db + '.' + t.nama + ' masih ada — belum dihapus.');
+    }
+  });
+  var d = dampakHapus(awal, akhir);
+  d.db.forEach(function (x) {
+    if (dbTarget(x.nama)) return;
+    salah.push(
+      'Basis data ' +
+        x.nama +
+        ' ikut terhapus — ' +
+        x.tabel +
+        ' tabel dan ' +
+        x.baris +
+        ' baris data hilang! Basis data ini bukan sasaran penghapusan.'
+    );
+  });
+  d.tabel.forEach(function (x) {
+    if (tabelTarget(x.db, x.nama)) return;
+    salah.push(
+      'Tabel ' + x.db + '.' + x.nama + ' ikut terhapus — ' + x.baris + ' baris data hilang!'
+    );
+  });
+  d.dikosongkan.forEach(function (x) {
+    if (tabelTarget(x.db, x.nama)) return;
+    salah.push(
+      'Isi tabel ' + x.db + '.' + x.nama + ' ikut dikosongkan — ' + x.baris + ' baris data hilang!'
+    );
+  });
+  awal.basisData.forEach(function (a) {
+    var b = cariNama(akhir.basisData, a.nama);
+    if (!b) return;
+    a.tabel.forEach(function (ta) {
+      var tb = cariNama(b.tabel, ta.nama);
+      if (!tb || tabelTarget(a.nama, ta.nama)) return;
+      ta.kolom.forEach(function (k) {
+        if (!cariNama(tb.kolom, k.nama)) {
+          salah.push('Kolom ' + a.nama + '.' + ta.nama + '.' + k.nama + ' ikut terhapus.');
+        }
+      });
+    });
+  });
+  return salah;
+}
+
 /* Peta ganti nama dari pernyataan ALTER di `sql`:
    { tabel: { tabelBaru: tabelLama }, kolom: { tabelBaru: { kolomBaru: kolomLama } } } */
 function petaGantiNama(sql) {
@@ -4177,6 +4414,144 @@ function buildSkemaDdl(skema, opts) {
   return '<div class="ddl-schema">' + judul + daftarDb + tabel + '</div>';
 }
 
+/*
+ * Panel server: satu kartu per basis data (tabel + jumlah baris),
+ * basis data aktif ditandai. Untuk melihat akibat DROP sekilas.
+ *   opts.judul  judul panel
+ *   opts.awal   skema sebelum skrip → basis data/tabel yang sudah tidak
+ *               ada ditampilkan dicoret dengan tanda ➖ dihapus
+ */
+function buildServerDdl(skema, opts) {
+  opts = opts || {};
+  var judul = opts.judul ? '<p class="ddl-schema__judul">' + esc(opts.judul) + '</p>' : '';
+  var sekarang = (skema && skema.basisData) || [];
+  var awal = opts.awal ? opts.awal.basisData : sekarang;
+  /* Urutan kartu mengikuti skema awal; basis data baru ditaruh di akhir. */
+  var semua = awal.slice();
+  sekarang.forEach(function (b) {
+    if (!cariNama(semua, b.nama)) semua.push(b);
+  });
+  if (!semua.length) {
+    return (
+      '<div class="ddl-server ddl-server--kosong">' +
+      judul +
+      '<p class="ddl-schema__kosong">🗄️ Belum ada basis data di server.</p></div>'
+    );
+  }
+  function kartuTabel(t, hapus) {
+    return (
+      '<li class="ddl-server__tabel' +
+      (hapus ? ' ddl-server__tabel--hapus' : '') +
+      '"><span class="ddl-server__nama">' +
+      (hapus ? '<span aria-hidden="true">➖</span> ' : '▦ ') +
+      esc(t.nama) +
+      (hapus ? ' <span class="sr-only">(dihapus)</span>' : '') +
+      '</span><span class="ddl-server__baris">' +
+      (hapus ? t.baris + ' baris hilang' : t.baris + ' baris') +
+      '</span></li>'
+    );
+  }
+  var kartu = semua
+    .map(function (a) {
+      var b = cariNama(sekarang, a.nama);
+      var hapus = !b;
+      var aktif = b && skema.aktif && samaNama(skema.aktif, b.nama);
+      var db = b || a;
+      var tabel = db.tabel.map(function (t) {
+        return kartuTabel(t, false);
+      });
+      if (b && opts.awal) {
+        a.tabel.forEach(function (t) {
+          if (!cariNama(b.tabel, t.nama)) tabel.push(kartuTabel(t, true));
+        });
+      }
+      return (
+        '<div class="ddl-server__db' +
+        (aktif ? ' ddl-server__db--aktif' : '') +
+        (hapus ? ' ddl-server__db--hapus' : '') +
+        '"><p class="ddl-server__head"><span class="ddl-server__nama">' +
+        (hapus ? '<span aria-hidden="true">➖</span> ' : '🗄️ ') +
+        esc(db.nama) +
+        '</span>' +
+        (aktif ? '<span class="ddl-server__tag">aktif</span>' : '') +
+        (hapus
+          ? '<span class="ddl-server__tag ddl-server__tag--hapus">dihapus · ' +
+            jumlahBaris(a.tabel) +
+            ' baris hilang</span>'
+          : '') +
+        '</p>' +
+        (hapus
+          ? ''
+          : tabel.length
+            ? '<ul class="ddl-server__daftar">' + tabel.join('') + '</ul>'
+            : '<p class="ddl-schema__kosong">Belum punya tabel.</p>') +
+        '</div>'
+      );
+    })
+    .join('');
+  return (
+    '<div class="ddl-server">' +
+    judul +
+    '<div class="ddl-server__grid">' +
+    kartu +
+    '</div>' +
+    (sekarang.length && !skema.aktif
+      ? '<p class="ddl-schema__kosong">Belum ada basis data yang aktif — pilih dengan USE.</p>'
+      : '') +
+    '</div>'
+  );
+}
+
+/* Laporan dampak dari dampakHapus: apa saja yang hilang dan berapa baris. */
+function buildDampakHapus(dampak, opts) {
+  opts = opts || {};
+  var judul = '<p class="ddl-schema__judul">' + esc(opts.judul || 'Laporan dampak') + '</p>';
+  var aman = !dampak.db.length && !dampak.tabel.length && !dampak.dikosongkan.length;
+  if (aman) {
+    return (
+      '<div class="ddl-dampak ddl-dampak--aman" role="status">' +
+      judul +
+      '<p class="ddl-dampak__total"><span aria-hidden="true">🛡️</span> Tidak ada data yang hilang.</p></div>'
+    );
+  }
+  function butir(ikon, teks, baris) {
+    return (
+      '<li><span aria-hidden="true">' +
+      ikon +
+      '</span> ' +
+      teks +
+      ' <strong>(' +
+      baris +
+      ' baris)</strong></li>'
+    );
+  }
+  var daftar = dampak.db
+    .map(function (x) {
+      return butir(
+        '🗄️',
+        'Basis data <code>' + esc(x.nama) + '</code> beserta ' + x.tabel + ' tabel',
+        x.baris
+      );
+    })
+    .concat(
+      dampak.tabel.map(function (x) {
+        return butir('▦', 'Tabel <code>' + esc(x.db + '.' + x.nama) + '</code>', x.baris);
+      }),
+      dampak.dikosongkan.map(function (x) {
+        return butir('🧹', 'Isi tabel <code>' + esc(x.db + '.' + x.nama) + '</code>', x.baris);
+      })
+    );
+  return (
+    '<div class="ddl-dampak ddl-dampak--hilang" role="status">' +
+    judul +
+    '<p class="ddl-dampak__total"><span aria-hidden="true">⚠️</span> ' +
+    dampak.baris +
+    ' baris data hilang permanen:</p><ul class="ddl-dampak__daftar">' +
+    daftar.join('') +
+    '</ul></div>'
+  );
+}
+
 /* ---------- Konsol DDL berlangkah ----------
    langkah = [{ id, sql, amati? }]  — pernyataan siap-jalan berurutan
    state[key] = { jalan, bebas, draf }
@@ -4235,6 +4610,7 @@ function buildLogDdl(entri) {
  *   opts.awal    skema awal (default kosong)
  *   opts.bebas   true → kotak "coba sendiri" setelah semua langkah dijalankan
  *   opts.judulSkema  judul panel skema
+ *   opts.server  true → tampilkan semua basis data (buildServerDdl)
  */
 function buildKonsolDdl(id, langkah, st, opts) {
   opts = opts || {};
@@ -4324,7 +4700,12 @@ function buildKonsolDdl(id, langkah, st, opts) {
         'Ulang">↺ Ulangi percobaan dari awal</button></div>'
       : '') +
     '</div><div class="ddl-console__skema" aria-live="polite">' +
-    buildSkemaDdl(hasil.skema, { judul: opts.judulSkema || 'Isi DBMS saat ini' }) +
+    (opts.server
+      ? buildServerDdl(hasil.skema, {
+          awal: opts.awal,
+          judul: opts.judulSkema || 'Isi server DBMS saat ini',
+        })
+      : buildSkemaDdl(hasil.skema, { judul: opts.judulSkema || 'Isi DBMS saat ini' })) +
     '</div></div></div>'
   );
 }
@@ -4399,6 +4780,8 @@ function bindKonsolDdl(root, id, langkah, st, save, rerender) {
  *   opts.ketat   default true (lihat periksaStruktur)
  *   opts.panjang  bandingkan panjang tipe juga (VARCHAR(30) ≠ VARCHAR(60))
  *   opts.jagaIsi  data lama (jumlah baris & kolom berisi) tidak boleh hilang
+ *   opts.hapus    { db, tabel } target DROP: hanya objek itu yang boleh
+ *                 hilang dari opts.awal (periksaPenghapusan)
  * → { ok, lulus, log, skema, salah }
  */
 function periksaSkripDdl(sql, harapan, opts) {
@@ -4419,6 +4802,9 @@ function periksaSkripDdl(sql, harapan, opts) {
       panjang: !!opts.panjang,
       jagaIsi: !!opts.jagaIsi,
     });
+  }
+  if (h.ok && opts.hapus) {
+    salah = periksaPenghapusan(opts.awal || skemaKosong(), h.skema, opts.hapus).concat(salah);
   }
   return { ok: h.ok, lulus: h.ok && !salah.length, log: h.log, skema: h.skema, salah: salah };
 }
@@ -4528,6 +4914,8 @@ function hasilEditorDdl(st, opts) {
  *   opts.rows        tinggi editor (default 8)
  *   opts.judulSkema  judul panel skema hasil
  *   opts.beda        true → tampilkan beda struktur terhadap opts.awal
+ *   opts.server      true → tampilkan panel server dan laporan dampak
+ *                    terhadap opts.awal (untuk skrip DROP)
  */
 function buildEditorDdl(id, st, opts) {
   opts = opts || {};
@@ -4616,11 +5004,21 @@ function buildEditorDdl(id, st, opts) {
         '</ul>' +
         umpan +
         '</div>' +
-        (opts.beda
-          ? buildBedaSkema(bedaSkema(opts.awal || skemaKosong(), hasil.skema, st.jalan), {
-              judul: opts.judulSkema || 'Struktur sebelum → sesudah skripmu',
-            })
-          : buildSkemaDdl(hasil.skema, { judul: opts.judulSkema || 'Isi DBMS setelah skripmu' })) +
+        (opts.server
+          ? '<div class="ddl-editor__server">' +
+            buildServerDdl(hasil.skema, {
+              awal: opts.awal,
+              judul: opts.judulSkema || 'Server sebelum → sesudah skripmu',
+            }) +
+            buildDampakHapus(dampakHapus(opts.awal || skemaKosong(), hasil.skema)) +
+            '</div>'
+          : opts.beda
+            ? buildBedaSkema(bedaSkema(opts.awal || skemaKosong(), hasil.skema, st.jalan), {
+                judul: opts.judulSkema || 'Struktur sebelum → sesudah skripmu',
+              })
+            : buildSkemaDdl(hasil.skema, {
+                judul: opts.judulSkema || 'Isi DBMS setelah skripmu',
+              })) +
         '</div>'
       : '') +
     '</div>'

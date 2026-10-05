@@ -2979,6 +2979,13 @@ strong {
   text-align: center;
 }
 
+/* Rumpang yang sudah terisi benar */
+.sql-blank--isi {
+  border-bottom-style: solid;
+  border-bottom-color: #c3e88d;
+  color: #c3e88d;
+}
+
 .ddl-console__grid {
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
@@ -3416,7 +3423,264 @@ strong {
   border-radius: var(--radius-sm);
 }
 
+/* Komponen Problem Based Learning: memo/kutipan masalah, log galat,
+   panel berdampingan, kartu sintaks buka-tutup, daftar permintaan */
+.pbl-quote {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-left: 4px solid var(--color-primary);
+  background: var(--color-primary-soft);
+  border-radius: var(--radius-sm);
+  font-style: italic;
+  line-height: 1.6;
+}
+
+.app-log {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-3);
+  max-width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  background: #1f2428;
+  color: #ff8a80;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.pbl-banding {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+/* Dua panel sama lebar (mis. bukti sebelum–sesudah & rancangan) */
+.pbl-banding--rata {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.pbl-banding > .panel {
+  min-width: 0;
+}
+
+.pbl-kartu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.pbl-kartu {
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.pbl-kartu[open] {
+  border-color: var(--color-primary);
+}
+
+.pbl-kartu summary {
+  min-height: 32px;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.pbl-kartu p {
+  margin: var(--space-2) 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.pbl-permintaan {
+  margin: 0 0 var(--space-4);
+  padding-left: var(--space-5);
+  line-height: 1.6;
+}
+
+.pbl-permintaan li + li {
+  margin-top: var(--space-1);
+}
+
+/* Server DBMS: kartu per basis data (buildServerDdl) */
+.ddl-server {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3);
+  border: 2px solid var(--color-blue);
+  border-radius: var(--radius-md);
+  background: var(--color-blue-soft);
+}
+
+.ddl-server--kosong {
+  border-style: dashed;
+}
+
+.ddl-server__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  gap: var(--space-2);
+}
+
+.ddl-server__db {
+  min-width: 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.ddl-server__db--aktif {
+  border: 2px solid var(--color-blue-strong);
+}
+
+.ddl-server__db--hapus {
+  border: 2px dashed var(--color-error);
+  background: var(--color-error-soft);
+}
+
+.ddl-server__head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-blue);
+  color: #fff;
+}
+
+.ddl-server__db--hapus .ddl-server__head {
+  background: transparent;
+  color: var(--color-error-strong);
+}
+
+.ddl-server__db--hapus .ddl-server__head .ddl-server__nama {
+  text-decoration: line-through;
+}
+
+.ddl-server__nama {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.ddl-server__tag {
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-blue-strong);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.ddl-server__tag--hapus {
+  background: var(--color-error);
+  color: #fff;
+}
+
+.ddl-server__daftar {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ddl-server__tabel {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-top: 1px solid var(--color-border);
+  font-size: 0.84rem;
+}
+
+.ddl-server__tabel .ddl-server__nama {
+  font-weight: 400;
+}
+
+.ddl-server__baris {
+  color: var(--color-ink-muted);
+  font-size: 0.78rem;
+}
+
+.ddl-server__tabel--hapus {
+  border-left: 4px solid var(--color-error);
+  background: var(--color-error-soft);
+}
+
+.ddl-server__tabel--hapus .ddl-server__nama {
+  text-decoration: line-through;
+}
+
+.ddl-server__tabel--hapus .ddl-server__baris {
+  color: var(--color-error-strong);
+  font-weight: 700;
+}
+
+.ddl-server .ddl-schema__kosong {
+  padding: var(--space-2) var(--space-3);
+}
+
+/* Laporan dampak penghapusan (buildDampakHapus) */
+.ddl-dampak {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3);
+  border: 2px solid var(--color-error);
+  border-radius: var(--radius-md);
+  background: var(--color-error-soft);
+}
+
+.ddl-dampak--aman {
+  border-color: var(--color-success);
+  background: var(--color-success-soft);
+}
+
+.ddl-dampak .ddl-schema__judul {
+  color: var(--color-error-strong);
+}
+
+.ddl-dampak--aman .ddl-schema__judul {
+  color: var(--color-success-strong);
+}
+
+.ddl-dampak__total {
+  margin: 0;
+  font-weight: 700;
+}
+
+.ddl-dampak__daftar {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.88rem;
+  overflow-wrap: anywhere;
+}
+
+.ddl-editor__server {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
 @media (max-width: 760px) {
+  .pbl-banding,
+  .pbl-banding--rata {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .ddl-console__grid {
     grid-template-columns: minmax(0, 1fr);
   }

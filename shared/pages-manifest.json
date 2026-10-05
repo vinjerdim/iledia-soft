@@ -54,5 +54,13 @@
     "h1": "Mengubah Struktur Tabel dengan ALTER TABLE",
     "stageCount": 11,
     "extraBody": "partials/reset-modal.html"
+  },
+  "fase-f/mpi-2.4": {
+    "title": "Menghapus Basis Data dan Tabel dengan DROP DATABASE dan DROP TABLE — Rekayasa Perangkat Lunak Fase F",
+    "description": "Media pembelajaran interaktif berbasis Problem Based Learning untuk menghapus basis data dan tabel menggunakan perintah DROP DATABASE dan DROP TABLE secara tepat serta memahami konsekuensi dan risikonya: permintaan pembersihan server Bank Sampah Sekolah yang berisi data, log insiden DROP, akar masalah dan rumusan masalah, peran tim dan rencana penghapusan aman, kartu sintaks DROP TABLE/DROP DATABASE/IF EXISTS dan pengecekan SHOW DATABASES/SELECT DATABASE()/SHOW TABLES, pilah perintah dan dampak (DROP vs TRUNCATE vs DELETE vs DROP COLUMN), konsol DROP pada server berisi data, editor DROP berpemeriksa yang hanya boleh menghapus target, analisis risiko skrip tim junior dengan laporan dampak, bukti sebelum–sesudah, evaluasi kasus Servis Laptop TEFA dan uji silang skrip tim lain.",
+    "kicker": "Rekayasa Perangkat Lunak — Fase F (SMK)",
+    "h1": "Menghapus Basis Data dan Tabel dengan DROP DATABASE dan DROP TABLE",
+    "stageCount": 11,
+    "extraBody": "partials/reset-modal.html"
   }
 }

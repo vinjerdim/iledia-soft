@@ -2,8 +2,8 @@
 
 /* ============================================================
    app.js — Logika aplikasi media pembelajaran
-   Rekayasa Perangkat Lunak: Mengubah Struktur Tabel dengan
-   ALTER TABLE (Menambah, Mengubah, dan Menghapus Kolom)
+   Rekayasa Perangkat Lunak: Menghapus Basis Data dan Tabel
+   dengan DROP DATABASE dan DROP TABLE
    Fase F — SMK Rekayasa Perangkat Lunak, Problem Based Learning
 
    Utilitas & komponen bersama berada di shared/engine.js:
@@ -14,11 +14,10 @@
        ensureTapOrderState, buildTapOrder, ensureMultiState,
        buildMultiSelect, buildLikertGroup, buildPeranKelompok,
        buildKuisSekali);
-     • seksi 17 — SQL DDL (jalankanDdl, strukturDariErd,
-       skemaDariStruktur, strukturDariSkema, sorotSql,
-       buildSqlKode, buildSkemaDdl, buildKonsolDdl, buildKamusData,
-       periksaSkripDdl, bedaSkema, buildBedaSkema,
-       ensureEditorState, buildEditorDdl, bindEditorDdl).
+     • seksi 17 — SQL DDL (jalankanDdl, skemaBanyakDb, dampakHapus,
+       periksaSkripDdl dengan opsi `hapus`, buildServerDdl,
+       buildDampakHapus, buildSqlKode, buildKonsolDdl &
+       buildEditorDdl dengan opsi `server`).
 
    Alur tahap mengikuti lima sintaks Problem Based Learning; lihat
    komentar kepala data.js.
@@ -28,28 +27,28 @@
    render — sehingga pilihan tidak melompat-lompat ketika tahap
    dirender ulang, tetapi teracak ulang setiap Reset.
 
-   Skrip ALTER yang ditulis murid di editor disambung menjadi
-   "skrip migrasi tim": tambah → ubah → hapus. Skema awal setiap
-   editor adalah DBMS v1 berisi data ditambah skrip tim sebelumnya;
-   struktur harapannya adalah hasil skrip kunci sampai editor itu
-   (strukturDariSkema), sehingga data yang hilang ikut terdeteksi.
+   Skrip DROP yang ditulis murid di editor disambung menjadi
+   "skrip pembersihan tim": hapusTabel → hapusDb. Skema awal setiap
+   editor adalah server awal ditambah skrip tim sebelumnya; yang
+   boleh hilang hanya target editor itu (data.js `target`), sehingga
+   objek lain yang ikut terhapus atau dikosongkan langsung terdeteksi.
 
    Bagian:
     1. Konstanta
     2. State & Storage
     3. Pengacakan (initOrders)
     4. Navigasi & render ulang
-    5. Utilitas render & skrip migrasi tim
-    6. Stage: Orientasi        (PBL sintaks 1)
-    7. Stage: Masalah          (PBL sintaks 1)
-    8. Stage: Bentuk Tim       (PBL sintaks 2)
-    9. Stage: Bekal Sintaks    (PBL sintaks 3)
-   10. Stage: Tambah Kolom     (PBL sintaks 3)
-   11. Stage: Ubah Kolom       (PBL sintaks 3)
-   12. Stage: Hapus Kolom      (PBL sintaks 4)
-   13. Stage: Sajikan Hasil    (PBL sintaks 4)
-   14. Stage: Evaluasi         (PBL sintaks 5)
-   15. Stage: Refleksi         (PBL sintaks 5)
+    5. Utilitas render & skrip pembersihan tim
+    6. Stage: Orientasi          (PBL sintaks 1)
+    7. Stage: Masalah            (PBL sintaks 1)
+    8. Stage: Bentuk Tim         (PBL sintaks 2)
+    9. Stage: Bekal Sintaks      (PBL sintaks 3)
+   10. Stage: Hapus Tabel        (PBL sintaks 3)
+   11. Stage: Hapus Basis Data   (PBL sintaks 3)
+   12. Stage: Analisis Risiko    (PBL sintaks 4)
+   13. Stage: Sajikan Hasil      (PBL sintaks 4)
+   14. Stage: Evaluasi           (PBL sintaks 5)
+   15. Stage: Refleksi           (PBL sintaks 5)
    16. Stage: Selesai (skor)
    17. Router render & Init
    ============================================================ */
@@ -65,18 +64,13 @@ var STAGES = D.tahap.map(function (t) {
 var STAGE_LABELS = D.tahap.map(function (t) {
   return t.label;
 });
-var STORAGE_KEY = 'mpi-f-2-3-alter-pbl-v1';
+var STORAGE_KEY = 'mpi-f-2-4-drop-pbl-v1';
 
-var STRUKTUR_V1 = strukturDariErd(D.erdV1);
-var STRUKTUR_V2 = strukturDariErd(D.erdV2);
-var STRUKTUR_TEFA = strukturDariErd(D.erdTefa);
+/* Basis data yang harus tetap aktif setelah setiap skrip tim. */
+var DB_UTAMA = D.server.aktif;
 
-/* Editor ALTER berurutan; skripnya disambung menjadi skrip migrasi tim. */
-var EDITOR = ['tambah', 'ubah', 'hapus'];
-
-/* Opsi pemeriksaan: kolom wajib & tambahan (ketat), panjang tipe,
-   data lama tidak boleh hilang (jagaIsi). */
-var OPSI_PERIKSA = { ketat: true, panjang: true, jagaIsi: true };
+/* Editor DROP berurutan; skripnya disambung menjadi skrip pembersihan tim. */
+var EDITOR = ['hapusTabel', 'hapusDb'];
 
 /* Urutan benar rencana langkah tim = urutan di data.js. */
 var RENCANA = D.organisasi.rencana.items;
@@ -87,9 +81,8 @@ var JAWAB_RENCANA = RENCANA.map(function (it) {
 /* Pertanyaan penuntun (boleh dicoba ulang), untuk pengacakan & skor. */
 var GUIDED = {
   konsep: D.konsep.pertanyaan,
-  tambah: D.tambah.pertanyaan,
-  ubah: D.ubah.pertanyaan,
-  rumpang: D.ubah.rumpang,
+  hapusTabel: D.hapusTabel.pertanyaan,
+  hapusDb: D.hapusDb.pertanyaan,
 };
 
 /* Kuis sekali-jawab: key State jawaban → daftar soal. */
@@ -106,7 +99,8 @@ var SORTS = {
 /* Multi-pilih berdiagnosa: key State → daftar opsi. */
 var MULTI = {
   akar: D.masalah.akar.opsi,
-  analisis: D.hapus.analisis.opsi,
+  analisis: D.risiko.analisis.opsi,
+  aturan: D.risiko.aturan.opsi,
   klaim: D.sajikan.klaim.opsi,
   ujiSilang: D.evaluasi.ujiSilang.opsi,
 };
@@ -133,11 +127,11 @@ var State = {
   /* Kuis evaluasi sekali-jawab */
   jawabEval: {},
 
-  /* Pemilahan: aksi ALTER, dampak data */
+  /* Pemilahan: perintah yang tepat, dampak perintah */
   sorts: {},
   sortOrders: {},
 
-  /* Multi-pilih: akar masalah, analisis hapus, klaim, uji silang */
+  /* Multi-pilih: akar masalah, analisis risiko, aturan aman, klaim, uji silang */
   multi: {},
 
   /* Masalah — rumusan masalah tim */
@@ -147,13 +141,14 @@ var State = {
   peran: {},
   rencana: null,
 
-  /* Konsol latihan: tambah, ubah, hapus */
+  /* Konsol latihan: hapusTabel, hapusDb */
   konsol: {},
 
-  /* Editor ALTER: tambah, ubah, hapus */
+  /* Editor DROP: hapusTabel, hapusDb */
   editor: {},
 
-  /* Sajikan & evaluasi — skrip sudah dijalankan? */
+  /* Risiko, sajikan & evaluasi — skrip sudah dijalankan? */
+  risikoJalan: false,
   sajikanJalan: false,
   evalJalan: false,
 
@@ -289,7 +284,7 @@ function goNext(id) {
 }
 
 /* ============================================================
-   5. UTILITAS RENDER & SKRIP MIGRASI TIM
+   5. UTILITAS RENDER & SKRIP PEMBERSIHAN TIM
    ============================================================ */
 
 function sintaksOf(id) {
@@ -318,6 +313,30 @@ function bindNextButton(root, id) {
     btn.addEventListener('click', function () {
       if (btn.disabled) return;
       goNext(id);
+    });
+  }
+}
+
+/* Tombol "jalankan skrip" sekali pakai; flag = key State boolean. */
+function runButton(id, label, cls) {
+  return (
+    '<div class="btn-group"><button type="button" class="btn ' +
+    (cls || 'btn--primary') +
+    '" id="' +
+    id +
+    '">' +
+    label +
+    '</button></div>'
+  );
+}
+
+function bindRunButton(root, id, flag) {
+  var run = root.querySelector('#' + id);
+  if (run) {
+    run.addEventListener('click', function () {
+      State[flag] = true;
+      store.save();
+      rerender();
     });
   }
 }
@@ -413,35 +432,44 @@ function logHtml(log) {
   return '<ul class="ddl-log">' + log.map(buildLogDdl).join('') + '</ul>';
 }
 
-/* Kamus data rancangan v2 (seluruhnya atau tabel tertentu). */
-function kamus(tabel, judul) {
-  return buildKamusData(STRUKTUR_V2, {
-    tabel: tabel,
-    judul: judul,
-    namaDb: tabel ? null : D.namaDb,
-  });
+/* Daftar permintaan bernomor (memo pembina, permintaan TEFA). */
+function permintaanHtml(items) {
+  return (
+    '<ol class="pbl-permintaan">' +
+    items
+      .map(function (p) {
+        return '<li>' + p + '</li>';
+      })
+      .join('') +
+    '</ol>'
+  );
 }
 
-/* DBMS bank_sampah v1 yang sudah berisi data. */
-function skemaV1() {
-  return skemaDariStruktur(D.namaDb, STRUKTUR_V1, D.baris);
+/* Server DBMS dari data.js ({ aktif, db: [{ nama, struktur, baris }] }). */
+function serverDari(srv) {
+  return skemaBanyakDb(srv.db, srv.aktif);
 }
 
-/* DBMS latihan berisi data untuk konsol tahap `key`. */
+/* Server Bank Sampah sebelum dibersihkan. */
+function serverAwal() {
+  return serverDari(D.server);
+}
+
+/* Server latihan berisi data untuk konsol tahap `key`. */
 function skemaLab(key) {
-  var lab = D[key].lab;
-  return skemaDariStruktur(lab.namaDb, lab.struktur, lab.baris);
+  return serverDari(D[key].lab);
 }
 
 function konsolPanel(key) {
   var d = D[key];
   var st = State.konsol[key];
   return buildDlPanel(
-    '<h3>🧪 Konsol latihan (tabel berisi data)</h3>' +
+    '<h3>🧪 Konsol latihan (server berisi data)</h3>' +
       counter(Math.min(st.jalan, d.langkah.length), d.langkah.length, 'langkah dijalankan') +
       buildKonsolDdl('k-' + key, d.langkah, st, {
         awal: skemaLab(key),
-        judulSkema: 'Isi DBMS latihan',
+        server: true,
+        judulSkema: 'Isi server latihan',
       })
   );
 }
@@ -452,15 +480,6 @@ function bindKonsol(root, key) {
 
 function konsolTuntas(key) {
   return State.konsol[key].jalan >= D[key].langkah.length;
-}
-
-/* Pernyataan MODIFY dengan semua rumpang terisi. */
-function skripRumpang() {
-  var sql = D.ubah.rumpangSql;
-  D.ubah.rumpang.forEach(function (q, i) {
-    sql = sql.replace('__' + (i + 1) + '__', D.ubah.isian[q.id]);
-  });
-  return sql;
 }
 
 /* Skrip editor murid bila sudah lulus; skrip kunci sebagai cadangan. */
@@ -475,35 +494,17 @@ function potonganTim(sampai) {
   return EDITOR.slice(0, batas).map(skripEditor);
 }
 
-/* Struktur harapan setelah skrip KUNCI sampai (dan termasuk) editor `key`. */
-function harapanSampai(key) {
-  var n = key ? EDITOR.indexOf(key) + 1 : EDITOR.length;
-  var sql = EDITOR.slice(0, n)
-    .map(function (k) {
-      return D.kunci[k];
-    })
-    .join('\n');
-  return strukturDariSkema(jalankanDdl(skemaV1(), sql).skema);
-}
-
 function skripTim() {
-  return (
-    '-- Migrasi struktur ' +
-    D.namaDb +
-    ' v1 → v2 (Bank Sampah Sekolah)\n\n' +
-    potonganTim().join('\n\n')
-  );
+  return '-- Pembersihan server Bank Sampah Sekolah (skrip tim)\n\n' + potonganTim().join('\n\n');
 }
 
 function editorOpts(key) {
   var d = D[key].editor;
   return {
-    harapan: harapanSampai(key),
-    awal: jalankanDdl(skemaV1(), potonganTim(key).join('\n')).skema,
-    ketat: OPSI_PERIKSA.ketat,
-    panjang: OPSI_PERIKSA.panjang,
-    jagaIsi: OPSI_PERIKSA.jagaIsi,
-    beda: true,
+    awal: jalankanDdl(serverAwal(), potonganTim(key).join('\n')).skema,
+    namaDb: DB_UTAMA,
+    hapus: D.target[key],
+    server: true,
     label: d.label,
     placeholder: d.placeholder,
     kerangka: d.kerangka,
@@ -521,6 +522,7 @@ function editorPanel(key) {
       '</h3><p>' +
       d.tugas +
       '</p>' +
+      buildServerDdl(editorOpts(key).awal, { judul: 'Server sebelum skripmu' }) +
       buildEditorDdl('ed-' + key, State.editor[key], editorOpts(key))
   );
 }
@@ -529,26 +531,36 @@ function bindEditor(root, key) {
   bindEditorDdl(root, 'ed-' + key, State.editor[key], editorOpts(key), store.save, rerender);
 }
 
-/* Menjalankan skrip migrasi pada DBMS v1 dan memeriksanya terhadap v2. */
-function periksaMigrasi(sql) {
-  return periksaSkripDdl(sql, harapanSampai(), {
-    awal: skemaV1(),
-    ketat: OPSI_PERIKSA.ketat,
-    panjang: OPSI_PERIKSA.panjang,
-    jagaIsi: OPSI_PERIKSA.jagaIsi,
+/* Menjalankan skrip pembersihan pada server awal: tepat target saja? */
+function periksaPembersihan(sql) {
+  return periksaSkripDdl(sql, null, {
+    awal: serverAwal(),
+    namaDb: DB_UTAMA,
+    hapus: D.target.semua,
   });
 }
 
 function hasilTim() {
-  return periksaMigrasi(skripTim());
+  return periksaPembersihan(skripTim());
 }
 
 function hasilTimBiru() {
-  return periksaMigrasi(D.evaluasi.ujiSilang.skrip);
+  return periksaPembersihan(D.evaluasi.ujiSilang.skrip);
 }
 
-function bedaPanel(hasil, sql, judul) {
-  return buildBedaSkema(bedaSkema(skemaV1(), hasil.skema, sql), { judul: judul });
+function hasilJunior() {
+  return jalankanDdl(serverAwal(), D.risiko.skrip);
+}
+
+/* Bukti: panel server sebelum → sesudah dan laporan dampaknya. */
+function buktiPanel(skema, judul) {
+  var awal = serverAwal();
+  return (
+    '<div class="pbl-banding pbl-banding--rata">' +
+    buildDlPanel(buildServerDdl(skema, { awal: awal, judul: judul })) +
+    buildDlPanel(buildDampakHapus(dampakHapus(awal, skema))) +
+    '</div>'
+  );
 }
 
 /* ============================================================
@@ -633,10 +645,9 @@ function renderMasalah(root) {
         esc(d.logJudul) +
         '">' +
         d.log.map(esc).join('\n') +
-        '</pre>' +
-        buildSkemaDdl(skemaV1(), { judul: d.skemaJudul })
+        '</pre>'
     ) +
-    buildDlPanel(kamus(null, d.kamusJudul)) +
+    buildDlPanel(buildServerDdl(serverAwal(), { judul: d.serverJudul }) + keteranganDb(D.server)) +
     '</div>' +
     buildDlPanel(
       '<h3>① Temukan akar masalah</h3><p>' +
@@ -682,6 +693,19 @@ function renderMasalah(root) {
   }
   sync();
   bindNextButton(root, 'masalah');
+}
+
+/* Keterangan pemilik/kegunaan tiap basis data di server. */
+function keteranganDb(srv) {
+  return (
+    '<ul class="drop-ket">' +
+    srv.db
+      .map(function (b) {
+        return '<li><code>' + esc(b.nama) + '</code> — ' + esc(b.ket) + '</li>';
+      })
+      .join('') +
+    '</ul>'
+  );
 }
 
 /* ============================================================
@@ -758,7 +782,7 @@ function renderKonsep(root) {
             sortList('dampak', { mono: true })
         )
       : '') +
-    (dDone ? buildDlPanel('<h3>③ Cek penulisan</h3>' + guidedList('konsep')) : '') +
+    (dDone ? buildDlPanel('<h3>③ Cek penulisan & konsekuensi</h3>' + guidedList('konsep')) : '') +
     (done ? nextButton('konsep') : '');
   bindSort(root, 'aksi');
   if (aDone) bindSort(root, 'dampak');
@@ -767,114 +791,79 @@ function renderKonsep(root) {
 }
 
 /* ============================================================
-   10. STAGE: TAMBAH KOLOM
+   10–11. STAGE: HAPUS TABEL & HAPUS BASIS DATA
+   Pola sama: konsol latihan → olah pengamatan → editor sendiri.
    ============================================================ */
 
-function renderTambah(root) {
-  var d = D.tambah;
-  var tuntas = konsolTuntas('tambah');
-  var gDone = tuntas && guidedDone('tambah');
-  var done = gDone && State.editor.tambah.lulus;
+function renderPenyelidikan(root, key) {
+  var d = D[key];
+  var tuntas = konsolTuntas(key);
+  var gDone = tuntas && guidedDone(key);
+  var done = gDone && State.editor[key].lulus;
   root.innerHTML =
-    head('tambah') +
+    head(key) +
     buildTeacherNote(d.guru) +
     buildDlPanel('<p style="margin:0;">' + d.pengantar + '</p>') +
-    konsolPanel('tambah') +
-    (tuntas ? buildDlPanel('<h3>🔎 Olah hasil pengamatan</h3>' + guidedList('tambah')) : '') +
-    (gDone
-      ? buildDlPanel(kamus(['nasabah'], 'Kamus data v2 tabel nasabah')) + editorPanel('tambah')
-      : '') +
-    (done ? nextButton('tambah') : '');
-  bindKonsol(root, 'tambah');
-  if (tuntas) bindGuided(root, 'tambah');
-  if (gDone) bindEditor(root, 'tambah');
-  bindNextButton(root, 'tambah');
+    konsolPanel(key) +
+    (tuntas ? buildDlPanel('<h3>🔎 Olah hasil pengamatan</h3>' + guidedList(key)) : '') +
+    (gDone ? editorPanel(key) : '') +
+    (done ? nextButton(key) : '');
+  bindKonsol(root, key);
+  if (tuntas) bindGuided(root, key);
+  if (gDone) bindEditor(root, key);
+  bindNextButton(root, key);
+}
+
+function renderHapusTabel(root) {
+  renderPenyelidikan(root, 'hapusTabel');
+}
+
+function renderHapusDb(root) {
+  renderPenyelidikan(root, 'hapusDb');
 }
 
 /* ============================================================
-   11. STAGE: UBAH KOLOM
+   12. STAGE: ANALISIS RISIKO
    ============================================================ */
 
-/* Pernyataan berumpang: rumpang terisi bila sudah dijawab benar. */
-function rumpangHtml() {
-  var d = D.ubah;
-  var html = sorotSql(d.rumpangSql);
-  d.rumpang.forEach(function (q, i) {
-    var no = i + 1;
-    var benar = State.pilih[q.id] === q.correct;
-    var isi = benar
-      ? '<span class="sql-blank sql-blank--isi">' + esc(d.isian[q.id]) + '</span>'
-      : '<span class="sql-blank" aria-label="isian ' + no + '">' + '①②③'[i] + '</span>';
-    html = html.replace('__' + no + '__', isi);
-  });
-  return '<pre class="sql-code" aria-label="Pernyataan berumpang"><code>' + html + '</code></pre>';
-}
-
-function renderUbah(root) {
-  var d = D.ubah;
-  var tuntas = konsolTuntas('ubah');
-  var gDone = tuntas && guidedDone('ubah');
-  var rDone = gDone && guidedDone('rumpang');
-  var done = rDone && State.editor.ubah.lulus;
+function renderRisiko(root) {
+  var d = D.risiko;
+  var h = State.risikoJalan ? hasilJunior() : null;
+  var aDone = h && State.multi.analisis.done;
+  var done = aDone && State.multi.aturan.done;
   root.innerHTML =
-    head('ubah') +
+    head('risiko') +
     buildTeacherNote(d.guru) +
-    buildDlPanel('<p style="margin:0;">' + d.pengantar + '</p>') +
-    konsolPanel('ubah') +
-    (tuntas ? buildDlPanel('<h3>🔎 Olah hasil pengamatan</h3>' + guidedList('ubah')) : '') +
-    (gDone
-      ? buildDlPanel(
-          kamus(['jenis_sampah'], 'Kamus data v2 tabel jenis_sampah') +
-            '<p>' +
-            d.rumpangPengantar +
-            '</p>' +
-            rumpangHtml() +
-            guidedList('rumpang')
-        )
-      : '') +
-    (rDone
-      ? buildFeedbackBox('success', '✓', d.rumpangSukses) +
-        buildDlPanel(kamus(['nasabah'], 'Kamus data v2 tabel nasabah')) +
-        editorPanel('ubah')
-      : '') +
-    (done ? nextButton('ubah') : '');
-  bindKonsol(root, 'ubah');
-  if (tuntas) bindGuided(root, 'ubah');
-  if (gDone) bindGuided(root, 'rumpang');
-  if (rDone) bindEditor(root, 'ubah');
-  bindNextButton(root, 'ubah');
-}
-
-/* ============================================================
-   12. STAGE: HAPUS KOLOM
-   ============================================================ */
-
-function renderHapus(root) {
-  var d = D.hapus;
-  var tuntas = konsolTuntas('hapus');
-  var aDone = tuntas && State.multi.analisis.done;
-  var done = aDone && State.editor.hapus.lulus;
-  root.innerHTML =
-    head('hapus') +
-    buildTeacherNote(d.guru) +
-    buildDlPanel('<p style="margin:0;">' + d.pengantar + '</p>') +
-    konsolPanel('hapus') +
-    (tuntas
-      ? buildDlPanel(
-          '<h3>🧐 Analisis rencana penghapusan</h3><p>' +
+    buildDlPanel(
+      '<p>' +
+        d.pengantar +
+        '</p>' +
+        buildSqlKode(d.skrip, { label: 'Skrip tim junior' }) +
+        (h ? '' : runButton('risikoRun', '▶ Uji di salinan server'))
+    ) +
+    (h
+      ? buildDlPanel('<h3>🖥️ Hasil di salinan server</h3>' + logHtml(h.log)) +
+        buktiPanel(h.skema, 'Salinan server sebelum → sesudah skrip junior') +
+        buildDlPanel(
+          '<h3>🧐 Analisis risiko</h3><p>' +
             d.analisis.tanya +
             '</p>' +
             multi('analisis', { done: d.analisis.done })
         )
       : '') +
     (aDone
-      ? buildDlPanel(kamus(['setoran'], 'Kamus data v2 tabel setoran')) + editorPanel('hapus')
+      ? buildDlPanel(
+          '<h3>🛡️ Checklist sebelum DROP</h3><p>' +
+            d.aturan.tanya +
+            '</p>' +
+            multi('aturan', { done: d.aturan.done })
+        )
       : '') +
-    (done ? nextButton('hapus') : '');
-  bindKonsol(root, 'hapus');
-  if (tuntas) bindMulti(root, 'analisis');
-  if (aDone) bindEditor(root, 'hapus');
-  bindNextButton(root, 'hapus');
+    (done ? nextButton('risiko') : '');
+  bindRunButton(root, 'risikoRun', 'risikoJalan');
+  if (h) bindMulti(root, 'analisis');
+  if (aDone) bindMulti(root, 'aturan');
+  bindNextButton(root, 'risiko');
 }
 
 /* ============================================================
@@ -893,27 +882,22 @@ function renderSajikan(root) {
       '<p>' +
         d.pengantar +
         '</p>' +
-        buildSqlKode(skrip, { label: 'Skrip migrasi tim' }) +
-        (State.sajikanJalan
-          ? ''
-          : '<div class="btn-group"><button type="button" class="btn btn--primary" id="sajikanRun">▶ Jalankan di DBMS v1 berisi data</button></div>')
+        buildSqlKode(skrip, { label: 'Skrip pembersihan tim' }) +
+        (State.sajikanJalan ? '' : runButton('sajikanRun', '▶ Jalankan di salinan server awal'))
     ) +
     (hasil
       ? buildDlPanel(
-          '<h3>🖥️ Hasil di DBMS</h3>' +
+          '<h3>🖥️ Hasil di server</h3>' +
             logHtml(hasil.log) +
             (hasil.lulus
               ? buildFeedbackBox('success', '✓', d.lulus)
               : buildFeedbackBox(
                   'warning',
                   '💭',
-                  '<strong>Hasil migrasi belum sesuai:</strong>' + listHtml(hasil.salah.map(esc))
+                  '<strong>Hasil pembersihan belum tepat:</strong>' + listHtml(hasil.salah.map(esc))
                 ))
         ) +
-        '<div class="pbl-banding pbl-banding--rata">' +
-        buildDlPanel(bedaPanel(hasil, skrip, 'Bukti: struktur sebelum → sesudah')) +
-        buildDlPanel(kamus(null, 'Rancangan: kamus data v2')) +
-        '</div>' +
+        buktiPanel(hasil.skema, 'Bukti: server sebelum → sesudah') +
         buildDlPanel(
           '<h3>📣 Klaim presentasi</h3><p>' +
             d.klaim.tanya +
@@ -922,14 +906,7 @@ function renderSajikan(root) {
         )
       : '') +
     (done ? nextButton('sajikan') : '');
-  var run = root.querySelector('#sajikanRun');
-  if (run) {
-    run.addEventListener('click', function () {
-      State.sajikanJalan = true;
-      store.save();
-      rerender();
-    });
-  }
+  bindRunButton(root, 'sajikanRun', 'sajikanJalan');
   if (hasil) bindMulti(root, 'klaim');
   bindNextButton(root, 'sajikan');
 }
@@ -954,14 +931,10 @@ function renderEvaluasi(root) {
     buildDlPanel(
       '<p>' +
         d.pengantarKuis +
-        '</p><ol class="pbl-permintaan">' +
-        d.permintaan
-          .map(function (p) {
-            return '<li>' + p + '</li>';
-          })
-          .join('') +
-        '</ol>' +
-        buildKamusData(STRUKTUR_TEFA, { judul: d.kamusJudul, namaDb: D.namaDbTefa })
+        '</p>' +
+        permintaanHtml(d.permintaan) +
+        buildServerDdl(serverDari(D.serverTefa), { judul: d.serverJudul }) +
+        keteranganDb(D.serverTefa)
     ) +
     buildDlPanel(
       counter(dijawab, KUIS.jawabEval.length, 'soal sudah dijawab') +
@@ -986,25 +959,19 @@ function renderEvaluasi(root) {
             '</h4>' +
             buildSqlKode(u.skrip, { label: u.judul }) +
             (hasil
-              ? logHtml(hasil.log) +
-                bedaPanel(hasil, u.skrip, 'Bukti: struktur sebelum → sesudah skrip Tim Biru')
-              : '<div class="btn-group"><button type="button" class="btn btn--ghost btn--small" id="evalRun">▶ Jalankan skrip Tim Biru di DBMS v1</button></div>') +
-            '<p>' +
-            u.tanya +
-            '</p>' +
-            multi('ujiSilang', { done: u.done })
-        )
+              ? logHtml(hasil.log)
+              : runButton(
+                  'evalRun',
+                  '▶ Jalankan skrip Tim Biru di salinan server',
+                  'btn--ghost btn--small'
+                ))
+        ) +
+        (hasil ? buktiPanel(hasil.skema, 'Bukti: server sebelum → sesudah skrip Tim Biru') : '') +
+        buildDlPanel('<p>' + u.tanya + '</p>' + multi('ujiSilang', { done: u.done }))
       : '') +
     (done ? nextButton('evaluasi') : '');
   bindKuisSekali(root, KUIS.jawabEval, State.jawabEval, store.save, rerender);
-  var run = root.querySelector('#evalRun');
-  if (run) {
-    run.addEventListener('click', function () {
-      State.evalJalan = true;
-      store.save();
-      rerender();
-    });
-  }
+  bindRunButton(root, 'evalRun', 'evalJalan');
   if (kDone) bindMulti(root, 'ujiSilang');
   bindNextButton(root, 'evaluasi');
 }
@@ -1080,23 +1047,23 @@ function sum(parts) {
 
 function hitungSkor() {
   return [
-    { label: 'Masalah — akar masalah perubahan rancangan', skor: multiScore('akar') },
-    { label: 'Bentuk tim — rencana migrasi', skor: tapScore(State.rencana) },
+    { label: 'Masalah — akar masalah pembersihan server', skor: multiScore('akar') },
+    { label: 'Bentuk tim — rencana penghapusan aman', skor: tapScore(State.rencana) },
     {
-      label: 'Bekal sintaks — aksi ALTER, dampak data, penulisan',
+      label: 'Bekal sintaks — perintah tepat, dampak, konsekuensi',
       skor: sum([sortScore('aksi'), sortScore('dampak'), guidedScore('konsep')]),
     },
     {
-      label: 'Tambah kolom — pengamatan & skrip ADD',
-      skor: sum([guidedScore('tambah'), editorScore('tambah')]),
+      label: 'Hapus tabel — pengamatan & skrip DROP TABLE',
+      skor: sum([guidedScore('hapusTabel'), editorScore('hapusTabel')]),
     },
     {
-      label: 'Ubah kolom — pengamatan, rumpang & skrip MODIFY/RENAME',
-      skor: sum([guidedScore('ubah'), guidedScore('rumpang'), editorScore('ubah')]),
+      label: 'Hapus basis data — pengamatan & skrip DROP DATABASE',
+      skor: sum([guidedScore('hapusDb'), editorScore('hapusDb')]),
     },
     {
-      label: 'Hapus kolom — analisis & skrip DROP COLUMN',
-      skor: sum([multiScore('analisis'), editorScore('hapus')]),
+      label: 'Analisis risiko — skrip junior & checklist aman',
+      skor: sum([multiScore('analisis'), multiScore('aturan')]),
     },
     { label: 'Sajikan — klaim berbasis bukti', skor: multiScore('klaim') },
     {
@@ -1160,7 +1127,8 @@ function renderSelesai(root) {
         ' kali (tidak dinilai — setiap perbaikan adalah latihan).</p>'
     ) +
     buildDlPanel(
-      '<h3>📜 Skrip migrasi tim</h3>' + buildSqlKode(skripTim(), { label: 'Skrip migrasi tim' })
+      '<h3>📜 Skrip pembersihan tim</h3>' +
+        buildSqlKode(skripTim(), { label: 'Skrip pembersihan tim' })
     ) +
     buildDlPanel('<h3>📌 Ingat kembali</h3>' + listHtml(d.rangkuman)) +
     '<div class="btn-group btn-group--end">' +
@@ -1182,9 +1150,9 @@ var RENDERERS = {
   masalah: renderMasalah,
   organisasi: renderOrganisasi,
   konsep: renderKonsep,
-  tambah: renderTambah,
-  ubah: renderUbah,
-  hapus: renderHapus,
+  hapusTabel: renderHapusTabel,
+  hapusDb: renderHapusDb,
+  risiko: renderRisiko,
   sajikan: renderSajikan,
   evaluasi: renderEvaluasi,
   refleksi: renderRefleksi,

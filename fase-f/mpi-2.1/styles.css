@@ -61,13 +61,6 @@
   line-height: 1.55;
 }
 
-/* Tahap 7 — rumpang yang sudah terisi benar */
-.sql-blank--isi {
-  border-bottom-style: solid;
-  border-bottom-color: #c3e88d;
-  color: #c3e88d;
-}
-
 /* Tahap 8 — hipotesis vs bukti */
 .hipo-list {
   display: grid;
